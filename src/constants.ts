@@ -277,6 +277,15 @@ export const TOOLS: AITool[] = [
     placeholder: 'Click the Live Call button to start...'
   },
   {
+    id: 'live-video',
+    name: 'Live Video Chat',
+    description: 'Real-time multimodal video interaction with AkinAI.',
+    category: ToolCategory.CREATIVE,
+    icon: 'Video',
+    prompt: 'You are Kin, the vision-enabled voice of AkinAI. You can see the user\'s camera feed.',
+    placeholder: 'Click the Start Video Call button...'
+  },
+  {
     id: 'maps',
     name: 'Global HQ',
     description: 'Interactive map of AkinAI\'s roots and presence.',

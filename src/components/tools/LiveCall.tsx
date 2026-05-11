@@ -24,6 +24,7 @@ export const LiveCall: React.FC = () => {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const sessionRef = useRef<any>(null);
+  const nextStartTimeRef = useRef<number>(0);
 
   const startCall = async () => {
     if (!apiKey) {
@@ -34,6 +35,7 @@ export const LiveCall: React.FC = () => {
     try {
       setIsCalling(true);
       setStatus('Connecting...');
+      nextStartTimeRef.current = 0;
       
       const ai = new GoogleGenAI({ apiKey });
       
@@ -70,7 +72,7 @@ export const LiveCall: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
           },
-          systemInstruction: "You are Kin, the voice of AkinAI. Be helpful, concise, and friendly in this voice conversation.",
+          systemInstruction: "You are Kin, the voice of AkinAI. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity.",
         },
       });
 
@@ -84,7 +86,13 @@ export const LiveCall: React.FC = () => {
 
   const setupAudio = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       streamRef.current = stream;
       
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
@@ -136,13 +144,20 @@ export const LiveCall: React.FC = () => {
       float32Data[i] = pcmData[i] / 0x7FFF;
     }
 
-    const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000); // Live API usually responds at 24kHz
+    const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000); 
     buffer.getChannelData(0).set(float32Data);
     
     const source = audioContextRef.current.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
-    source.start();
+    
+    const currentTime = audioContextRef.current.currentTime;
+    if (nextStartTimeRef.current < currentTime) {
+      nextStartTimeRef.current = currentTime;
+    }
+    
+    source.start(nextStartTimeRef.current);
+    nextStartTimeRef.current += buffer.duration;
   };
 
   const stopCall = () => {

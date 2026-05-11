@@ -27,6 +27,7 @@ export const LiveVideoCall: React.FC = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const sessionRef = useRef<any>(null);
   const videoIntervalRef = useRef<number | null>(null);
+  const nextStartTimeRef = useRef<number>(0);
 
   const startCall = async () => {
     if (!apiKey) {
@@ -37,6 +38,7 @@ export const LiveVideoCall: React.FC = () => {
     try {
       setIsCalling(true);
       setStatus('Connecting...');
+      nextStartTimeRef.current = 0;
       
       const ai = new GoogleGenAI({ apiKey });
       
@@ -71,7 +73,7 @@ export const LiveVideoCall: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
           },
-          systemInstruction: "You are Kin, the vision-enabled voice of AkinAI. You can see the user's camera feed. Be helpful, observant, and conversational about what you see.",
+          systemInstruction: "You are Kin, the vision-enabled voice of AkinAI. You can see the user's camera feed. Be helpful, observant, and conversational. Speak clearly and maintain a steady pace for optimal clarity.",
         },
       });
 
@@ -86,7 +88,11 @@ export const LiveVideoCall: React.FC = () => {
   const setupStreams = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }, 
         video: { width: 640, height: 480, frameRate: 15 } 
       });
       streamRef.current = stream;
@@ -154,10 +160,18 @@ export const LiveVideoCall: React.FC = () => {
     for (let i = 0; i < pcmData.length; i++) float32Data[i] = pcmData[i] / 0x7FFF;
     const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000);
     buffer.getChannelData(0).set(float32Data);
+    
     const source = audioContextRef.current.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
-    source.start();
+    
+    const currentTime = audioContextRef.current.currentTime;
+    if (nextStartTimeRef.current < currentTime) {
+      nextStartTimeRef.current = currentTime;
+    }
+    
+    source.start(nextStartTimeRef.current);
+    nextStartTimeRef.current += buffer.duration;
   };
 
   const stopCall = () => {

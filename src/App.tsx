@@ -13,6 +13,7 @@ import { Menu } from 'lucide-react';
 import { Sidebar } from './components/layout/Sidebar';
 import { ToolInterface } from './components/tools/ToolInterface';
 import { LiveCall } from './components/tools/LiveCall';
+import { MapTool } from './components/tools/MapTool';
 import { AITool } from './types';
 import { TOOLS } from './constants';
 import { cn } from './lib/utils';
@@ -51,6 +52,8 @@ export default function App() {
         <section className="flex-1 overflow-hidden bg-white">
           {activeTool.id === 'live-call' ? (
             <LiveCall />
+          ) : activeTool.id === 'maps' ? (
+            <MapTool />
           ) : (
             <ToolInterface key={activeTool.id} tool={activeTool} />
           )}

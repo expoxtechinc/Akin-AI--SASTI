@@ -14,11 +14,12 @@ import {
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
   Mic, Search as SearchIcon, Gamepad2, Calendar, Compass,
-  LayoutDashboard
+  LayoutDashboard, MapPin
 } from 'lucide-react';
 import { AITool, ToolCategory } from '../../types';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
+import { CreatorInfo } from './CreatorInfo';
 
 interface SidebarProps {
   activeToolId: string;
@@ -31,7 +32,7 @@ const ICON_MAP: Record<string, any> = {
   MessageSquare, Brain, BookOpen, PenTool, Clapperboard,
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
-  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass,
+  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -72,10 +73,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
-              <span className="text-stone-50 font-bold text-lg">A</span>
+            <div className="w-10 h-10 overflow-hidden rounded-xl shadow-md border border-stone-200">
+              <img 
+                src="https://www.image2url.com/r2/default/images/1778503153344-dedc222a-cefc-456a-b4b2-50e8b3e2226f.jpg" 
+                alt="AkinAI Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-stone-900">AkinAI</h1>
+            <h1 className="text-xl font-black tracking-tighter text-stone-900 group">
+              Akin<span className="text-stone-500">AI</span>
+            </h1>
           </div>
           <button onClick={onToggle} className="lg:hidden p-2 text-stone-500 hover:text-stone-900">
             <X size={20} />
@@ -133,6 +140,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </div>
+
+        <CreatorInfo />
       </motion.aside>
     </>
   );

@@ -250,6 +250,42 @@ export const TOOLS: AITool[] = [
     placeholder: 'Click the Live Call button to start...'
   },
   {
+    id: 'maps',
+    name: 'Global HQ',
+    description: 'Interactive map of AkinAI\'s roots and presence.',
+    category: ToolCategory.GENERAL,
+    icon: 'MapPin',
+    prompt: 'Map of Liberia and AkinAI presence.',
+    placeholder: ''
+  },
+  {
+    id: 'nurse-ethics',
+    name: 'Clinical Ethics',
+    description: 'Analyzing complex ethical dilemmas in nursing.',
+    category: ToolCategory.GROWTH,
+    icon: 'Compass',
+    prompt: 'You are a Bioethics Consultant. Analyze the provided clinical scenario and discuss ethical principles (autonomy, beneficence, non-maleficence, justice) and potential resolutions.',
+    placeholder: 'Describe an ethical dilemma you\'ve encountered...'
+  },
+  {
+    id: 'patient-ed',
+    name: 'Patient Educator',
+    description: 'Simplified handouts for complex medical conditions.',
+    category: ToolCategory.PRODUCTIVITY,
+    icon: 'BookOpen',
+    prompt: 'You are a Patient Advocate. Create clear, jargon-free educational materials for patients about their chronic conditions, medications, or post-op instructions.',
+    placeholder: 'What condition should I create an educational handout for?'
+  },
+  {
+    id: 'biz-model',
+    name: 'Startup Architect',
+    description: 'Generate lean business models and revenue strategies.',
+    category: ToolCategory.BUSINESS,
+    icon: 'Cpu',
+    prompt: 'You are a Startup Consultant. Help the user define their Value Proposition, Revenue Streams, and Customer Segments using the Lean Canvas framework.',
+    placeholder: 'Describe your business idea...'
+  },
+  {
     id: 'planner',
     name: 'Productivity Planner',
     description: 'Optimized schedules for maximum efficiency.',

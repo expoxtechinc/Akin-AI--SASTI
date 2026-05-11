@@ -14,26 +14,41 @@ if (!apiKey) {
 const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 
 export const geminiService = {
-  async generateResponse(prompt: string, contextPrompt: string, history: { role: 'user' | 'model', parts: { text: string }[] }[] = []) {
+  async generateResponse(
+    prompt: string | { text: string, inlineData?: { data: string, mimeType: string } }[], 
+    contextPrompt: string, 
+    history: { role: 'user' | 'model', parts: { text: string }[] }[] = []
+  ) {
     if (!apiKey) {
       throw new Error("API Key missing. Please check your environment configuration.");
     }
 
     try {
       const model = "gemini-3-flash-preview";
+
+      // Flatten history and current prompt into contents
+      const contents = [
+        ...history,
+        {
+          role: 'user',
+          parts: Array.isArray(prompt) ? prompt : [{ text: prompt }]
+        }
+      ];
       
-      const chat = ai.chats.create({
+      const response = await ai.models.generateContent({
         model,
         config: {
           systemInstruction: contextPrompt,
         },
-        history,
+        contents: contents as any,
       });
 
-      const response = await chat.sendMessage({ message: prompt });
       return response.text;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gemini API Error:", error);
+      if (error.message?.includes('403') || error.message?.includes('400')) {
+        throw new Error("API Key Invalid or Permission Denied. Please check your API key in Settings > Secrets.");
+      }
       throw error;
     }
   },

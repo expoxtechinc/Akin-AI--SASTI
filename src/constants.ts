@@ -196,6 +196,60 @@ export const TOOLS: AITool[] = [
     placeholder: 'Give me trivia about...'
   },
   {
+    id: 'nurse-dosage',
+    name: 'Dosage Calculator',
+    description: 'Calculate medication dosages and infusion rates.',
+    category: ToolCategory.TECHNICAL,
+    icon: 'Calculator',
+    prompt: 'You are a Clinical Pharmacist. Help the user calculate accurate medication dosages and infusion rates based on weight, concentration, and prescribed rates. ALWAYS include a disclaimer that this is for educational purposes.',
+    placeholder: 'Enter weight, dose ordered, and concentration...'
+  },
+  {
+    id: 'nurse-careplan',
+    name: 'Care Plan Pro',
+    description: 'Generate comprehensive nursing care plans.',
+    category: ToolCategory.TECHNICAL,
+    icon: 'FileText',
+    prompt: 'You are a Nurse Educator. Create detailed nursing care plans including Nursing Diagnoses (NANDA), Outcomes (NOC), and Interventions (NIC) based on patient assessment data.',
+    placeholder: 'Describe patient assessment findings and primary diagnosis...'
+  },
+  {
+    id: 'medical-terms',
+    name: 'Medical Decoder',
+    description: 'Explain medical jargon and abbreviations simply.',
+    category: ToolCategory.GENERAL,
+    icon: 'Brain',
+    prompt: 'You are a Medical Interpreter. Explain medical terms, abbreviations, and complex diagnoses in clear, plain language for patients or students.',
+    placeholder: 'What medical term or abbreviation should I explain?'
+  },
+  {
+    id: 'legal-aide',
+    name: 'Legal Draftsman',
+    description: 'Draft contracts and explain legal concepts.',
+    category: ToolCategory.BUSINESS,
+    icon: 'BookOpen',
+    prompt: 'You are a Legal Assistant. Helping with drafting common contracts and explaining legal concepts in simple terms. DISCLAIMER: I am an AI, not a lawyer.',
+    placeholder: 'Describe the contract or legal concept...'
+  },
+  {
+     id: 'scientific-paper',
+     name: 'Research Buddy',
+     description: 'Structure scientific abstracts and methodology.',
+     category: ToolCategory.TECHNICAL,
+     icon: 'Cpu',
+     prompt: 'You are a Research Scientist. Assist in structuring scientific abstracts, refining methodology sections, and suggesting peer-reviewed sources.',
+     placeholder: 'Describe your research topic or abstract draft...'
+  },
+  {
+    id: 'live-call',
+    name: 'Live Voice Chat',
+    description: 'Real-time voice conversation with AkinAI.',
+    category: ToolCategory.GENERAL,
+    icon: 'Mic',
+    prompt: 'You are Kin, the voice of AkinAI. Be helpful, quick, and conversational.',
+    placeholder: 'Click the Live Call button to start...'
+  },
+  {
     id: 'planner',
     name: 'Productivity Planner',
     description: 'Optimized schedules for maximum efficiency.',

@@ -12,6 +12,7 @@ import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/layout/Sidebar';
 import { ToolInterface } from './components/tools/ToolInterface';
+import { LiveCall } from './components/tools/LiveCall';
 import { AITool } from './types';
 import { TOOLS } from './constants';
 import { cn } from './lib/utils';
@@ -47,8 +48,12 @@ export default function App() {
           <div className="w-10" /> {/* Spacer */}
         </header>
 
-        <section className="flex-1 overflow-hidden">
-          <ToolInterface key={activeTool.id} tool={activeTool} />
+        <section className="flex-1 overflow-hidden bg-white">
+          {activeTool.id === 'live-call' ? (
+            <LiveCall />
+          ) : (
+            <ToolInterface key={activeTool.id} tool={activeTool} />
+          )}
         </section>
       </main>
     </div>

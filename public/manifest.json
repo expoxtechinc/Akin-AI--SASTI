@@ -1,0 +1,17 @@
+{
+  "name": "AkinAI",
+  "short_name": "AkinAI",
+  "description": "Advanced AI Suite by Akin S. Sokpah for problem solving and nursing education.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1c1917",
+  "icons": [
+    {
+      "src": "https://www.image2url.com/r2/default/images/1778503153344-dedc222a-cefc-456a-b4b2-50e8b3e2226f.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

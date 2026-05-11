@@ -198,25 +198,52 @@ export const TOOLS: AITool[] = [
   {
     id: 'nurse-dosage',
     name: 'Dosage Calculator',
-    description: 'Calculate medication dosages and infusion rates.',
+    description: 'Calculate medication dosages and infusion rates (Pharmacology focus).',
     category: ToolCategory.TECHNICAL,
     icon: 'Calculator',
     prompt: 'You are a Clinical Pharmacist. Help the user calculate accurate medication dosages and infusion rates based on weight, concentration, and prescribed rates. ALWAYS include a disclaimer that this is for educational purposes.',
     placeholder: 'Enter weight, dose ordered, and concentration...'
   },
   {
+    id: 'nursing-curriculum',
+    name: 'Curriculum Navigator',
+    description: 'Freshman to Senior study modules and NCLEX prep.',
+    category: ToolCategory.GROWTH,
+    icon: 'BookOpen',
+    prompt: 'You are a Nursing Academic Advisor. Provide study plans and lecture summaries for nursing students from Freshman to Senior years. Cover Anatomy, Physiology, Med-Surg, Peds, OB, and Psychiatric nursing.',
+    placeholder: 'Tell me your current level (e.g., Sophomore 1) and subject...'
+  },
+  {
     id: 'nurse-careplan',
     name: 'Care Plan Pro',
-    description: 'Generate comprehensive nursing care plans.',
+    description: 'Sophomore/Junior level NANDA, NOC, and NIC care plans.',
     category: ToolCategory.TECHNICAL,
     icon: 'FileText',
     prompt: 'You are a Nurse Educator. Create detailed nursing care plans including Nursing Diagnoses (NANDA), Outcomes (NOC), and Interventions (NIC) based on patient assessment data.',
     placeholder: 'Describe patient assessment findings and primary diagnosis...'
   },
   {
+    id: 'anatomy-expert',
+    name: 'Anatomy Lab',
+    description: 'Deep dive into human systems (Physiology/Anatomy focus).',
+    category: ToolCategory.TECHNICAL,
+    icon: 'Brain',
+    prompt: 'You are an Anatomy and Physiology professor. Explain organs, systems, and physiological processes with high clarity.',
+    placeholder: 'Ask about any organ or body system (e.g., Cardiac cycle)...'
+  },
+  {
+    id: 'nclex-prep',
+    name: 'NCLEX Prep Coach',
+    description: 'Senior level board exam practice and strategies.',
+    category: ToolCategory.GROWTH,
+    icon: 'Mic',
+    prompt: 'You are an NCLEX Prep Instructor. Provide practice questions (SATA, priority, delegation) and explain the rationale for correct answers.',
+    placeholder: 'Give me a practice question on Med-Surg...'
+  },
+  {
     id: 'medical-terms',
     name: 'Medical Decoder',
-    description: 'Explain medical jargon and abbreviations simply.',
+    description: 'Freshman level basics: jargon and abbreviations.',
     category: ToolCategory.GENERAL,
     icon: 'Brain',
     prompt: 'You are a Medical Interpreter. Explain medical terms, abbreviations, and complex diagnoses in clear, plain language for patients or students.',

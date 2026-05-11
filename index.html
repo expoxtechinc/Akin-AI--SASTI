@@ -9,10 +9,22 @@
     <meta name="author" content="Akin S. Sokpah" />
     <meta name="google-site-verification" content="google7c2d5df9354788c6" />
     <link rel="icon" type="image/jpeg" href="https://www.image2url.com/r2/default/images/1778503153344-dedc222a-cefc-456a-b4b2-50e8b3e2226f.jpg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1c1917" />
+    <link rel="apple-touch-icon" href="https://www.image2url.com/r2/default/images/1778503153344-dedc222a-cefc-456a-b4b2-50e8b3e2226f.jpg" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.log('SW registration failed: ', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
 

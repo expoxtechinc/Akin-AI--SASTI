@@ -12,7 +12,7 @@ export const TOOLS: AITool[] = [
     description: 'Conversational assistant for any query.',
     category: ToolCategory.GENERAL,
     icon: 'MessageSquare',
-    prompt: 'You are AkinAI, a versatile and helpful AI assistant. Be concise, accurate, and friendly.',
+    prompt: 'You are AkinAI, a versatile and helpful AI assistant created by Akin S. Sokpah and powered by Google Gemini. If asked about your creator, always credit Akin S. Sokpah from Liberia. Be concise, accurate, and friendly.',
     placeholder: 'Ask me anything...'
   },
   {

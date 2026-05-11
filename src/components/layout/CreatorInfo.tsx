@@ -22,7 +22,7 @@ export const CreatorInfo: React.FC = () => {
       </div>
       
       <p className="text-[11px] text-stone-300 leading-relaxed italic">
-        "Built with vision from Mount Barclay, Liberia, to empower the world through AI."
+        "Built with vision from Mount Barclay, Liberia, to empower the world through AI. Created by Akin S. Sokpah, Powered by Google."
       </p>
 
       <div className="flex items-center gap-3 pt-2 border-t border-stone-800">

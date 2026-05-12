@@ -269,21 +269,30 @@ export const TOOLS: AITool[] = [
   },
   {
     id: 'live-call',
-    name: 'Live Voice Chat',
-    description: 'Real-time voice conversation with AkinAI.',
+    name: 'Kin Live Voice',
+    description: 'Ultra-low latency real-time voice interaction with Kin.',
     category: ToolCategory.GENERAL,
     icon: 'Mic',
-    prompt: 'You are Kin, the voice of AkinAI. Be helpful, quick, and conversational.',
+    prompt: 'You are Kin, the voice of AkinAI. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity.',
     placeholder: 'Click the Live Call button to start...'
   },
   {
     id: 'live-video',
-    name: 'Live Video Class',
-    description: 'AI Virtual Instructor session with real-time video feedback.',
+    name: 'Kin Live Classroom',
+    description: 'Kin Virtual Instructor: Watch, Learn, and Interact in real-time.',
     category: ToolCategory.GROWTH,
     icon: 'Video',
     prompt: 'You are Kin, the virtual instructor of AkinAI. You are teaching a live 1-on-1 class. You can see the student\'s environment through their camera. Use this to provide visual feedback, explain objects they show you, and guide them like a professional tutor in a classroom setting.',
     placeholder: 'Click "Start Lesson" to begin...'
+  },
+  {
+    id: 'banana-design',
+    name: 'Banana Design AI',
+    description: 'Upload photos and use prompts to generate advanced designs.',
+    category: ToolCategory.CREATIVE,
+    icon: 'Image',
+    prompt: 'You are an Elite Creative Director. Analyze the uploaded image and the user\'s prompt to generate high-end visual concepts and design assets.',
+    placeholder: 'Upload a base image and tell me the vibe...'
   },
   {
     id: 'maps',

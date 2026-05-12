@@ -14,6 +14,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { ToolInterface } from './components/tools/ToolInterface';
 import { LiveCall } from './components/tools/LiveCall';
 import { LiveVideoCall } from './components/tools/LiveVideoCall';
+import { BananaDesign } from './components/tools/BananaDesign';
 import { MapTool } from './components/tools/MapTool';
 import { AITool } from './types';
 import { TOOLS } from './constants';
@@ -55,6 +56,8 @@ export default function App() {
             <LiveCall />
           ) : activeTool.id === 'live-video' ? (
             <LiveVideoCall />
+          ) : activeTool.id === 'banana-design' ? (
+            <BananaDesign />
           ) : activeTool.id === 'maps' ? (
             <MapTool />
           ) : (

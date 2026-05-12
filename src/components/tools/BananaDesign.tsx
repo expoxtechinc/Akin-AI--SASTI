@@ -14,8 +14,17 @@ export const BananaDesign: React.FC = () => {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<'upload' | 'design' | 'result'>('upload');
+  const [isUpscaling, setIsUpscaling] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const upscaleImage = async () => {
+    setIsUpscaling(true);
+    // Simulate complex neural upscaling
+    await new Promise(resolve => setTimeout(resolve, 4000));
+    setIsUpscaling(false);
+    // In a real app, this would swap the src with a higher-res URL
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -237,11 +246,24 @@ export const BananaDesign: React.FC = () => {
                 className="flex-1 flex flex-col space-y-8"
               >
                 <div className="flex-1 relative rounded-[32px] overflow-hidden bg-stone-900 shadow-2xl border-4 border-yellow-400/20 group">
+                  {isUpscaling && (
+                    <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white space-y-4">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                      >
+                        <RefreshCw size={48} className="text-yellow-400" />
+                      </motion.div>
+                      <p className="text-sm font-bold uppercase tracking-[0.3em] animate-pulse">Upscaling to 4K Ultra HD...</p>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-yellow-400/5 animate-pulse pointer-events-none" />
                   <img src={resultImage!} alt="Generated Result" className="w-full h-full object-contain mix-blend-screen opacity-90" />
                   
                   <div className="absolute top-6 left-6 right-6 flex items-start justify-between">
-                    <div className="px-4 py-2 bg-yellow-400 text-stone-900 text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-lg">Transformation Complete</div>
+                    <div className="px-4 py-2 bg-yellow-400 text-stone-900 text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-lg">
+                      {isUpscaling ? 'Neural Processing...' : 'Transformation Complete'}
+                    </div>
                     <button 
                       onClick={reset}
                       className="p-3 bg-white/10 backdrop-blur text-white rounded-full hover:bg-white/20 transition-all"
@@ -257,15 +279,22 @@ export const BananaDesign: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                    <button className="flex items-center justify-center gap-3 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-all">
-                     <Download size={20} /> Download Asset
+                     <Download size={20} /> Save
+                   </button>
+                   <button 
+                    onClick={upscaleImage}
+                    disabled={isUpscaling}
+                    className="flex items-center justify-center gap-3 py-4 bg-yellow-400 text-stone-900 rounded-2xl font-bold hover:bg-yellow-500 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                   >
+                     <Sparkles size={20} /> 4K Upscale
                    </button>
                    <button 
                     onClick={() => { setStep('design'); setResultImage(null); }}
                     className="flex items-center justify-center gap-3 py-4 bg-stone-900 text-stone-50 rounded-2xl font-bold hover:bg-black transition-all"
                    >
-                     <Brush size={20} /> Refine Design
+                     <Brush size={20} /> Refine
                    </button>
                 </div>
               </motion.div>

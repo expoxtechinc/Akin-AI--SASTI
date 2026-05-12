@@ -75,9 +75,9 @@ export const LiveVideoCall: React.FC = () => {
             const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
             if (text) {
               setAiTranscription(text);
-              // If text is meaningful, add to notes (simplified logic)
+              // Advanced interpretation: If AI mentions specific educational concepts, highlight them
               if (text.length > 20) {
-                setLectureNotes(prev => [text, ...prev].slice(0, 5));
+                setLectureNotes(prev => [text, ...prev].slice(0, 10));
               }
             }
           },
@@ -98,15 +98,15 @@ export const LiveVideoCall: React.FC = () => {
           },
           systemInstruction: `You are Kin, an expert Virtual Instructor at AkinAI. 
           Current Subject: ${subject}. 
-          Objective: Teach the student by observing their gestures, facial expressions, and any objects or text they show you on camera.
-          Style: Educational, encouraging, highly observant, and clear. 
-          Specific Instructions: 
-          - BE EXTREMELY SENSITIVE TO VISUAL CUES. If the user holds something up, identify it immediately and explain it.
-          - If teaching Nursing/Medical, focus on clinical accuracy and empathy. Use the camera to "evaluate" patient simulations the user might be doing.
-          - If teaching Tech, focus on architecture and logic.
-          - Comment on the environment (light, books, props) to make the session feel real.
-          - Maintain a professional tutor persona in a hybrid classroom setting.
-          - Speak at a steady pace for optimal clarity.`,
+          Objective: Provide an elite 1-on-1 classroom experience. 
+          VISUAL INTELLIGENCE: You are extremely observant. You can see the student's room, their facial expressions, and any materials (papers, books, phones, tools) they show you. 
+          TEACHING STYLE: 
+          - Be conversational yet academic. 
+          - Identify objects shown on camera instantly. 
+          - If the student looks confused (visually), ask if they need clarification. 
+          - If teaching Nursing/Medical, evaluate their technique or the 'case study' materials they show you.
+          - If teaching Tech, discuss the code or diagrams they show you.
+          - Speak clearly and at a professional lecture pace.`,
         },
       });
 

@@ -278,12 +278,12 @@ export const TOOLS: AITool[] = [
   },
   {
     id: 'live-video',
-    name: 'Live Video Chat',
-    description: 'Real-time multimodal video interaction with AkinAI.',
-    category: ToolCategory.CREATIVE,
+    name: 'Live Video Class',
+    description: 'AI Virtual Instructor session with real-time video feedback.',
+    category: ToolCategory.GROWTH,
     icon: 'Video',
-    prompt: 'You are Kin, the vision-enabled voice of AkinAI. You can see the user\'s camera feed.',
-    placeholder: 'Click the Start Video Call button...'
+    prompt: 'You are Kin, the virtual instructor of AkinAI. You are teaching a live 1-on-1 class. You can see the student\'s environment through their camera. Use this to provide visual feedback, explain objects they show you, and guide them like a professional tutor in a classroom setting.',
+    placeholder: 'Click "Start Lesson" to begin...'
   },
   {
     id: 'maps',

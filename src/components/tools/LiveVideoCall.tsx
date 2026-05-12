@@ -189,134 +189,200 @@ export const LiveVideoCall: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full">
-      {/* Video Area */}
-      <div className="flex-1 bg-stone-900 relative flex items-center justify-center overflow-hidden">
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-          muted 
-          className={cn(
-            "w-full h-full object-cover transition-opacity duration-500",
-            isVideoMuted || !isCalling ? "opacity-0" : "opacity-100"
-          )}
-        />
-        
-        {(!isCalling || isVideoMuted) && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-500 space-y-4">
-            <div className="w-24 h-24 bg-stone-800 rounded-full flex items-center justify-center">
-              <Camera size={48} />
-            </div>
-            <p className="text-sm font-medium uppercase tracking-widest">
-              Camera {isVideoMuted ? 'is off' : 'is waiting'}
+    <div className="flex flex-col h-full bg-stone-950 overflow-hidden">
+      {/* Header / Info */}
+      <div className="px-6 py-4 bg-stone-900/50 backdrop-blur border-b border-white/5 flex items-center justify-between z-20">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-500/10 rounded-lg">
+            <Video size={18} className="text-green-500" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white tracking-tight">Kin AI Virtual Classroom</h3>
+            <p className={cn(
+              "text-[10px] font-bold uppercase tracking-widest",
+              isCalling ? "text-green-400" : "text-stone-500"
+            )}>
+              {status}
             </p>
           </div>
-        )}
-
-        <canvas ref={canvasRef} className="hidden" width="320" height="240" />
-
-        {/* AI Voice Indicator overlay */}
-        {isCalling && (
-          <div className="absolute top-6 right-6 px-4 py-2 bg-stone-900/50 backdrop-blur rounded-full flex items-center gap-2 border border-white/20">
-            <div className="flex items-center gap-0.5">
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ height: [4, 12, 4] }}
-                  transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.2 }}
-                  className="w-1 bg-green-400 rounded-full"
-                />
-              ))}
-            </div>
-            <span className="text-[10px] font-bold text-stone-50 uppercase tracking-widest">Kin Live Vision</span>
-          </div>
-        )}
+        </div>
+        <div className="flex items-center gap-2">
+           <div className="h-6 px-2 rounded bg-stone-800 flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-stone-300 uppercase tracking-tighter">Live Session</span>
+           </div>
+        </div>
       </div>
 
-      {/* Control Area */}
-      <div className="w-full lg:w-96 bg-white border-l border-stone-200 flex flex-col p-8 space-y-8">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold tracking-tight text-stone-900">Vision Mode</h2>
-          <p className={cn(
-            "text-xs font-bold uppercase tracking-widest",
-            isCalling ? "text-green-500 animate-pulse" : "text-stone-400"
-          )}>
-            {status}
-          </p>
-        </div>
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+        {/* AI Instructor (Left) */}
+        <div className="flex-1 border-r border-white/5 relative bg-stone-950 flex flex-col items-center justify-center p-8">
+          <div className="absolute top-4 left-6">
+             <span className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.3em]">AI Instructor (Kin)</span>
+          </div>
 
-        <div className="flex-1 overflow-y-auto">
+          <div className="relative">
+            <AnimatePresence>
+              {isCalling && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="absolute inset-0 pointer-events-none"
+                >
+                  <div className="absolute inset-0 bg-stone-500/10 rounded-full blur-3xl animate-pulse" />
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        opacity: [0.3, 0.1, 0.3],
+                        rotate: [0, 180, 360]
+                      }}
+                      transition={{ 
+                        repeat: Infinity, 
+                        duration: 4 + i, 
+                        ease: "linear" 
+                      }}
+                      className="absolute inset-[-40px] border border-white/10 rounded-full"
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="w-48 h-48 lg:w-64 lg:h-64 rounded-full bg-stone-900 border border-white/10 flex items-center justify-center relative overflow-hidden shadow-2xl">
+              {isCalling ? (
+                <div className="flex items-center gap-2">
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ 
+                        height: [12, 60, 12],
+                        backgroundColor: ["#fafaf9", "#a8a29e", "#fafaf9"]
+                      }}
+                      transition={{ 
+                        repeat: Infinity, 
+                        duration: 0.6, 
+                        delay: i * 0.1 
+                      }}
+                      className="w-1.5 lg:w-2 bg-stone-50 rounded-full"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center space-y-2">
+                  <div className="w-16 h-16 bg-stone-800 rounded-full mx-auto flex items-center justify-center">
+                    <Zap size={32} className="text-stone-500" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <AnimatePresence>
             {aiTranscription && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                className="bg-stone-50 border border-stone-200 p-4 rounded-2xl shadow-sm"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="mt-8 max-w-md bg-stone-900/80 backdrop-blur border border-white/10 p-5 rounded-2xl text-center shadow-2xl z-10"
               >
-                <p className="text-sm text-stone-700 italic">"{aiTranscription}"</p>
+                <p className="text-stone-200 text-sm leading-relaxed italic">"{aiTranscription}"</p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            disabled={!isCalling}
-            className={cn(
-              "flex flex-col items-center justify-center p-4 rounded-2xl transition-all border",
-              isMuted ? "bg-red-50 border-red-100 text-red-500" : "bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100"
-            )}
-          >
-            {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
-            <span className="text-[10px] font-bold uppercase mt-2">Mic</span>
-          </button>
-
-          <button
-            onClick={() => setIsVideoMuted(!isVideoMuted)}
-            disabled={!isCalling}
-            className={cn(
-              "flex flex-col items-center justify-center p-4 rounded-2xl transition-all border",
-              isVideoMuted ? "bg-red-50 border-red-100 text-red-500" : "bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100"
-            )}
-          >
-            {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
-            <span className="text-[10px] font-bold uppercase mt-2">Camera</span>
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {isCalling ? (
-            <button
-              onClick={stopCall}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-red-500 text-stone-50 rounded-2xl font-bold transition-all shadow-lg hover:bg-red-600 active:scale-95"
-            >
-              <PhoneOff size={20} /> End Video Call
-            </button>
-          ) : (
-            <button
-              onClick={startCall}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-stone-900 text-stone-50 rounded-2xl font-bold transition-all shadow-xl hover:bg-stone-800 active:scale-95"
-            >
-              <Play size={20} /> Start Video Call
-            </button>
-          )}
-
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setIsAiMuted(!isAiMuted)}
+        {/* User / Student (Right) */}
+        <div className="lg:w-[450px] bg-stone-950 flex flex-col relative border-l border-white/5">
+          <div className="flex-1 relative bg-black overflow-hidden group">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
               className={cn(
-                "p-2 rounded-lg transition-colors",
-                isAiMuted ? "text-red-500" : "text-stone-400 hover:text-stone-900"
+                "w-full h-full object-cover transition-all duration-700",
+                isVideoMuted || !isCalling ? "grayscale blur-xl opacity-20" : "grayscale-0 blur-0 opacity-100"
               )}
-            >
-              {isAiMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
-            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">
-              Live API v3.1 Multimodal
-            </span>
+            />
+            
+            {(!isCalling || isVideoMuted) && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-600 gap-3">
+                <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center shadow-inner">
+                  <Camera size={40} />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Student Camera Offline</p>
+              </div>
+            )}
+
+            <div className="absolute top-4 left-4 flex items-center gap-2">
+               <span className="px-2 py-1 bg-stone-900/80 backdrop-blur text-[10px] font-bold text-white rounded border border-white/10 uppercase tracking-widest">
+                  Live Feed
+               </span>
+            </div>
+
+            <canvas ref={canvasRef} className="hidden" width="320" height="240" />
+          </div>
+
+          {/* Controls */}
+          <div className="p-8 bg-stone-900 space-y-6">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setIsMuted(!isMuted)}
+                disabled={!isCalling}
+                className={cn(
+                  "flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all border",
+                  isMuted ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-stone-800 border-white/5 text-stone-300 hover:bg-stone-700"
+                )}
+              >
+                {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
+                <span className="text-[10px] font-bold uppercase tracking-widest">Mute</span>
+              </button>
+
+              <button
+                onClick={() => setIsVideoMuted(!isVideoMuted)}
+                disabled={!isCalling}
+                className={cn(
+                  "flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all border",
+                  isVideoMuted ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-stone-800 border-white/5 text-stone-300 hover:bg-stone-700"
+                )}
+              >
+                {isVideoMuted ? <VideoOff size={18} /> : <Video size={18} />}
+                <span className="text-[10px] font-bold uppercase tracking-widest">Camera</span>
+              </button>
+            </div>
+
+            {isCalling ? (
+              <button
+                onClick={stopCall}
+                className="w-full flex items-center justify-center gap-3 py-4 bg-red-600 text-stone-50 rounded-xl font-bold shadow-lg hover:bg-red-700 active:scale-95 transition-all"
+              >
+                <PhoneOff size={20} /> End Session
+              </button>
+            ) : (
+              <button
+                onClick={startCall}
+                className="w-full flex items-center justify-center gap-3 py-5 bg-stone-50 text-stone-900 rounded-xl font-bold shadow-xl hover:bg-white active:scale-95 transition-all text-lg"
+              >
+                <Play size={24} fill="currentColor" /> Start Lesson
+              </button>
+            )}
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                <button
+                  onClick={() => setIsAiMuted(!isAiMuted)}
+                  className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    isAiMuted ? "text-red-500" : "text-stone-500 hover:text-white"
+                  )}
+                >
+                  {isAiMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                </button>
+                <span className="text-[9px] text-stone-600 font-bold uppercase tracking-[0.2em]">
+                   AkinAI Educational Engine
+                </span>
+            </div>
           </div>
         </div>
       </div>

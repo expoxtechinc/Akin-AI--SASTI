@@ -14,7 +14,7 @@ import {
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
   Mic, Search as SearchIcon, Gamepad2, Calendar, Compass,
-  LayoutDashboard, MapPin, Video, Image, MessageCircle
+  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music
 } from 'lucide-react';
 import { AITool, ToolCategory } from '../../types';
 import { TOOLS } from '../../constants';
@@ -32,7 +32,7 @@ const ICON_MAP: Record<string, any> = {
   MessageSquare, Brain, BookOpen, PenTool, Clapperboard,
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
-  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin, Video, Image, MessageCircle
+  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin, Video, Image, MessageCircle, Music
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ 

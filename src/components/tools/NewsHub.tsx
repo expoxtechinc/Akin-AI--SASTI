@@ -64,7 +64,7 @@ export const NewsHub: React.FC = () => {
   const filteredNews = filter === 'all' ? news : news.filter(n => n.category === filter);
 
   return (
-    <div className="flex-1 flex flex-col bg-stone-50 min-h-screen">
+    <div className="flex-1 flex flex-col bg-stone-50">
       <div className="px-8 py-12 max-w-7xl mx-auto w-full space-y-12">
         
         {/* Hero / Header */}

@@ -15,6 +15,8 @@ import { ToolInterface } from './components/tools/ToolInterface';
 import { LiveCall } from './components/tools/LiveCall';
 import { LiveVideoCall } from './components/tools/LiveVideoCall';
 import { BananaDesign } from './components/tools/BananaDesign';
+import { SonicStudio } from './components/tools/SonicStudio';
+import { CinemaAI } from './components/tools/CinemaAI';
 import { NewsHub } from './components/tools/NewsHub';
 import { MapTool } from './components/tools/MapTool';
 import { AITool } from './types';
@@ -59,13 +61,17 @@ export default function App() {
         </header>
 
         <section className="flex-1 overflow-y-auto bg-white scroll-smooth relative">
-          <div className="w-full h-full min-h-full flex flex-col">
+          <div className="w-full min-h-full flex flex-col">
             {activeTool.id === 'live-call' ? (
               <LiveCall />
             ) : activeTool.id === 'live-video' ? (
               <LiveVideoCall />
             ) : activeTool.id === 'banana-design' ? (
               <BananaDesign />
+            ) : activeTool.id === 'sonic-studio' ? (
+              <SonicStudio />
+            ) : activeTool.id === 'cinema-ai' ? (
+              <CinemaAI />
             ) : activeTool.id === 'news-hub' ? (
               <NewsHub />
             ) : activeTool.id === 'maps' ? (

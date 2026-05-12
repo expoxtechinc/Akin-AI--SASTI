@@ -295,6 +295,24 @@ export const TOOLS: AITool[] = [
     placeholder: 'Upload a base image and tell me the vibe...'
   },
   {
+    id: 'sonic-studio',
+    name: 'Sonic Studio',
+    description: 'Professional AI Music Generation & Master Mastering (Free Download).',
+    category: ToolCategory.CREATIVE,
+    icon: 'Music',
+    prompt: 'You are a legendary Music Producer and Sound Engineer. Generate complex musical arrangements, lyrics, and production notes based on the user\'s genre and mood.',
+    placeholder: 'Describe your hit song (e.g., "Afrobeats with a smooth saxophone and deep bass")...'
+  },
+  {
+    id: 'cinema-ai',
+    name: 'Cinema AI',
+    description: 'Ultra-HD Video Production & Motion Synthesis.',
+    category: ToolCategory.CREATIVE,
+    icon: 'Clapperboard',
+    prompt: 'You are a Hollywood Film Director. Describe cinematic scenes, camera movements, and visual effects in extreme detail for the Cinema AI engine.',
+    placeholder: 'Describe your scene (e.g., "Drone shot of a futuristic Monrovia at sunset")...'
+  },
+  {
     id: 'maps',
     name: 'Global HQ',
     description: 'Interactive map of AkinAI\'s roots and presence.',

@@ -11,7 +11,8 @@ export enum ToolCategory {
   TECHNICAL = 'Technical',
   BUSINESS = 'Business',
   PRODUCTIVITY = 'Productivity',
-  GROWTH = 'Growth'
+  GROWTH = 'Growth',
+  EDUCATION = 'Education'
 }
 
 export interface AITool {

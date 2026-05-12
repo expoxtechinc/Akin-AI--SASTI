@@ -22,6 +22,7 @@ import { MapTool } from './components/tools/MapTool';
 import { BossLive } from './components/tools/BossLive';
 import { MedicalPro } from './components/tools/MedicalPro';
 import { IllustrationAI } from './components/tools/IllustrationAI';
+import { ScholarCam } from './components/tools/ScholarCam';
 import { AITool } from './types';
 import { TOOLS } from './constants';
 import { cn } from './lib/utils';
@@ -88,6 +89,8 @@ export default function App() {
                 <MedicalPro />
               ) : activeTool.id === 'illustrator' ? (
                 <IllustrationAI />
+              ) : activeTool.id === 'scholar-cam' ? (
+                <ScholarCam />
               ) : (
                 <ToolInterface key={activeTool.id} tool={activeTool} />
               )}

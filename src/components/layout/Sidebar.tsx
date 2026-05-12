@@ -14,7 +14,7 @@ import {
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
   Mic, Search as SearchIcon, Gamepad2, Calendar, Compass,
-  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush
+  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush, GraduationCap
 } from 'lucide-react';
 import { AITool, ToolCategory } from '../../types';
 import { TOOLS } from '../../constants';
@@ -32,7 +32,7 @@ const ICON_MAP: Record<string, any> = {
   MessageSquare, Brain, BookOpen, PenTool, Clapperboard,
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
-  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush
+  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush, GraduationCap
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -121,6 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </h3>
                 {categoryTools.map(tool => {
                   const isActive = activeToolId === tool.id;
+                  const Icon = ICON_MAP[tool.icon] || LayoutDashboard;
 
                   return (
                     <button
@@ -137,6 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       )}
                     >
                       {isActive && <div className="absolute left-0 w-1 h-4 bg-white rounded-r-full" />}
+                      <Icon size={14} className={cn(isActive ? "text-white" : "text-stone-700 group-hover:text-stone-400")} />
                       <span className="text-[13px] font-medium flex-1 text-left line-clamp-1">{tool.name}</span>
                     </button>
                   );

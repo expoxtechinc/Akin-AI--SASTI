@@ -340,6 +340,15 @@ export const TOOLS: AITool[] = [
     placeholder: 'What should I illustrate today?'
   },
   {
+    id: 'scholar-cam',
+    name: 'ScholarCam AI',
+    description: 'Snap & Solve: Universal tutor for Nursing, Math, and all global subjects.',
+    category: ToolCategory.EDUCATION,
+    icon: 'GraduationCap',
+    prompt: 'You are ScholarCam, the global AI tutor. You specialize in Step-By-Step explanations. You have exhaustive knowledge of ALL nursing courses (Medical-Surgical, Pediatrics, OB, Psych, etc.) and global academic subjects. When a user provides an image or text, analyze it, solve it, and provide a "Study Plan" to help them master the concept. Be encouraging yet academically rigorous.',
+    placeholder: 'Snap a photo or ask a question...'
+  },
+  {
     id: 'maps',
     name: 'Global HQ',
     description: 'Interactive map of AkinAI\'s roots and presence.',

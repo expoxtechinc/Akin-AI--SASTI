@@ -5,19 +5,28 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Video, VideoOff, Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Play, Camera } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Play, Camera, Zap, HeartPulse, Activity, Code, BookOpen } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
 
 const apiKey = process.env.GEMINI_API_KEY;
+
+const IconMap: Record<string, any> = {
+  HeartPulse,
+  Activity,
+  Code,
+  Zap,
+};
 
 export const LiveVideoCall: React.FC = () => {
   const [isCalling, setIsCalling] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [isAiMuted, setIsAiMuted] = useState(false);
-  const [status, setStatus] = useState<string>('Ready for Video Call');
+  const [status, setStatus] = useState<string>('Select Subject to Begin');
   const [aiTranscription, setAiTranscription] = useState<string>('');
+  const [subject, setSubject] = useState<string>('nursing');
+  const [lectureNotes, setLectureNotes] = useState<string[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,6 +38,13 @@ export const LiveVideoCall: React.FC = () => {
   const videoIntervalRef = useRef<number | null>(null);
   const nextStartTimeRef = useRef<number>(0);
 
+  const subjects = [
+    { id: 'nursing', name: 'Nursing & Ethics', icon: 'HeartPulse' },
+    { id: 'medical', name: 'Anatomy & Med-Surg', icon: 'Activity' },
+    { id: 'tech', name: 'Tech & Architecture', icon: 'Code' },
+    { id: 'general', name: 'General Problem Solving', icon: 'Zap' },
+  ];
+
   const startCall = async () => {
     if (!apiKey) {
       setStatus('API Key missing');
@@ -37,8 +53,9 @@ export const LiveVideoCall: React.FC = () => {
 
     try {
       setIsCalling(true);
-      setStatus('Connecting...');
+      setStatus('Connecting to Classroom...');
       nextStartTimeRef.current = 0;
+      setLectureNotes([]);
       
       const ai = new GoogleGenAI({ apiKey });
       
@@ -46,7 +63,7 @@ export const LiveVideoCall: React.FC = () => {
         model: "gemini-3.1-flash-live-preview",
         callbacks: {
           onopen: () => {
-            setStatus('Connected - AI is watching');
+            setStatus(`Live: ${subject.charAt(0).toUpperCase() + subject.slice(1)} Session`);
             setupStreams();
           },
           onmessage: async (message: LiveServerMessage) => {
@@ -56,7 +73,13 @@ export const LiveVideoCall: React.FC = () => {
             }
 
             const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) setAiTranscription(text);
+            if (text) {
+              setAiTranscription(text);
+              // If text is meaningful, add to notes (simplified logic)
+              if (text.length > 20) {
+                setLectureNotes(prev => [text, ...prev].slice(0, 5));
+              }
+            }
           },
           onerror: (err) => {
             console.error('Live Video API Error:', err);
@@ -73,14 +96,22 @@ export const LiveVideoCall: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
           },
-          systemInstruction: "You are Kin, the vision-enabled voice of AkinAI. You can see the user's camera feed. Be helpful, observant, and conversational. Speak clearly and maintain a steady pace for optimal clarity.",
+          systemInstruction: `You are Kin, an expert Virtual Instructor at AkinAI. 
+          Current Subject: ${subject}. 
+          Objective: Teach the student by observing their gestures and what they show you on camera.
+          Style: Educational, encouraging, and clear. 
+          Specific Instructions: 
+          - If teaching Nursing/Medical, focus on clinical accuracy and empathy.
+          - If teaching Tech, focus on architecture and logic.
+          - Use the fact that you can SEE the user to comment on their surroundings or any props they use.
+          - Speak at a steady pace for optimal clarity.`,
         },
       });
 
       sessionRef.current = session;
     } catch (error) {
       console.error(error);
-      setStatus('Failed to start video call');
+      setStatus('Failed to start session');
       setIsCalling(false);
     }
   };
@@ -199,19 +230,38 @@ export const LiveVideoCall: React.FC = () => {
           <div>
             <h3 className="text-sm font-bold text-white tracking-tight">Kin AI Virtual Classroom</h3>
             <p className={cn(
-              "text-[10px] font-bold uppercase tracking-widest",
+              "text-[10px] font-bold uppercase tracking-widest transition-colors",
               isCalling ? "text-green-400" : "text-stone-500"
             )}>
               {status}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-           <div className="h-6 px-2 rounded bg-stone-800 flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-stone-300 uppercase tracking-tighter">Live Session</span>
-           </div>
-        </div>
+        
+        {!isCalling && (
+          <div className="hidden md:flex items-center gap-2">
+            {subjects.map((sub) => {
+              const Icon = IconMap[sub.icon];
+              return (
+                <button
+                  key={sub.id}
+                  onClick={() => setSubject(sub.id)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all",
+                    subject === sub.id 
+                      ? "bg-white text-stone-900 border-white" 
+                      : "bg-stone-800 text-stone-400 border-white/5 hover:border-white/20"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon size={12} />
+                    {sub.name}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
@@ -293,9 +343,10 @@ export const LiveVideoCall: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* User / Student (Right) */}
+        {/* Student View & Whiteboard (Right Side Column) */}
         <div className="lg:w-[450px] bg-stone-950 flex flex-col relative border-l border-white/5">
-          <div className="flex-1 relative bg-black overflow-hidden group">
+          {/* User Camera Section */}
+          <div className="relative h-64 bg-black overflow-hidden group border-b border-white/5">
             <video 
               ref={videoRef} 
               autoPlay 
@@ -309,10 +360,10 @@ export const LiveVideoCall: React.FC = () => {
             
             {(!isCalling || isVideoMuted) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-600 gap-3">
-                <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center shadow-inner">
-                  <Camera size={40} />
+                <div className="w-14 h-14 bg-stone-900 rounded-full flex items-center justify-center shadow-inner">
+                  <Camera size={24} />
                 </div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Student Camera Offline</p>
+                <p className="text-[8px] font-bold uppercase tracking-[0.3em]">Student View</p>
               </div>
             )}
 
@@ -325,15 +376,52 @@ export const LiveVideoCall: React.FC = () => {
             <canvas ref={canvasRef} className="hidden" width="320" height="240" />
           </div>
 
-          {/* Controls */}
-          <div className="p-8 bg-stone-900 space-y-6">
+          {/* Virtual Whiteboard / Lecture Notes */}
+          <div className="flex-1 overflow-hidden flex flex-col bg-stone-900 shadow-inner">
+             <div className="p-4 border-b border-white/5 flex items-center gap-2 text-stone-400">
+               <BookOpen size={14} />
+               <h4 className="text-[10px] font-bold uppercase tracking-widest">Digital Whiteboard</h4>
+             </div>
+             
+             <div className="flex-1 p-6 overflow-y-auto space-y-4 scrollbar-hide">
+               {lectureNotes.length === 0 ? (
+                 <div className="h-full flex flex-col items-center justify-center text-stone-600 space-y-2 opacity-50">
+                    <BookOpen size={32} strokeWidth={1} />
+                    <p className="text-[10px] uppercase font-bold tracking-widest">Notes will appear here...</p>
+                 </div>
+               ) : (
+                 <AnimatePresence mode="popLayout">
+                   {lectureNotes.map((note, i) => (
+                     <motion.div
+                       key={i}
+                       layout
+                       initial={{ opacity: 0, x: -20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       className="p-4 bg-stone-800/50 border-l-2 border-green-500/30 rounded-r-xl"
+                     >
+                        <p className="text-xs text-stone-300 leading-relaxed">{note}</p>
+                     </motion.div>
+                   ))}
+                 </AnimatePresence>
+               )}
+             </div>
+          </div>
+
+          {/* Call Controls */}
+          <div className="p-8 bg-stone-900 border-t border-white/5 space-y-6">
+            {!isCalling && (
+                <div className="space-y-4 mb-2">
+                  <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest text-center">Ready to begin lesson?</p>
+                </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setIsMuted(!isMuted)}
                 disabled={!isCalling}
                 className={cn(
                   "flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all border",
-                  isMuted ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-stone-800 border-white/5 text-stone-300 hover:bg-stone-700"
+                  isMuted ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-stone-800 border-white/5 text-stone-300 hover:bg-stone-700 disabled:opacity-50"
                 )}
               >
                 {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
@@ -345,7 +433,7 @@ export const LiveVideoCall: React.FC = () => {
                 disabled={!isCalling}
                 className={cn(
                   "flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all border",
-                  isVideoMuted ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-stone-800 border-white/5 text-stone-300 hover:bg-stone-700"
+                  isVideoMuted ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-stone-800 border-white/5 text-stone-300 hover:bg-stone-700 disabled:opacity-50"
                 )}
               >
                 {isVideoMuted ? <VideoOff size={18} /> : <Video size={18} />}

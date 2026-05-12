@@ -102,8 +102,8 @@ export const BananaDesign: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-stone-50 flex flex-col items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-stone-200 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+    <div className="w-full flex flex-col items-center justify-start p-4 md:p-8 lg:p-12">
+      <div className="w-full max-w-5xl bg-white rounded-[40px] shadow-2xl border border-stone-200 flex flex-col md:flex-row min-h-[600px] overflow-visible">
         
         {/* Sidebar / Settings */}
         <div className="w-full md:w-80 bg-stone-900 p-8 flex flex-col justify-between text-stone-50">
@@ -184,9 +184,9 @@ export const BananaDesign: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
-                className="flex-1 flex flex-col space-y-8"
+                className="flex-1 flex flex-col space-y-6"
               >
-                <div className="flex-1 relative rounded-[32px] overflow-hidden bg-stone-100 border border-stone-200 shadow-inner group">
+                <div className="relative h-[300px] md:h-[400px] rounded-[32px] overflow-hidden bg-stone-100 border border-stone-200 shadow-inner group shrink-0">
                   <img src={originalImage!} alt="Original" className="w-full h-full object-contain" />
                   <button 
                     onClick={reset}
@@ -199,13 +199,13 @@ export const BananaDesign: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 flex flex-col">
                   <div className="relative">
                     <textarea
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Describe the transformation (e.g., 'Turn this person into a futuristic cyber-punk explorer in a neon rainforest')..."
-                      className="w-full h-32 p-6 bg-stone-50 border border-stone-200 rounded-3xl outline-none focus:ring-2 ring-yellow-400 transition-all text-stone-700 placeholder:text-stone-400 resize-none"
+                      className="w-full h-28 p-6 bg-stone-50 border border-stone-200 rounded-3xl outline-none focus:ring-2 ring-yellow-400 transition-all text-stone-700 placeholder:text-stone-400 resize-none font-medium"
                     />
                     <div className="absolute bottom-4 right-4">
                       <Sparkles className="text-yellow-400 animate-pulse" size={20} />
@@ -216,7 +216,7 @@ export const BananaDesign: React.FC = () => {
                     onClick={generateDesign}
                     disabled={isGenerating || !prompt.trim()}
                     className={cn(
-                      "w-full py-5 rounded-3xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-3",
+                      "w-full py-4 rounded-3xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-3",
                       isGenerating 
                         ? "bg-stone-200 text-stone-400 cursor-not-allowed" 
                         : "bg-stone-900 text-white hover:bg-black active:scale-[0.98]"

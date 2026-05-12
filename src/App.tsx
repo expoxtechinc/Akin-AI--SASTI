@@ -60,8 +60,8 @@ export default function App() {
           </div>
         </header>
 
-        <section className="flex-1 overflow-y-auto bg-white scroll-smooth relative">
-          <div className="w-full min-h-full flex flex-col">
+        <section className="flex-1 overflow-y-auto bg-stone-50 scroll-smooth relative customized-scrollbar">
+          <div className="w-full min-h-full flex flex-col items-stretch">
             {activeTool.id === 'live-call' ? (
               <LiveCall />
             ) : activeTool.id === 'live-video' ? (

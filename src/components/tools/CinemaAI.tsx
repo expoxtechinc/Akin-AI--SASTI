@@ -64,23 +64,23 @@ export const CinemaAI: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-stone-900 text-stone-100 pb-20">
-      <div className="px-8 py-12 max-w-7xl mx-auto w-full space-y-16">
+      <div className="px-4 py-8 md:px-8 md:py-12 max-w-7xl mx-auto w-full space-y-8 md:space-y-16">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 p-12 bg-black/40 rounded-[64px] border border-white/5 relative overflow-hidden group">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 p-6 md:p-12 bg-black/40 rounded-[32px] md:rounded-[64px] border border-white/5 relative overflow-hidden group">
            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
            <div className="space-y-4 relative z-10">
               <div className="flex items-center gap-4">
-                 <div className="p-4 bg-blue-600 rounded-3xl shadow-2xl shadow-blue-500/20">
-                    <Clapperboard size={32} className="text-white" />
+                 <div className="p-3 md:p-4 bg-blue-600 rounded-2xl md:rounded-3xl shadow-2xl shadow-blue-500/20">
+                    <Clapperboard size={24} className="text-white" />
                  </div>
                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">AkinAI Motion Lab</span>
-                    <h1 className="text-5xl font-black tracking-tighter uppercase italic">Cinema AI</h1>
+                    <span className="text-[8px] md:text-[10px] font-black text-blue-400 uppercase tracking-widest">AkinAI Motion Lab</span>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic">Cinema AI</h1>
                  </div>
               </div>
-              <p className="text-stone-400 max-w-xl text-lg font-medium leading-relaxed">
-                Transform text into cinematic reality. Precision-engineered for ultra-high definition motion synthesis and professional film grain simulation.
+              <p className="text-stone-400 max-w-xl text-sm md:text-lg font-medium leading-relaxed">
+                Transform text into cinematic reality. Precision-engineered for ultra-high definition motion synthesis.
               </p>
            </div>
            

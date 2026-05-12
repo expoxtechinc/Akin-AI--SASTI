@@ -102,50 +102,53 @@ export const BananaDesign: React.FC = () => {
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-start p-4 md:p-8 lg:p-12">
-      <div className="w-full max-w-5xl bg-white rounded-[40px] shadow-2xl border border-stone-200 flex flex-col md:flex-row min-h-[600px] overflow-visible">
+    <div className="w-full flex flex-col items-center justify-start p-3 md:p-8 lg:p-12">
+      <div className="w-full max-w-5xl bg-white rounded-[24px] md:rounded-[40px] shadow-xl border border-stone-200 flex flex-col md:flex-row overflow-hidden">
         
-        {/* Sidebar / Settings */}
-        <div className="w-full md:w-80 bg-stone-900 p-8 flex flex-col justify-between text-stone-50">
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-12">
-                <ImageIcon className="text-stone-900" size={24} />
-              </div>
-              <h2 className="text-xl font-bold tracking-tight">Banana Design</h2>
+        {/* Sidebar / Settings - Top on Mobile, Left on Desktop */}
+        <div className="w-full md:w-72 bg-stone-900 p-5 md:p-8 flex flex-row md:flex-col justify-between items-center md:items-stretch text-stone-50 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg transform -rotate-12 shrink-0">
+              <ImageIcon className="text-stone-900" size={18} />
             </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Creative Engine</label>
-                <div className="p-3 bg-stone-800 rounded-xl border border-white/5 flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                  <span className="text-xs font-medium">Nano Banana v2.0 Live</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 opacity-50 pointer-events-none">
-                <div className="p-3 bg-stone-800 rounded-xl border border-white/5 flex flex-col items-center gap-2">
-                  <Palette size={18} />
-                  <span className="text-[9px] uppercase font-bold">Palette</span>
-                </div>
-                <div className="p-3 bg-stone-800 rounded-xl border border-white/5 flex flex-col items-center gap-2">
-                  <Layout size={18} />
-                  <span className="text-[9px] uppercase font-bold">Layout</span>
-                </div>
-              </div>
-            </div>
+            <h2 className="text-base md:text-xl font-bold tracking-tight">Banana Design</h2>
           </div>
 
-          <div className="pt-8 border-t border-white/5">
-             <p className="text-[10px] text-stone-500 leading-relaxed italic">
-               "Banana Design AI uses advanced multimodal neural networks to reimagine visual content."
-             </p>
+          <div className="hidden md:block space-y-6 mt-8">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Creative Engine</label>
+              <div className="p-3 bg-stone-800 rounded-xl border border-white/5 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                <span className="text-xs font-medium">Nano Banana v2.0 Live</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 opacity-50 pointer-events-none">
+              <div className="p-3 bg-stone-800 rounded-xl border border-white/5 flex flex-col items-center gap-2">
+                <Palette size={18} />
+                <span className="text-[9px] uppercase font-bold">Palette</span>
+              </div>
+              <div className="p-3 bg-stone-800 rounded-xl border border-white/5 flex flex-col items-center gap-2">
+                <Layout size={18} />
+                <span className="text-[9px] uppercase font-bold">Layout</span>
+              </div>
+            </div>
+            
+            <div className="pt-8 border-t border-white/5">
+              <p className="text-[10px] text-stone-500 leading-relaxed italic">
+                "Banana Design AI reimagines visual content using advanced neural logic."
+              </p>
+            </div>
+          </div>
+          
+          <div className="md:hidden flex items-center gap-2">
+             <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+             <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nano v2.0</span>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-8 md:p-12 flex flex-col relative">
+        {/* Main Content Area */}
+        <div className="flex-1 p-6 md:p-12 bg-white relative">
           <AnimatePresence mode="wait">
             {step === 'upload' && (
               <motion.div

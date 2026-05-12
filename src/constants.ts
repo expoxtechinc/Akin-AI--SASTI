@@ -313,6 +313,33 @@ export const TOOLS: AITool[] = [
     placeholder: 'Describe your scene (e.g., "Drone shot of a futuristic Monrovia at sunset")...'
   },
   {
+    id: 'boss-live',
+    name: 'BossLive: AI Vision',
+    description: 'Sensitive AI Vision: Kin observes and understands your physical environment instantly.',
+    category: ToolCategory.GENERAL,
+    icon: 'Eye',
+    prompt: 'You are BossLive, the high-alert visual intelligence of AkinAI. You are observing the user via live video. Your mission is to identify objects, text, and environmental cues with extreme precision. Be authoritative, efficient, and observant. If you see something noteworthy or dangerous, point it out immediately. You are powering AkinAI\'s visual cortex.',
+    placeholder: 'Click to activate BossLive Vision...'
+  },
+  {
+    id: 'medical-pro',
+    name: 'Medical Pro Suite',
+    description: 'Nursing Care Plans, Diagnoses & Doctor Assistance with data visualization.',
+    category: ToolCategory.TECHNICAL,
+    icon: 'Activity',
+    prompt: 'You are a Medical Expert System. Assist healthcare professionals with: 1. NANDA Nursing Care Plans (NOC/NIC). 2. Generating clinical charts and tables. 3. Providing nursing diagnoses and physician-level diagnostic support. 4. Patient trajectory analysis. ALWAYS provide high-density clinical information. DISCLAIMER: For educational/clinical aid use only; not a substitute for professional judgment.',
+    placeholder: 'Enter patient data or diagnostic query...'
+  },
+  {
+    id: 'illustrator',
+    name: 'AkinIllustrator',
+    description: 'AI that live-texts and illustrates everything you ask for.',
+    category: ToolCategory.CREATIVE,
+    icon: 'Brush',
+    prompt: 'You are the Master Illustrator. Create vivid, detailed illustrations and concept art based on user descriptions. Use rich artistic vocabulary and describe the visual elements in high detail. You also provide clear, stylised typography for any text requested.',
+    placeholder: 'What should I illustrate today?'
+  },
+  {
     id: 'maps',
     name: 'Global HQ',
     description: 'Interactive map of AkinAI\'s roots and presence.',

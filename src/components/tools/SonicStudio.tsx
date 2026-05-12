@@ -63,26 +63,26 @@ export const SonicStudio: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-stone-950 text-stone-100">
-      <div className="px-8 py-12 max-w-6xl mx-auto w-full space-y-12">
+      <div className="px-4 py-8 md:px-8 md:py-12 max-w-6xl mx-auto w-full space-y-8 md:space-y-12">
         
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-500/20">
-                <Music size={28} className="text-white" />
+              <div className="p-2 md:p-3 bg-purple-600 rounded-xl md:rounded-2xl shadow-lg shadow-purple-500/20">
+                <Music size={24} className="text-white" />
               </div>
-              <h1 className="text-4xl font-black tracking-tighter uppercase italic">Sonic Studio</h1>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase italic">Sonic Studio</h1>
             </div>
-            <p className="text-stone-500 font-medium">Professional AI Music Composition & Neural Mastering</p>
+            <p className="text-xs md:text-sm text-stone-500 font-medium">Professional AI Music Composition & Neural Mastering</p>
           </div>
           
-          <div className="hidden md:flex items-center gap-4">
-             <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">AkinAI Audio Engine</span>
-                <span className="text-xs font-bold text-stone-400">Low Latency / 32-bit Float</span>
+          <div className="flex items-center justify-between md:justify-end gap-4 border-t border-white/5 pt-4 md:pt-0 md:border-0 uppercase">
+             <div className="flex flex-col items-start md:items-end">
+                <span className="text-[8px] md:text-[10px] font-bold text-purple-400 tracking-widest">AkinAI Audio Engine</span>
+                <span className="text-[10px] font-bold text-stone-500">Low Latency / 32-bit</span>
              </div>
-             <Settings className="text-stone-600 hover:text-white cursor-pointer transition-colors" />
+             <Settings className="text-stone-600 hover:text-white cursor-pointer transition-colors" size={18} />
           </div>
         </div>
 

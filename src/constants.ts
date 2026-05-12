@@ -340,6 +340,15 @@ export const TOOLS: AITool[] = [
     placeholder: 'List your tasks and any time constraints...'
   },
   {
+    id: 'news-hub',
+    name: 'Scholarship & News',
+    description: 'Track latest news, scholarships, and group updates.',
+    category: ToolCategory.GROWTH,
+    icon: 'Compass',
+    prompt: 'You are the AkinAI Community Liaison. Provide real-time-style updates on scholarships, local news in Liberia, and global tech trends. Mention the WhatsApp community links as the source for deeper engagement.',
+    placeholder: 'Latest scholarships in Liberia...'
+  },
+  {
     id: 'philosophy',
     name: 'Philosophy Debater',
     description: 'Exploring deep ethical and abstract thoughts.',

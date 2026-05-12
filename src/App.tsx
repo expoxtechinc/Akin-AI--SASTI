@@ -51,7 +51,7 @@ export default function App() {
           <div className="w-10" /> {/* Spacer */}
         </header>
 
-        <section className="flex-1 overflow-hidden bg-white">
+        <section className="flex-1 overflow-y-auto bg-white scroll-smooth cursor-default">
           {activeTool.id === 'live-call' ? (
             <LiveCall />
           ) : activeTool.id === 'live-video' ? (

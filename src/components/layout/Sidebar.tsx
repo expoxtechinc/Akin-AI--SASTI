@@ -14,7 +14,7 @@ import {
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
   Mic, Search as SearchIcon, Gamepad2, Calendar, Compass,
-  LayoutDashboard, MapPin, Video, Image
+  LayoutDashboard, MapPin, Video, Image, MessageCircle
 } from 'lucide-react';
 import { AITool, ToolCategory } from '../../types';
 import { TOOLS } from '../../constants';
@@ -32,7 +32,7 @@ const ICON_MAP: Record<string, any> = {
   MessageSquare, Brain, BookOpen, PenTool, Clapperboard,
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
-  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin, Video, Image
+  Mic, Search: SearchIcon, Gamepad2, Calendar, Compass, MapPin, Video, Image, MessageCircle
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -141,6 +141,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
+        <div className="px-6 py-4 border-t border-stone-200">
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-2">Community</h4>
+            <div className="flex flex-col gap-2">
+              <a 
+                href="https://chat.whatsapp.com/GYEGrtGA4lmD2PpFKDvRuo" 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex items-center gap-3 px-3 py-2 bg-green-50 text-green-700 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors"
+              >
+                <MessageCircle size={16} />
+                WhatsApp Group
+              </a>
+              <a 
+                href="https://whatsapp.com/channel/0029VbCYgbzL7UVcJBJGAu3u" 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex items-center gap-3 px-3 py-2 bg-stone-100 text-stone-700 rounded-xl text-xs font-bold hover:bg-stone-200 transition-colors"
+              >
+                <div className="w-4 h-4 bg-stone-900 rounded-full flex items-center justify-center text-[8px] text-white">A</div>
+                WhatsApp Channel
+              </a>
+            </div>
+          </div>
+        </div>
         <CreatorInfo />
       </motion.aside>
     </>

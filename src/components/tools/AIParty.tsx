@@ -84,11 +84,11 @@ export const AIParty: React.FC = () => {
     // Background interaction interval
     const interval = setInterval(() => {
       const idleTime = Date.now() - lastActivityRef.current;
-      // If idle for more than 25 seconds, one AI might chime in
-      if (idleTime > 25000 && !isTyping) {
+      // If idle for more than 40 seconds, one AI might chime in
+      if (idleTime > 40000 && !isTyping) {
         triggerSelfDiscussion();
       }
-    }, 5000);
+    }, 10000);
 
     // News update interval (every 10 minutes, checking for something to share)
     const newsInterval = setInterval(() => {

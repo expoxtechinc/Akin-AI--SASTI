@@ -52,6 +52,12 @@ export async function syncNewsToFeed(newsItems: NewsItem[]) {
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
+        const userId = (await import('./firebase')).auth.currentUser?.uid;
+        if (!userId) {
+          console.warn('Cannot sync news: User not logged in');
+          continue;
+        }
+
         await addDoc(collection(db, 'posts'), {
           title: item.title,
           content: item.excerpt,
@@ -59,6 +65,7 @@ export async function syncNewsToFeed(newsItems: NewsItem[]) {
           mediaUrl: item.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=800',
           source: item.source,
           link: item.link,
+          authorId: userId,
           tags: [item.category, 'auto-synced', 'live'],
           createdAt: serverTimestamp()
         });

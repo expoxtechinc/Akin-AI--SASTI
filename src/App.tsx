@@ -27,6 +27,7 @@ import { CloudArchitect } from './components/tools/CloudArchitect';
 import { Heart2Heart } from './components/tools/Heart2Heart';
 import { AIParty } from './components/tools/AIParty';
 import { GlobalCall } from './components/tools/GlobalCall';
+import { VideoDownloader } from './components/tools/VideoDownloader';
 import { Pricing } from './components/pages/Pricing';
 import { HelpSupport } from './components/pages/Support';
 import { DeveloperHub } from './components/pages/DeveloperHub';
@@ -149,6 +150,8 @@ export default function App() {
                 <AIParty />
               ) : activeTool.id === 'global-call' ? (
                 <GlobalCall />
+              ) : activeTool.id === 'video-downloader' ? (
+                <VideoDownloader />
               ) : activeTool.id === 'pricing' ? (
                 <Pricing />
               ) : activeTool.id === 'support' ? (

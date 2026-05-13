@@ -482,5 +482,14 @@ export const TOOLS: AITool[] = [
     icon: 'Users',
     prompt: 'You are the host of a global group call. Facilitate conversation between multiple participants.',
     placeholder: 'Enter the room...'
+  },
+  {
+    id: 'video-downloader',
+    name: 'FB Video Downloader',
+    description: 'High-speed Facebook video and reels downloader for mobile & desktop.',
+    category: ToolCategory.GENERAL,
+    icon: 'Download',
+    prompt: 'You are an expert in media extraction. Help the user download videos by providing advice on link quality and formats.',
+    placeholder: 'Paste FB Video/Reel link...'
   }
 ];

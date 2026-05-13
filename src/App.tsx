@@ -25,6 +25,8 @@ import { IllustrationAI } from './components/tools/IllustrationAI';
 import { ScholarCam } from './components/tools/ScholarCam';
 import { CloudArchitect } from './components/tools/CloudArchitect';
 import { Heart2Heart } from './components/tools/Heart2Heart';
+import { AIParty } from './components/tools/AIParty';
+import { GlobalCall } from './components/tools/GlobalCall';
 import { LiveFeed } from './components/tools/LiveFeed';
 import { AdOverlay } from './components/tools/AdOverlay';
 import { LandingPage } from './components/landing/LandingPage';
@@ -140,6 +142,10 @@ export default function App() {
                 <CloudArchitect tool={activeTool} />
               ) : activeTool.id === 'heart-2-heart' ? (
                 <Heart2Heart />
+              ) : activeTool.id === 'ai-party' ? (
+                <AIParty />
+              ) : activeTool.id === 'global-call' ? (
+                <GlobalCall />
               ) : (
                 <ToolInterface key={activeTool.id} tool={activeTool} />
               )}

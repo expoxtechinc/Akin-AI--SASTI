@@ -18,12 +18,31 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." }
       },
       "required": ["title", "type", "authorId", "createdAt"]
+    },
+    "GroupMessage": {
+      "title": "Group Message",
+      "description": "A message sent in the AI Party group chat.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "sender": { "type": "string" },
+        "senderId": { "type": "string" },
+        "type": { "type": "string", "enum": ["user", "ai"] },
+        "avatar": { "type": "string" },
+        "color": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "sender", "senderId", "type", "createdAt"]
     }
   },
   "firestore": {
     "/posts/{postId}": {
       "schema": "Post",
       "description": "Public stream of all content published by administrators."
+    },
+    "/group_messages/{messageId}": {
+      "schema": "GroupMessage",
+      "description": "Messages for the AI Party group chat room."
     }
   }
 }

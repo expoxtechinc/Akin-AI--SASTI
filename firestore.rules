@@ -44,6 +44,16 @@ service cloud.firestore {
         && (!('tags' in data) || (data.tags is list && data.tags.size() <= 20));
     }
 
+    function isValidGroupMessage(data) {
+      return data.keys().hasAll(['text', 'sender', 'senderId', 'type', 'createdAt'])
+        && data.keys().size() <= 7
+        && data.text is string && data.text.size() <= 1000
+        && data.sender is string && data.sender.size() <= 100
+        && data.senderId is string && data.senderId.size() <= 128
+        && data.type in ['user', 'ai']
+        && data.createdAt == request.time;
+    }
+
     match /posts/{postId} {
       // 3. Path Variable Hardening
       allow get: if isValidId(postId);
@@ -62,6 +72,14 @@ service cloud.firestore {
         );
 
       allow delete: if isVerifiedAdmin();
+    }
+
+    match /group_messages/{messageId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidGroupMessage(incoming()) && (
+        (incoming().type == 'user' && incoming().senderId == request.auth.uid) ||
+        (incoming().type == 'ai') // In a demo, we allow AI messages or would use a Cloud Function/Admin SDK
+      );
     }
   }
 }

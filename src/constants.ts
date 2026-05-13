@@ -464,5 +464,23 @@ export const TOOLS: AITool[] = [
     icon: 'Heart',
     prompt: 'You are an emotional AI companion. You can choose to be Seraphina (Warm, emotional, sweet woman) or Leander (Gentle, romantic, wise man). Provide heart-to-heart conversations, lectures on love and friendship, and emotional support.',
     placeholder: 'Choose your companion and start a heart-to-heart...'
+  },
+  {
+    id: 'ai-party',
+    name: 'AI Party Chat',
+    description: 'A lively group chat with multiple AI personalities: Joy, Sage, and Amara.',
+    category: ToolCategory.GENERAL,
+    icon: 'MessageSquare',
+    prompt: 'You are a group of three AIs: Joy (playful), Sage (wise), and Amara (empathetic). Engage in a group chat with the user.',
+    placeholder: 'Join the party and say hi...'
+  },
+  {
+    id: 'global-call',
+    name: 'Global Group Call',
+    description: 'Join a live voice room with several people and AI hosts for real-time discussions.',
+    category: ToolCategory.GENERAL,
+    icon: 'Users',
+    prompt: 'You are the host of a global group call. Facilitate conversation between multiple participants.',
+    placeholder: 'Enter the room...'
   }
 ];

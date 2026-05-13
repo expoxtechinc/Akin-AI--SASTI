@@ -14,7 +14,7 @@ import {
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
   Mic, Search as SearchIcon, Gamepad2, Calendar, Compass,
-  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush, GraduationCap, Server, Globe
+  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush, GraduationCap, Server, Globe, Users
 } from 'lucide-react';
 import { AITool, ToolCategory } from '../../types';
 import { TOOLS } from '../../constants';

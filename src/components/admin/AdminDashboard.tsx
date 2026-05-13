@@ -233,34 +233,48 @@ const PublishTab = ({ title }: { title: string }) => {
   }, []);
 
   const handlePublish = async () => {
-    if (!formData.title || !formData.description) return;
+    if (!formData.title || !formData.description) {
+      alert("Please fill in at least the title and description.");
+      return;
+    }
     
     setIsPublishing(true);
     try {
-      const postType = title.toLowerCase().includes('news') ? 'news' 
-                    : title.toLowerCase().includes('gallery') ? 'gallery'
-                    : title.toLowerCase().includes('music') ? 'music'
-                    : title.toLowerCase().includes('ads') ? 'ads'
-                    : title.toLowerCase().includes('products') ? 'products'
-                    : 'videos';
+      const typeMap: {[key: string]: string} = {
+        'news feed': 'news',
+        'media gallery': 'gallery',
+        'music streaming': 'music',
+        'ads system': 'ads',
+        'product store': 'products',
+        'video studio': 'videos'
+      };
+      
+      const postType = typeMap[title.toLowerCase()] || 'news';
 
       await addDoc(collection(db, 'posts'), {
         title: formData.title,
         content: formData.description,
         type: postType,
-        tags: formData.tags.split(',').map(t => t.trim()),
-        mediaUrl: formData.mediaUrl || `https://picsum.photos/seed/${Math.random()}/800/450`,
+        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+        mediaUrl: formData.mediaUrl || `https://picsum.photos/seed/${encodeURIComponent(formData.title || 'default')}/1200/800`,
         authorId: auth.currentUser?.uid || 'admin',
         createdAt: serverTimestamp()
       });
 
       setFormData({ title: '', description: '', tags: '', mediaUrl: '' });
-      alert(`${title} published successfully!`);
+      alert(`${title} published successfully! It's now live on the platform.`);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'posts');
     } finally {
       setIsPublishing(false);
     }
+  };
+
+  const getPlaceholder = () => {
+    if (title.toLowerCase().includes('video')) return "YouTube URL, MP4 link, or Cloudinary Video URL";
+    if (title.toLowerCase().includes('music')) return "MP3 Link or Audio Streaming URL";
+    if (title.toLowerCase().includes('gallery')) return "High-res Image URL";
+    return "Media URL (Image or Video link)";
   };
 
   return (
@@ -306,17 +320,45 @@ const PublishTab = ({ title }: { title: string }) => {
 
         <div className="space-y-6">
            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Media URL (Image/Video Link)</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">{getPlaceholder()}</label>
               <input 
                 type="text" 
                 value={formData.mediaUrl}
                 onChange={(e) => setFormData(f => ({ ...f, mediaUrl: e.target.value }))}
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://example.com/media-file.jpg"
                 className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
               />
               <div className="w-full aspect-video bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center p-8 text-center group hover:border-indigo-500/50 transition-all cursor-pointer relative overflow-hidden">
                  {formData.mediaUrl ? (
-                   <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                   <>
+                     {title.toLowerCase().includes('video') ? (
+                       <div className="absolute inset-0 bg-stone-900 flex items-center justify-center">
+                          {formData.mediaUrl.includes('youtube.com') || formData.mediaUrl.includes('youtu.be') ? (
+                            <iframe 
+                              src={formData.mediaUrl.replace('watch?v=', 'embed/').split('&')[0]} 
+                              className="w-full h-full pointer-events-none opacity-60" 
+                            />
+                          ) : (
+                            <video src={formData.mediaUrl} className="w-full h-full object-cover opacity-60" />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                             <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                                <Play size={32} />
+                             </div>
+                          </div>
+                       </div>
+                     ) : title.toLowerCase().includes('music') ? (
+                       <div className="absolute inset-0 bg-stone-900 flex flex-col items-center justify-center p-8 gap-4">
+                          <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                          <div className="w-24 h-24 bg-white/10 rounded-[32px] flex items-center justify-center text-white backdrop-blur-md">
+                             <Music size={40} />
+                          </div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 z-10">Audio Preview Active</p>
+                       </div>
+                     ) : (
+                       <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                     )}
+                   </>
                  ) : (
                    <>
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-stone-500 mb-4 group-hover:bg-indigo-500 group-hover:text-white transition-all">

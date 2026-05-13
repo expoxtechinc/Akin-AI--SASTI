@@ -25,6 +25,7 @@ import { IllustrationAI } from './components/tools/IllustrationAI';
 import { ScholarCam } from './components/tools/ScholarCam';
 import { CloudArchitect } from './components/tools/CloudArchitect';
 import { LiveFeed } from './components/tools/LiveFeed';
+import { AdOverlay } from './components/tools/AdOverlay';
 import { LandingPage } from './components/landing/LandingPage';
 import { LandingHeader } from './components/landing/LandingHeader';
 import { AuthModal } from './components/landing/AuthModal';
@@ -70,6 +71,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-stone-100 text-stone-900 font-sans selection:bg-stone-200">
+      <AdOverlay />
       <Sidebar 
         activeToolId={activeTool.id}
         onSelectTool={setActiveTool}

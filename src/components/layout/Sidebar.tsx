@@ -14,7 +14,7 @@ import {
   Cpu, Bug, Database, Mail, TrendingUp, Share2, Type,
   Languages, FileText, Zap, Calculator, Lightbulb, UserPlus,
   Mic, Search as SearchIcon, Gamepad2, Calendar, Compass,
-  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush, GraduationCap, Server, Globe, Users
+  LayoutDashboard, MapPin, Video, Image, MessageCircle, Music, Eye, Activity, Brush, GraduationCap, Server, Globe, Users, LifeBuoy
 } from 'lucide-react';
 import { AITool, ToolCategory } from '../../types';
 import { TOOLS } from '../../constants';
@@ -130,6 +130,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 py-4 space-y-8 customized-scrollbar-dark">
+          <div className="space-y-1 mb-6">
+             <h3 className="px-3 text-[9px] font-black text-stone-600 uppercase tracking-[0.2em] mb-2">
+                Main Menu
+             </h3>
+             <button
+               onClick={() => {
+                 onSelectTool(null as any);
+                 if (window.innerWidth < 1024) onToggle();
+               }}
+               className={cn(
+                 "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative",
+                 !activeToolId || activeToolId === 'dashboard' ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-900 hover:text-stone-200"
+               )}
+             >
+                <LayoutDashboard size={14} className="text-stone-700" />
+                <span className="text-[13px] font-medium">Platform Feed</span>
+             </button>
+          </div>
           {categories.map(category => {
             const categoryTools = filteredTools.filter(tool => tool.category === category);
             if (categoryTools.length === 0) return null;
@@ -168,7 +186,52 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        <div className="mt-auto p-3 bg-stone-950">
+        <div className="mt-auto p-3 bg-stone-950 border-t border-white/5">
+          <div className="space-y-1 mb-4">
+             <h3 className="px-3 text-[9px] font-black text-stone-600 uppercase tracking-[0.2em] mb-2">
+                External Hubs
+             </h3>
+             <button
+               onClick={() => {
+                 onSelectTool({ id: 'pricing', name: 'Pricing', icon: 'Tag' } as any);
+                 if (window.innerWidth < 1024) onToggle();
+               }}
+               className={cn(
+                 "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all group",
+                 activeToolId === 'pricing' ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-900 hover:text-stone-200"
+               )}
+             >
+                <TrendingUp size={14} className="text-stone-700" />
+                <span className="text-[13px] font-medium">Subscription Model</span>
+             </button>
+             <button
+               onClick={() => {
+                 onSelectTool({ id: 'support', name: 'Help & Support', icon: 'HelpCircle' } as any);
+                 if (window.innerWidth < 1024) onToggle();
+               }}
+               className={cn(
+                 "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all group",
+                 activeToolId === 'support' ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-900 hover:text-stone-200"
+               )}
+             >
+                <LifeBuoy size={14} className="text-stone-700" />
+                <span className="text-[13px] font-medium">Support Archive</span>
+             </button>
+             <button
+               onClick={() => {
+                 onSelectTool({ id: 'dev-hub', name: 'Developer Hub', icon: 'Terminal' } as any);
+                 if (window.innerWidth < 1024) onToggle();
+               }}
+               className={cn(
+                 "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all group",
+                 activeToolId === 'dev-hub' ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-900 hover:text-stone-200"
+               )}
+             >
+                <Cpu size={14} className="text-stone-700" />
+                <span className="text-[13px] font-medium">Developer Hub</span>
+             </button>
+          </div>
+
           <div className="p-3 bg-stone-900/50 rounded-xl space-y-3">
              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500/20 to-stone-800 border border-green-500/30 flex items-center justify-center">
@@ -179,7 +242,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                    <span className="text-[9px] text-stone-500">Unrestricted Creative Access</span>
                 </div>
              </div>
-             <button className="w-full py-2 bg-stone-800 text-[10px] font-bold text-white rounded-lg hover:bg-white hover:text-black transition-all uppercase tracking-widest">
+             <button 
+               onClick={() => onSelectTool({ id: 'pricing', name: 'Pricing' } as any)}
+               className="w-full py-2 bg-stone-800 text-[10px] font-bold text-white rounded-lg hover:bg-white hover:text-black transition-all uppercase tracking-widest"
+             >
                 Upgrade Engine
              </button>
           </div>

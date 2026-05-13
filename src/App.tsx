@@ -27,6 +27,9 @@ import { CloudArchitect } from './components/tools/CloudArchitect';
 import { Heart2Heart } from './components/tools/Heart2Heart';
 import { AIParty } from './components/tools/AIParty';
 import { GlobalCall } from './components/tools/GlobalCall';
+import { Pricing } from './components/pages/Pricing';
+import { HelpSupport } from './components/pages/Support';
+import { DeveloperHub } from './components/pages/DeveloperHub';
 import { LiveFeed } from './components/tools/LiveFeed';
 import { AdOverlay } from './components/tools/AdOverlay';
 import { LandingPage } from './components/landing/LandingPage';
@@ -146,6 +149,12 @@ export default function App() {
                 <AIParty />
               ) : activeTool.id === 'global-call' ? (
                 <GlobalCall />
+              ) : activeTool.id === 'pricing' ? (
+                <Pricing />
+              ) : activeTool.id === 'support' ? (
+                <HelpSupport />
+              ) : activeTool.id === 'dev-hub' ? (
+                <DeveloperHub />
               ) : (
                 <ToolInterface key={activeTool.id} tool={activeTool} />
               )}

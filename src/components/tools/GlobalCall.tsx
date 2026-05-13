@@ -26,6 +26,9 @@ import {
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
 
+import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../services/firebase';
+
 const apiKey = process.env.GEMINI_API_KEY;
 
 interface Participant {
@@ -52,11 +55,47 @@ export const GlobalCall: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState('1');
   const [status, setStatus] = useState('Standby');
+  const [messages, setMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const sessionRef = useRef<any>(null);
   const nextStartTimeRef = useRef<number>(0);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'group_messages'), orderBy('createdAt', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
+      setMessages(msgs);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isChatOpen]);
+
+  const handleSendChat = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!chatInput.trim()) return;
+    const text = chatInput;
+    setChatInput('');
+    try {
+      await addDoc(collection(db, 'group_messages'), {
+        text,
+        sender: auth.currentUser?.displayName || 'You',
+        senderId: auth.currentUser?.uid || 'user',
+        type: 'user',
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const startLiveSession = async () => {
     if (!apiKey) return;
@@ -306,26 +345,34 @@ export const GlobalCall: React.FC = () => {
                  </button>
               </div>
               <div className="flex-1 p-8 space-y-6 overflow-y-auto customized-scrollbar">
-                 <div className="flex flex-col gap-2">
-                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Leander (AI)</span>
-                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-xs text-stone-300 font-medium">
-                       Welcome everyone! Today we are exploring the emotional resonance of digital companionship.
-                    </div>
-                 </div>
-                 <div className="flex flex-col gap-2 items-end">
-                    <span className="text-[8px] font-black text-stone-500 uppercase tracking-widest">You</span>
-                    <div className="bg-indigo-600 p-4 rounded-2xl text-xs text-white font-medium">
-                       That sounds fascinating, Leander. How do we define "real" emotion in this context?
-                    </div>
-                 </div>
+                 {messages.map((msg) => (
+                   <div key={msg.id} className={cn("flex flex-col gap-2", msg.type === 'user' ? "items-end" : "items-start")}>
+                      <span className={cn("text-[8px] font-black uppercase tracking-widest", msg.type === 'user' ? "text-stone-500" : "text-indigo-400")}>
+                        {msg.sender}
+                      </span>
+                      <div className={cn(
+                        "p-4 rounded-2xl text-xs font-medium max-w-[80%]",
+                        msg.type === 'user' ? "bg-indigo-600 text-white" : "bg-white/5 border border-white/5 text-stone-300"
+                      )}>
+                         {msg.text}
+                      </div>
+                   </div>
+                 ))}
+                 <div ref={chatEndRef} />
               </div>
               <div className="p-6 bg-white/5">
-                 <div className="relative">
-                    <input type="text" placeholder="Type a message..." className="w-full bg-white/10 border-none px-6 py-4 rounded-2xl text-xs text-white font-medium focus:ring-1 focus:ring-indigo-500" />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-indigo-400 hover:text-white transition-colors">
+                 <form onSubmit={handleSendChat} className="relative">
+                    <input 
+                      type="text" 
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Type a message..." 
+                      className="w-full bg-white/10 border-none px-6 py-4 rounded-2xl text-xs text-white font-medium focus:ring-1 focus:ring-indigo-500" 
+                    />
+                    <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-indigo-400 hover:text-white transition-colors">
                        <Send size={16} />
                     </button>
-                 </div>
+                 </form>
               </div>
            </motion.div>
          )}

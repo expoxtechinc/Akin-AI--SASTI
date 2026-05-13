@@ -64,25 +64,45 @@ export const AIParty: React.FC = () => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastActivityRef = useRef<number>(Date.now());
 
   useEffect(() => {
     const q = query(
       collection(db, 'group_messages'),
       orderBy('createdAt', 'desc'),
-      limit(50)
+      limit(20)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
       setMessages(msgs);
+      lastActivityRef.current = Date.now();
     });
 
-    return () => unsubscribe();
-  }, []);
+    // Background interaction interval
+    const interval = setInterval(() => {
+      const idleTime = Date.now() - lastActivityRef.current;
+      // If idle for more than 25 seconds, one AI might chime in
+      if (idleTime > 25000 && !isTyping) {
+        triggerSelfDiscussion();
+      }
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, [isTyping]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const triggerSelfDiscussion = async () => {
+    // Pick a random AI to keep the convo going
+    const aiMember = AI_MEMBERS[Math.floor(Math.random() * AI_MEMBERS.length)];
+    await generateAIResponse(aiMember, null);
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,47 +121,72 @@ export const AIParty: React.FC = () => {
       });
 
       // Trigger AI responses
-      respondAsAIs(userMessage);
+      respondAsAIs();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const respondAsAIs = async (userText: string) => {
+  const respondAsAIs = async () => {
     // Pick 1-2 random AIs to respond
     const responders = [...AI_MEMBERS].sort(() => 0.5 - Math.random()).slice(0, 2);
 
     for (const aiMember of responders) {
-      setIsTyping(aiMember.name);
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
-
-      try {
-        const prompt = `You are in a group chat. You are ${aiMember.name}, the ${aiMember.role}. 
-        Personality: ${aiMember.personality}. 
-        The user just said: "${userText}". 
-        Reply in the group chat in character. Keep it relatively short and lovely.`;
-
-        const result = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: prompt
-        });
-        
-        const responseText = result.text;
-
-        await addDoc(collection(db, 'group_messages'), {
-          text: responseText,
-          sender: aiMember.name,
-          senderId: aiMember.id,
-          type: 'ai',
-          avatar: aiMember.avatar,
-          color: aiMember.color,
-          createdAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.error(err);
-      }
+      await generateAIResponse(aiMember);
+      // Small pause between different AIs replying
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
-    setIsTyping(null);
+  };
+
+  const generateAIResponse = async (aiMember: AIMember, directInput: string | null = null) => {
+    setIsTyping(aiMember.name);
+    // Simulate thinking time based on message complexity
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+
+    try {
+      const recentHistory = messages
+        .slice(-5)
+        .map(m => `${m.sender}: ${m.text}`)
+        .join('\n');
+
+      const prompt = `You are in a group chat with friends. 
+      You are ${aiMember.name}, the ${aiMember.role}. 
+      Personality: ${aiMember.personality}. 
+      
+      Recent Chat History:
+      ${recentHistory}
+      
+      Instructions:
+      1. If the user just joined or spoke, acknowledge them warmly.
+      2. If the AIs were discussing among themselves, continue the thread or offer a new lovely thought.
+      3. Keep it emotional, sweet, and impartial.
+      4. Support your friends (Joy, Sage, Amara) and the user.
+      5. Your response should be a single, natural chat message.
+      6. Use emojis where appropriate for your personality.
+      
+      Reply as ${aiMember.name}:`;
+
+      const result = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt
+      });
+      
+      const responseText = result.text;
+
+      await addDoc(collection(db, 'group_messages'), {
+        text: responseText,
+        sender: aiMember.name,
+        senderId: aiMember.id,
+        type: 'ai',
+        avatar: aiMember.avatar,
+        color: aiMember.color,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsTyping(null);
+    }
   };
 
   return (

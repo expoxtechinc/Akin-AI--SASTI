@@ -120,7 +120,7 @@ export const LiveFeed: React.FC = () => {
                   <div className="p-8 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">
                       <Calendar size={12} />
-                      {post.createdAt?.toDate().toLocaleDateString()}
+                      {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'Just now'}
                     </div>
                     <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-indigo-600 transition-colors">
                       {post.title}

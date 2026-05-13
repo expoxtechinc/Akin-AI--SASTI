@@ -20,7 +20,9 @@ import {
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)' 
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -73,10 +75,20 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // Connection test
 async function testConnection() {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
+    // Attempt to read a non-existent document to trigger a light-weight check
+    // We use getDocs on a non-existent collection to avoid "permission denied" errors 
+    // that might occur if security rules are strictly production-ready.
+    await getDocs(query(collection(db, '_connection_test_'), limit(1)));
+    console.log("Firebase connection established successfully.");
+  } catch (error: any) {
+    console.error("Firebase Connection Error Details:", {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    
+    if (error.message?.includes('the client is offline') || error.code === 'unavailable') {
+      console.error("Firebase appears to be offline or unreachable. Please verify that: \n1. Firestore is enabled in your Firebase Console.\n2. The Project ID 'akinai-d2a38' is correct.\n3. You have a stable internet connection.");
     }
   }
 }

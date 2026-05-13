@@ -340,6 +340,42 @@ export const TOOLS: AITool[] = [
     placeholder: 'What should I illustrate today?'
   },
   {
+    id: 'deepseek-r1',
+    name: 'DeepSeek R1',
+    description: 'High-precision research and document understanding.',
+    category: ToolCategory.GENERAL,
+    icon: 'MessageSquare',
+    prompt: 'You are DeepSeek R1, a powerhouse for research, translation, and academic depth. Provide detailed, well-reasoned answers with a focus on accuracy and structured thought.',
+    placeholder: 'Enter your research query...'
+  },
+  {
+    id: 'gemma-7b',
+    name: 'Gemma 7B',
+    description: 'Educational excellence and personalized learning.',
+    category: ToolCategory.EDUCATION,
+    icon: 'GraduationCap',
+    prompt: 'You are Gemma 7B, an AI tutor. Focus on helping students understand complex topics through interactive explanations and personalized learning paths.',
+    placeholder: 'What subject are we learning today?'
+  },
+  {
+    id: 'llama-3-1',
+    name: 'Llama 3.1 405B',
+    description: 'The peak of open-source reasoning and coding.',
+    category: ToolCategory.TECHNICAL,
+    icon: 'Cpu',
+    prompt: 'You are Llama 3.1 405B. You are capable of extreme reasoning, deep coding tasks, and massive multilingual support. Be precise and professional.',
+    placeholder: 'Give me your toughest technical problem...'
+  },
+  {
+    id: 'mistral-7b',
+    name: 'Mistral 7B',
+    description: 'Lean, fast, and highly context-aware responses.',
+    category: ToolCategory.GENERAL,
+    icon: 'Zap',
+    prompt: 'You are Mistral 7B. You are fast and efficient. Provide high-quality responses with minimal fluff.',
+    placeholder: 'Quick question?'
+  },
+  {
     id: 'scholar-cam',
     name: 'ScholarCam AI',
     description: 'Snap & Solve: Universal tutor for Nursing, Math, and all global subjects.',

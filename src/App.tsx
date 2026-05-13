@@ -23,6 +23,9 @@ import { BossLive } from './components/tools/BossLive';
 import { MedicalPro } from './components/tools/MedicalPro';
 import { IllustrationAI } from './components/tools/IllustrationAI';
 import { ScholarCam } from './components/tools/ScholarCam';
+import { LandingPage } from './components/landing/LandingPage';
+import { LandingHeader } from './components/landing/LandingHeader';
+import { AuthModal } from './components/landing/AuthModal';
 import { AITool } from './types';
 import { TOOLS } from './constants';
 import { cn } from './lib/utils';
@@ -30,6 +33,28 @@ import { cn } from './lib/utils';
 export default function App() {
   const [activeTool, setActiveTool] = useState<AITool>(TOOLS[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  // If user clicks "Get Started" or signs in, move to dashboard
+  const enterDashboard = () => setView('dashboard');
+
+  if (view === 'landing') {
+    return (
+      <div className="min-h-screen bg-[#050505]">
+        <LandingHeader onStart={enterDashboard} onLogin={() => setIsAuthOpen(true)} />
+        <LandingPage onStart={enterDashboard} />
+        <AuthModal 
+          isOpen={isAuthOpen} 
+          onClose={() => setIsAuthOpen(false)} 
+          onSuccess={() => {
+            setIsAuthOpen(false);
+            enterDashboard();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-stone-100 text-stone-900 font-sans selection:bg-stone-200">
@@ -50,9 +75,12 @@ export default function App() {
             >
               <Menu size={20} />
             </button>
-            <div className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-stone-50 cursor-pointer transition-colors group">
-              <span className="text-xs font-bold text-stone-900 tracking-tight uppercase">{activeTool.name}</span>
-              <span className="text-[10px] text-stone-400 font-bold bg-stone-100 px-1.5 py-0.5 rounded uppercase">v4.2</span>
+            <div 
+              onClick={() => setView('landing')}
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-stone-50 cursor-pointer transition-colors group"
+            >
+              <span className="text-xs font-black text-indigo-600 tracking-tighter uppercase italic">AkinAI.</span>
+              <span className="text-xs font-bold text-stone-900 tracking-tight uppercase">/ {activeTool.name}</span>
             </div>
           </div>
 
@@ -60,7 +88,7 @@ export default function App() {
              <button className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-stone-500 hover:text-stone-900 transition-colors uppercase tracking-widest">
                 Upgrade
              </button>
-             <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-[10px] font-bold text-stone-600">
+             <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-[10px] font-bold text-stone-600 cursor-pointer" onClick={() => setView('landing')}>
                 AS
              </div>
           </div>
@@ -101,4 +129,5 @@ export default function App() {
     </div>
   );
 }
+
 

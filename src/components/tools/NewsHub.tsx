@@ -3,18 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, GraduationCap, Globe, Cpu, RefreshCw, ExternalLink, Calendar, Bell, Bookmark, Share2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { GoogleGenAI } from "@google/genai";
+import { fetchLatestNews, syncNewsToFeed, NewsItem } from '../../services/newsService';
 
 const apiKey = process.env.GEMINI_API_KEY;
-
-interface NewsItem {
-  id: string;
-  title: string;
-  excerpt: string;
-  category: 'scholarship' | 'tech' | 'liberia' | 'global';
-  date: string;
-  source: string;
-  isNew?: boolean;
-}
 
 export const NewsHub: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -24,33 +15,42 @@ export const NewsHub: React.FC = () => {
   const fetchNews = async () => {
     setIsLoading(true);
     try {
-      if (!apiKey) throw new Error('API Key missing');
-      const ai = new GoogleGenAI({ apiKey });
+      const realNews = await fetchLatestNews();
       
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: {
-          parts: [{
-            text: `Generate 6 current "live" news/opportunity items for a dashboard in JSON format. 
-            Include specialized categories: 'scholarship', 'tech', 'liberia'. 
-            Focus on opportunities for students and tech enthusiasts in Liberia and West Africa.
-            Return ONLY a JSON array of objects with fields: id, title, excerpt, category, date (Day Month), source.`
-          }]
-        }
-      });
+      if (realNews.length > 0) {
+        setNews(realNews);
+        // Automatically sync to official feed
+        syncNewsToFeed(realNews);
+      } else {
+        // Fallback to Gemini if API returns nothing or fails
+        if (!apiKey) throw new Error('API Key missing');
+        const ai = new GoogleGenAI({ apiKey });
+        
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: {
+            parts: [{
+              text: `Generate 6 current "live" news/opportunity items for a dashboard in JSON format. 
+              Include specialized categories: 'scholarship', 'tech', 'liberia'. 
+              Focus on opportunities for students and tech enthusiasts in Liberia and West Africa.
+              Return ONLY a JSON array of objects with fields: id, title, excerpt, category, date (Day Month), source, link.`
+            }]
+          }
+        });
 
-      const text = response.text;
-      const jsonStart = text.indexOf('[');
-      const jsonEnd = text.lastIndexOf(']') + 1;
-      const data = JSON.parse(text.slice(jsonStart, jsonEnd));
-      setNews(data);
+        const text = response.text;
+        const jsonStart = text.indexOf('[');
+        const jsonEnd = text.lastIndexOf(']') + 1;
+        const data = JSON.parse(text.slice(jsonStart, jsonEnd));
+        setNews(data);
+      }
     } catch (err) {
       console.error('Failed to fetch news:', err);
-      // Fallback data
+      // Hard fallback
       setNews([
-        { id: '1', title: 'GEM Fellowship 2026 Open', excerpt: 'Full funding for STEM graduate degrees in the US.', category: 'scholarship', date: '12 May', source: 'AkinAI Education' },
-        { id: '2', title: '5G Expansion in Monrovia', excerpt: 'Leading telcos announce rollout of ultra-fast internet.', category: 'liberia', date: '11 May', source: 'LN Daily' },
-        { id: '3', title: 'AI Ethics Summit', excerpt: 'Global leaders convene to discuss neural safety.', category: 'tech', date: '10 May', source: 'TechCrunch' },
+        { id: '1', title: 'GEM Fellowship 2026 Open', excerpt: 'Full funding for STEM graduate degrees in the US.', category: 'scholarship', date: '12 May', source: 'AkinAI Education', link: '#' },
+        { id: '2', title: '5G Expansion in Monrovia', excerpt: 'Leading telcos announce rollout of ultra-fast internet.', category: 'liberia', date: '11 May', source: 'LN Daily', link: '#' },
+        { id: '3', title: 'AI Ethics Summit', excerpt: 'Global leaders convene to discuss neural safety.', category: 'tech', date: '10 May', source: 'TechCrunch', link: '#' },
       ]);
     } finally {
       setIsLoading(false);
@@ -59,6 +59,8 @@ export const NewsHub: React.FC = () => {
 
   useEffect(() => {
     fetchNews();
+    const interval = setInterval(fetchNews, 300000); // Auto refresh every 5 mins
+    return () => clearInterval(interval);
   }, []);
 
   const filteredNews = filter === 'all' ? news : news.filter(n => n.category === filter);
@@ -87,7 +89,7 @@ export const NewsHub: React.FC = () => {
             className="flex items-center gap-2 px-6 py-3 bg-white border border-stone-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-stone-600 hover:bg-stone-100 hover:border-stone-300 transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
             <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
-            {isLoading ? 'Fetching Feed...' : 'Sync Live Updates'}
+            {isLoading ? 'Syncing...' : 'Live Updates Active'}
           </button>
         </div>
 
@@ -122,45 +124,54 @@ export const NewsHub: React.FC = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.05 }}
-                  className="group bg-white rounded-3xl border border-stone-200 p-6 shadow-sm hover:shadow-xl hover:border-stone-300 transition-all flex flex-col justify-between"
+                  className="group bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-xl hover:border-stone-300 transition-all flex flex-col overflow-hidden"
                 >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className={cn(
-                        "p-2.5 rounded-xl",
-                        item.category === 'scholarship' ? "bg-blue-50 text-blue-600" :
-                        item.category === 'tech' ? "bg-purple-50 text-purple-600" :
-                        "bg-green-50 text-green-600"
-                      )}>
-                        <Icon size={20} />
+                  {item.image && (
+                    <div className="h-48 w-full overflow-hidden">
+                       <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                  )}
+                  <div className="p-6 flex flex-col flex-1 justify-between">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className={cn(
+                          "p-2.5 rounded-xl",
+                          item.category === 'scholarship' ? "bg-blue-50 text-blue-600" :
+                          item.category === 'tech' ? "bg-purple-50 text-purple-600" :
+                          "bg-green-50 text-green-600"
+                        )}>
+                          <Icon size={20} />
+                        </div>
+                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">
+                          {item.date}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">
-                        {item.date}
-                      </span>
+
+                      <div className="space-y-2">
+                        <a href={item.link} target="_blank" rel="noreferrer">
+                          <h3 className="text-lg font-bold text-stone-900 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">
+                            {item.title}
+                          </h3>
+                        </a>
+                         <p className="text-sm text-stone-500 leading-relaxed line-clamp-3">
+                           {item.excerpt}
+                         </p>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                       <h3 className="text-lg font-bold text-stone-900 line-clamp-2 leading-tight group-hover:text-stone-700 transition-colors">
-                         {item.title}
-                       </h3>
-                       <p className="text-sm text-stone-500 leading-relaxed line-clamp-3">
-                         {item.excerpt}
-                       </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 mt-6 border-t border-stone-100 flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Source</span>
-                      <span className="text-xs font-bold text-stone-900 tracking-tight">{item.source}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 text-stone-400 hover:text-stone-900 transition-colors">
-                        <Bookmark size={16} />
-                      </button>
-                      <button className="p-2 text-stone-400 hover:text-blue-500 transition-colors">
-                         <Share2 size={16} />
-                      </button>
+                    <div className="pt-6 mt-6 border-t border-stone-100 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Source</span>
+                        <span className="text-xs font-bold text-stone-900 tracking-tight uppercase">{item.source}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className="p-2 text-stone-400 hover:text-stone-900 transition-colors">
+                          <Bookmark size={16} />
+                        </button>
+                        <a href={item.link} target="_blank" rel="noreferrer" className="p-2 text-stone-400 hover:text-indigo-600 transition-colors">
+                           <ExternalLink size={16} />
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

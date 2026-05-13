@@ -21,6 +21,8 @@ import { cn } from '../../lib/utils';
 import { db, auth } from '../../services/firebase';
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
+import { fetchLatestNews, NewsItem } from '../../services/newsService';
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 interface AIMember {
@@ -88,15 +90,39 @@ export const AIParty: React.FC = () => {
       }
     }, 5000);
 
+    // News update interval (every 10 minutes, checking for something to share)
+    const newsInterval = setInterval(() => {
+       if (!isTyping) {
+         shareNewsUpdate();
+       }
+    }, 600000);
+
     return () => {
       unsubscribe();
       clearInterval(interval);
+      clearInterval(newsInterval);
     };
   }, [isTyping]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const shareNewsUpdate = async () => {
+    try {
+      const newsItems = await fetchLatestNews();
+      if (newsItems.length > 0) {
+        // Pick one news item
+        const item = newsItems[Math.floor(Math.random() * newsItems.length)];
+        // Pick an AI to share it (Joy likes gossip/news, Sage likes analysis)
+        const aiMember = AI_MEMBERS[Math.floor(Math.random() * AI_MEMBERS.length)];
+        
+        await generateAIResponse(aiMember, `Hey guys, I just saw this news: "${item.title}" from ${item.source}. Here is a summary: ${item.excerpt}`);
+      }
+    } catch (err) {
+      console.error('AI news update failed:', err);
+    }
+  };
 
   const triggerSelfDiscussion = async () => {
     // Pick a random AI to keep the convo going
@@ -156,6 +182,8 @@ export const AIParty: React.FC = () => {
       Recent Chat History:
       ${recentHistory}
       
+      ${directInput ? `URGENT TOPIC TO DISCUSS: ${directInput}. Please mention this or share it with the group in your unique voice.` : ''}
+
       Instructions:
       1. If the user just joined or spoke, acknowledge them warmly.
       2. If the AIs were discussing among themselves, continue the thread or offer a new lovely thought.

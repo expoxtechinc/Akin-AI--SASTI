@@ -1,0 +1,29 @@
+{
+  "entities": {
+    "Post": {
+      "title": "Post",
+      "description": "A piece of content published by an admin.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title or headline of the post." },
+        "content": { "type": "string", "description": "The main text or body of the post." },
+        "type": { 
+          "type": "string", 
+          "enum": ["news", "gallery", "music", "ads", "products", "videos"],
+          "description": "The category of the content." 
+        },
+        "mediaUrl": { "type": "string", "description": "URL to the media asset (image, video, audio)." },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "List of comma separated tags." },
+        "authorId": { "type": "string", "description": "UID of the admin who posted this." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." }
+      },
+      "required": ["title", "type", "authorId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Public stream of all content published by administrators."
+    }
+  }
+}

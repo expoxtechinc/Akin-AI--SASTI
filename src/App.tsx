@@ -24,6 +24,7 @@ import { MedicalPro } from './components/tools/MedicalPro';
 import { IllustrationAI } from './components/tools/IllustrationAI';
 import { ScholarCam } from './components/tools/ScholarCam';
 import { CloudArchitect } from './components/tools/CloudArchitect';
+import { LiveFeed } from './components/tools/LiveFeed';
 import { LandingPage } from './components/landing/LandingPage';
 import { LandingHeader } from './components/landing/LandingHeader';
 import { AuthModal } from './components/landing/AuthModal';
@@ -132,6 +133,8 @@ export default function App() {
                 <ScholarCam />
               ) : activeTool.id === 'cloud-architect' ? (
                 <CloudArchitect tool={activeTool} />
+              ) : activeTool.id === 'live-feed' ? (
+                <LiveFeed />
               ) : (
                 <ToolInterface key={activeTool.id} tool={activeTool} />
               )}

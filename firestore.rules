@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // PHASE 3 Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedAdmin() {
+      return isSignedIn() 
+        && request.auth.token.email == 'aki.sokpah.link@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprint for Post
+    function isValidPost(data) {
+      return data.keys().hasAll(['title', 'content', 'type', 'authorId', 'createdAt'])
+        && data.keys().size() <= 7 // title, content, type, mediaUrl, tags, authorId, createdAt
+        && data.title is string && data.title.size() <= 200
+        && data.content is string && data.content.size() <= 5000
+        && data.type in ['news', 'gallery', 'music', 'ads', 'products', 'videos']
+        && data.authorId == request.auth.uid
+        && data.createdAt == request.time
+        && (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 1000))
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 20));
+    }
+
+    match /posts/{postId} {
+      // 3. Path Variable Hardening
+      allow get: if isValidId(postId);
+      
+      // 8. Secure List Queries
+      allow list: if true; // Everyone can see news/media
+
+      allow create: if isVerifiedAdmin() && isValidPost(incoming());
+      
+      allow update: if isVerifiedAdmin() 
+        && isValidPost(incoming())
+        && incoming().createdAt == existing().createdAt
+        && (
+          // Action: General Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'mediaUrl', 'tags', 'type'])
+        );
+
+      allow delete: if isVerifiedAdmin();
+    }
+  }
+}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -22,9 +22,12 @@ import {
   Search,
   CheckCircle2,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { db, auth, OperationType, handleFirestoreError } from '../../services/firebase';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -115,14 +118,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 };
 
 const OverviewTab = () => {
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    posts: 0,
+    visits: '2.4M',
+    users: '84.2K',
+    revenue: '$420K'
+  });
+
+  useEffect(() => {
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(5));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setRecentPosts(posts);
+      setStats(prev => ({ ...prev, posts: snapshot.size }));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'posts'));
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="space-y-12">
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Total Visits', val: '2.4M', change: '+12%', icon: BarChart3 },
-          { label: 'Content Posts', val: '12,842', change: '+8%', icon: Newspaper },
-          { label: 'Active Users', val: '84.2K', change: '+15%', icon: Users },
-          { label: 'Revenue', val: '$420K', change: '+22%', icon: ShoppingBag },
+          { label: 'Total Visits', val: stats.visits, change: '+12%', icon: BarChart3 },
+          { label: 'Content Posts', val: recentPosts.length || stats.posts, change: '+8%', icon: Newspaper },
+          { label: 'Active Users', val: stats.users, change: '+15%', icon: Users },
+          { label: 'Revenue', val: stats.revenue, change: '+22%', icon: ShoppingBag },
         ].map((stat, i) => (
           <div key={i} className="bg-white/5 border border-white/10 p-8 rounded-[32px] space-y-4">
             <div className="flex justify-between items-start">
@@ -146,18 +168,24 @@ const OverviewTab = () => {
             <button className="text-[10px] font-black uppercase tracking-widest text-indigo-400">View All</button>
           </div>
           <div className="space-y-6">
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="flex items-center gap-4 group cursor-pointer">
+            {recentPosts.length > 0 ? recentPosts.map((post) => (
+              <div key={post.id} className="flex items-center gap-4 group cursor-pointer">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-indigo-500 transition-all">
                   <Clock size={18} className="text-stone-400 group-hover:text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-bold">New system update deployed successfully</p>
-                  <span className="text-[10px] font-bold text-stone-500 uppercase">2 hours ago</span>
+                  <p className="text-sm font-bold">Published: {post.title}</p>
+                  <span className="text-[10px] font-bold text-stone-500 uppercase">
+                    {post.createdAt?.toDate().toLocaleTimeString() || 'Just now'}
+                  </span>
                 </div>
                 <ArrowUpRight size={16} className="text-stone-600 group-hover:text-indigo-400 transition-all" />
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 text-stone-500 font-bold uppercase tracking-widest text-xs">
+                No recent activity
+              </div>
+            )}
           </div>
         </div>
 
@@ -183,6 +211,58 @@ const OverviewTab = () => {
 };
 
 const PublishTab = ({ title }: { title: string }) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    tags: '',
+    mediaUrl: ''
+  });
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'posts'), 
+      orderBy('createdAt', 'desc'), 
+      limit(6)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setRecentPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handlePublish = async () => {
+    if (!formData.title || !formData.description) return;
+    
+    setIsPublishing(true);
+    try {
+      const postType = title.toLowerCase().includes('news') ? 'news' 
+                    : title.toLowerCase().includes('gallery') ? 'gallery'
+                    : title.toLowerCase().includes('music') ? 'music'
+                    : title.toLowerCase().includes('ads') ? 'ads'
+                    : title.toLowerCase().includes('products') ? 'products'
+                    : 'videos';
+
+      await addDoc(collection(db, 'posts'), {
+        title: formData.title,
+        content: formData.description,
+        type: postType,
+        tags: formData.tags.split(',').map(t => t.trim()),
+        mediaUrl: formData.mediaUrl || `https://picsum.photos/seed/${Math.random()}/800/450`,
+        authorId: auth.currentUser?.uid || 'admin',
+        createdAt: serverTimestamp()
+      });
+
+      setFormData({ title: '', description: '', tags: '', mediaUrl: '' });
+      alert(`${title} published successfully!`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'posts');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl space-y-12">
       <div className="space-y-4">
@@ -196,6 +276,8 @@ const PublishTab = ({ title }: { title: string }) => {
               <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Title / Headline</label>
               <input 
                 type="text" 
+                value={formData.title}
+                onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))}
                 placeholder={`Enter ${title} title...`}
                 className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
               />
@@ -204,6 +286,8 @@ const PublishTab = ({ title }: { title: string }) => {
               <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Description</label>
               <textarea 
                 rows={4}
+                value={formData.description}
+                onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
                 placeholder={`Describe the ${title.toLowerCase()}...`}
                 className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm resize-none"
               />
@@ -212,6 +296,8 @@ const PublishTab = ({ title }: { title: string }) => {
               <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Category Tags</label>
               <input 
                 type="text" 
+                value={formData.tags}
+                onChange={(e) => setFormData(f => ({ ...f, tags: e.target.value }))}
                 placeholder="news, tech, music, etc. (comma separated)"
                 className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
               />
@@ -220,18 +306,36 @@ const PublishTab = ({ title }: { title: string }) => {
 
         <div className="space-y-6">
            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Upload Media</label>
-              <div className="w-full aspect-video bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center p-8 text-center group hover:border-indigo-500/50 transition-all cursor-pointer">
-                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-stone-500 mb-4 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                    <Plus size={32} />
-                 </div>
-                 <p className="text-sm font-bold text-stone-400">Click or drag to upload media files</p>
-                 <span className="text-[10px] font-bold text-stone-600 uppercase mt-2">Max Size: 500MB</span>
+              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Media URL (Image/Video Link)</label>
+              <input 
+                type="text" 
+                value={formData.mediaUrl}
+                onChange={(e) => setFormData(f => ({ ...f, mediaUrl: e.target.value }))}
+                placeholder="https://example.com/image.jpg"
+                className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
+              />
+              <div className="w-full aspect-video bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center p-8 text-center group hover:border-indigo-500/50 transition-all cursor-pointer relative overflow-hidden">
+                 {formData.mediaUrl ? (
+                   <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                 ) : (
+                   <>
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-stone-500 mb-4 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                        <Plus size={32} />
+                    </div>
+                    <p className="text-sm font-bold text-stone-400">Click or drag to upload media files</p>
+                    <span className="text-[10px] font-bold text-stone-600 uppercase mt-2">Max Size: 500MB</span>
+                   </>
+                 )}
               </div>
            </div>
            
            <div className="pt-4">
-              <button className="w-full py-6 bg-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-95 transition-all">
+              <button 
+                onClick={handlePublish}
+                disabled={isPublishing}
+                className="w-full py-6 bg-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {isPublishing ? <Loader2 className="animate-spin" /> : null}
                 Publish {title}
               </button>
            </div>
@@ -241,13 +345,17 @@ const PublishTab = ({ title }: { title: string }) => {
       <div className="border-t border-white/5 pt-12">
         <h3 className="text-xl font-black uppercase tracking-tight mb-8">Recent {title} Uploads</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-           {[1, 2, 3].map((item) => (
-             <div key={item} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden group">
-                <div className="aspect-video bg-stone-900 group-hover:scale-105 transition-transform" />
+           {recentPosts.filter(p => p.type === title.toLowerCase().split(' ')[0] || (title.toLowerCase().includes('news') && p.type === 'news')).map((post) => (
+             <div key={post.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden group">
+                <div className="aspect-video bg-stone-900 overflow-hidden">
+                   <img src={post.mediaUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
                 <div className="p-4 flex justify-between items-center">
                    <div>
-                      <h4 className="text-sm font-bold">New Post {item}</h4>
-                      <span className="text-[10px] font-bold text-stone-500">LIVE • 2h ago</span>
+                      <h4 className="text-sm font-bold truncate max-w-[150px]">{post.title}</h4>
+                      <span className="text-[10px] font-bold text-stone-500 uppercase">
+                         LIVE • {post.createdAt?.toDate().toLocaleDateString()}
+                      </span>
                    </div>
                    <CheckCircle2 size={16} className="text-green-500" />
                 </div>

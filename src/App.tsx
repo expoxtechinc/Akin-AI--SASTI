@@ -23,21 +23,28 @@ import { BossLive } from './components/tools/BossLive';
 import { MedicalPro } from './components/tools/MedicalPro';
 import { IllustrationAI } from './components/tools/IllustrationAI';
 import { ScholarCam } from './components/tools/ScholarCam';
+import { CloudArchitect } from './components/tools/CloudArchitect';
 import { LandingPage } from './components/landing/LandingPage';
 import { LandingHeader } from './components/landing/LandingHeader';
 import { AuthModal } from './components/landing/AuthModal';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AITool } from './types';
 import { TOOLS } from './constants';
 import { cn } from './lib/utils';
+import { Cloud } from 'lucide-react';
 
 export default function App() {
   const [activeTool, setActiveTool] = useState<AITool>(TOOLS[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'admin'>('landing');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // If user clicks "Get Started" or signs in, move to dashboard
   const enterDashboard = () => setView('dashboard');
+
+  if (view === 'admin') {
+    return <AdminDashboard onLogout={() => setView('landing')} />;
+  }
 
   if (view === 'landing') {
     return (
@@ -47,9 +54,13 @@ export default function App() {
         <AuthModal 
           isOpen={isAuthOpen} 
           onClose={() => setIsAuthOpen(false)} 
-          onSuccess={() => {
+          onSuccess={(isAdmin) => {
             setIsAuthOpen(false);
-            enterDashboard();
+            if (isAdmin) {
+              setView('admin');
+            } else {
+              enterDashboard();
+            }
           }}
         />
       </div>
@@ -119,6 +130,8 @@ export default function App() {
                 <IllustrationAI />
               ) : activeTool.id === 'scholar-cam' ? (
                 <ScholarCam />
+              ) : activeTool.id === 'cloud-architect' ? (
+                <CloudArchitect tool={activeTool} />
               ) : (
                 <ToolInterface key={activeTool.id} tool={activeTool} />
               )}

@@ -10,11 +10,33 @@ import { X, Mail, Lock, User, Github, ArrowRight } from 'lucide-react';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (isAdmin?: boolean) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // Check for admin credentials
+    if (email === 'aki.sokpah.link@gmail.com' && password === 'River27!A$X') {
+      onSuccess(true);
+      return;
+    }
+
+    if (mode === 'login') {
+      // For demo purposes, allow any login if not admin, but we just pass false for isAdmin
+      onSuccess(false);
+    } else {
+      // For signup, just allow it
+      onSuccess(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -41,7 +63,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               <X />
             </button>
 
-            <div className="p-12">
+            <div className="p-12 text-white">
               <div className="mb-12">
                  <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">
                    {mode === 'login' ? 'Welcome Back' : 'Create Account'}
@@ -51,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                  </p>
               </div>
 
-              <div className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === 'signup' && (
                   <div className="relative">
                      <User className="absolute left-6 top-1/2 -translate-y-1/2 text-stone-600" size={18} />
@@ -66,22 +88,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-stone-600" size={18} />
                    <input 
                      type="email" 
+                     value={email}
+                     onChange={(e) => setEmail(e.target.value)}
                      placeholder="Email Address"
                      className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
+                     required
                    />
                 </div>
                 <div className="relative">
                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-stone-600" size={18} />
                    <input 
                      type="password" 
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
                      placeholder="Password"
                      className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
+                     required
                    />
                 </div>
 
+                {error && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest">{error}</p>}
+
                 <div className="pt-4">
                    <button 
-                     onClick={onSuccess}
+                     type="submit"
                      className="w-full py-5 bg-white text-black font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                    >
                      {mode === 'login' ? 'Login' : 'Sign Up'} <ArrowRight size={18} />
@@ -96,7 +126,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-white/10 transition-all">
                    <Github size={18} /> Github Account
                 </button>
-              </div>
+              </form>
 
               <div className="mt-12 text-center">
                  <button 

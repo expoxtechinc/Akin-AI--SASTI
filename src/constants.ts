@@ -376,6 +376,15 @@ export const TOOLS: AITool[] = [
     placeholder: 'Quick question?'
   },
   {
+    id: 'cloud-architect',
+    name: 'Cloud Architect',
+    description: 'Configure and provision high-performance AI infrastructure.',
+    category: ToolCategory.TECHNICAL,
+    icon: 'Server',
+    prompt: 'You are a Cloud Solutions Architect. Help the user configure high-performance server clusters for AI workloads (Training, Inference, Dev). Provide detailed hardware recommendations and cost estimates based on their requirements for CPU, RAM, GPU, Storage, and Bandwidth.',
+    placeholder: 'Tell me your infrastructure requirements...'
+  },
+  {
     id: 'scholar-cam',
     name: 'ScholarCam AI',
     description: 'Snap & Solve: Universal tutor for Nursing, Math, and all global subjects.',

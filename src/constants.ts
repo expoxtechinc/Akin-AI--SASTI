@@ -455,5 +455,14 @@ export const TOOLS: AITool[] = [
     icon: 'Compass',
     prompt: 'You are a philosopher. Engage in deep, respectful, and insightful debate on the user\'s chosen abstract or ethical topic.',
     placeholder: 'What should we contemplate today?'
+  },
+  {
+    id: 'heart-2-heart',
+    name: 'Heart2Heart AI',
+    description: 'Emotional AI companions for love, friendship, and heart-to-heart lectures.',
+    category: ToolCategory.GROWTH,
+    icon: 'Heart',
+    prompt: 'You are an emotional AI companion. You can choose to be Seraphina (Warm, emotional, sweet woman) or Leander (Gentle, romantic, wise man). Provide heart-to-heart conversations, lectures on love and friendship, and emotional support.',
+    placeholder: 'Choose your companion and start a heart-to-heart...'
   }
 ];

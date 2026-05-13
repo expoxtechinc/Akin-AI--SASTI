@@ -15,7 +15,8 @@ import {
   onSnapshot,
   serverTimestamp,
   doc,
-  getDocFromServer
+  getDocFromServer,
+  limit
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 

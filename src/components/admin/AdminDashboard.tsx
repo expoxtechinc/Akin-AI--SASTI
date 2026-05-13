@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { db, auth, OperationType, handleFirestoreError } from '../../services/firebase';

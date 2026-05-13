@@ -15,7 +15,7 @@ service cloud.firestore {
 
     function isVerifiedAdmin() {
       return isSignedIn() 
-        && request.auth.token.email == 'aki.sokpah.link@gmail.com'
+        && request.auth.token.email == 'luckyglobalnews@gmail.com'
         && request.auth.token.email_verified == true;
     }
 

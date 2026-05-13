@@ -237,6 +237,11 @@ const PublishTab = ({ title }: { title: string }) => {
       alert("Please fill in at least the title and description.");
       return;
     }
+
+    if (!auth.currentUser) {
+      alert("You must be logged in to publish content. Please sign in again.");
+      return;
+    }
     
     setIsPublishing(true);
     try {
@@ -251,19 +256,23 @@ const PublishTab = ({ title }: { title: string }) => {
       
       const postType = typeMap[title.toLowerCase()] || 'news';
 
-      await addDoc(collection(db, 'posts'), {
+      // Ensure that we include exactly what the validation helper expects
+      const payload = {
         title: formData.title,
         content: formData.description,
         type: postType,
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
         mediaUrl: formData.mediaUrl || `https://picsum.photos/seed/${encodeURIComponent(formData.title || 'default')}/1200/800`,
-        authorId: auth.currentUser?.uid || 'admin',
+        authorId: auth.currentUser.uid,
         createdAt: serverTimestamp()
-      });
+      };
+
+      await addDoc(collection(db, 'posts'), payload);
 
       setFormData({ title: '', description: '', tags: '', mediaUrl: '' });
       alert(`${title} published successfully! It's now live on the platform.`);
     } catch (error) {
+      console.error("Publish Error:", error);
       handleFirestoreError(error, OperationType.CREATE, 'posts');
     } finally {
       setIsPublishing(false);

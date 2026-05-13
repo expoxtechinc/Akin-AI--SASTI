@@ -81,6 +81,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <X size={18} />
             </button>
           </div>
+
+          <button 
+            onClick={() => {
+              onSelectTool(TOOLS[0]); // Default to first tool as fallback
+              if (window.innerWidth < 1024) onToggle();
+            }}
+            id="sidebar-home-btn"
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-4 rounded-2xl transition-all group relative border border-white/5 bg-gradient-to-br from-indigo-600/20 to-transparent",
+              activeToolId === 'dashboard' ? "bg-indigo-600 text-white" : "text-stone-300 hover:bg-stone-900"
+            )}
+          >
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+               <Globe size={18} />
+            </div>
+            <div className="flex flex-col items-start leading-none">
+               <span className="text-xs font-black uppercase tracking-widest">Live Platform</span>
+               <span className="text-[10px] font-bold text-stone-500 uppercase mt-1">Ecosystem Hub</span>
+            </div>
+          </button>
           
           <button 
             onClick={() => onSelectTool(TOOLS[0])}

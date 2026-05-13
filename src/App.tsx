@@ -36,7 +36,7 @@ import { cn } from './lib/utils';
 import { Cloud } from 'lucide-react';
 
 export default function App() {
-  const [activeTool, setActiveTool] = useState<AITool>(TOOLS[0]);
+  const [activeTool, setActiveTool] = useState<AITool | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [view, setView] = useState<'landing' | 'dashboard' | 'admin'>('landing');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -73,8 +73,8 @@ export default function App() {
     <div className="flex h-screen bg-stone-100 text-stone-900 font-sans selection:bg-stone-200">
       <AdOverlay />
       <Sidebar 
-        activeToolId={activeTool.id}
-        onSelectTool={setActiveTool}
+        activeToolId={activeTool?.id || 'dashboard'}
+        onSelectTool={(tool) => setActiveTool(tool)}
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
@@ -90,11 +90,11 @@ export default function App() {
               <Menu size={20} />
             </button>
             <div 
-              onClick={() => setView('landing')}
+              onClick={() => setActiveTool(null)}
               className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-stone-50 cursor-pointer transition-colors group"
             >
               <span className="text-xs font-black text-indigo-600 tracking-tighter uppercase italic">AkinAI.</span>
-              <span className="text-xs font-bold text-stone-900 tracking-tight uppercase">/ {activeTool.name}</span>
+              <span className="text-xs font-bold text-stone-900 tracking-tight uppercase">/ {activeTool ? activeTool.name : 'Live Platform'}</span>
             </div>
           </div>
 
@@ -111,7 +111,9 @@ export default function App() {
         <section className="flex-1 overflow-y-auto bg-white scroll-smooth relative customized-scrollbar">
           <div className="w-full h-full max-w-6xl mx-auto flex flex-col items-center">
             <div className="w-full flex-1">
-              {activeTool.id === 'live-call' ? (
+              {!activeTool ? (
+                <LiveFeed />
+              ) : activeTool.id === 'live-call' ? (
                 <LiveCall />
               ) : activeTool.id === 'live-video' ? (
                 <LiveVideoCall />
@@ -135,8 +137,6 @@ export default function App() {
                 <ScholarCam />
               ) : activeTool.id === 'cloud-architect' ? (
                 <CloudArchitect tool={activeTool} />
-              ) : activeTool.id === 'live-feed' ? (
-                <LiveFeed />
               ) : (
                 <ToolInterface key={activeTool.id} tool={activeTool} />
               )}

@@ -385,15 +385,6 @@ export const TOOLS: AITool[] = [
     placeholder: 'Tell me your infrastructure requirements...'
   },
   {
-    id: 'live-feed',
-    name: 'Live Feed',
-    description: 'View real-time updates, news, and media from the platform.',
-    category: ToolCategory.GENERAL,
-    icon: 'Activity',
-    prompt: 'This is the Live Feed tool. It fetches real-time updates from the AkinAI platform.',
-    placeholder: ''
-  },
-  {
     id: 'scholar-cam',
     name: 'ScholarCam AI',
     description: 'Snap & Solve: Universal tutor for Nursing, Math, and all global subjects.',

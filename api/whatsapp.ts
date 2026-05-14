@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { getAIResponse } from "../src/services/geminiService.js";
+
 // This file is designed for Vercel/Serverless deployment or as a reference for the Express server
 export default async function handler(req: any, res: any) {
   // Twilio sends data as URL-encoded POST body
@@ -17,20 +19,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Attempt to call the AI Chat endpoint
-    const aiResponse = await fetch("https://akinai-official.vercel.app/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, from })
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      throw new Error(`AI API error: ${aiResponse.status} - ${errorText}`);
-    }
-
-    const data = await aiResponse.json();
-    const reply = data.reply || data.message || "My brain is a bit foggy, could you repeat that?";
+    // Call the AI Service directly
+    const reply = await getAIResponse(message);
 
     res.setHeader("Content-Type", "text/xml");
     res.status(200).send(`
@@ -43,7 +33,7 @@ export default async function handler(req: any, res: any) {
     res.setHeader("Content-Type", "text/xml");
     res.status(200).send(`
       <Response>
-        <Message>AkinAI: I'm having trouble connecting to my central brain. Please check the logs.</Message>
+        <Message>AkinAI: I'm having trouble processing your message. Please try again later.</Message>
       </Response>
     `);
   }

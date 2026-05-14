@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import twilio from 'twilio';
 import dotenv from 'dotenv';
+import { getAIResponse } from "./src/services/geminiService.js";
 
 dotenv.config();
 
@@ -53,24 +54,11 @@ async function startServer() {
   // Standalone AI Chat Route
   app.post("/api/chat", async (req, res) => {
     const { message } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) return res.status(500).json({ error: "Gemini API key missing" });
-
     try {
-       // Logic similar to api/chat.ts for matching behavior
-       const result = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({
-           contents: [{ parts: [{ text: `You are AkinAI. Reply concisely: ${message}` }] }]
-         })
-       });
-       const data = await result.json();
-       const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm thinking...";
+       const reply = await getAIResponse(message);
        res.json({ reply });
-    } catch (e) {
-       res.status(500).json({ error: "AI failed" });
+    } catch (e: any) {
+       res.status(500).json({ error: "AI failed", details: e.message });
     }
   });
 
@@ -88,19 +76,7 @@ async function startServer() {
     }
 
     try {
-      // Call the AI chat endpoint on your main Vercel app
-      const aiResponse = await fetch("https://akinai-official.vercel.app/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, from })
-      });
-
-      if (!aiResponse.ok) {
-        throw new Error(`AI API failed with status ${aiResponse.status}`);
-      }
-
-      const data = await aiResponse.json();
-      const reply = data.reply || data.message || "I'm processing, but couldn't find a direct answer.";
+      const reply = await getAIResponse(message);
 
       res.setHeader("Content-Type", "text/xml");
       res.status(200).send(`
@@ -108,12 +84,12 @@ async function startServer() {
           <Message>${reply}</Message>
         </Response>
       `);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Webhook AI Error:", error);
       res.setHeader("Content-Type", "text/xml");
       res.status(200).send(`
         <Response>
-          <Message>AkinAI Context Error: The connection to your AI brain at akinai-official was interrupted.</Message>
+          <Message>AkinAI Context Error: ${error.message}</Message>
         </Response>
       `);
     }

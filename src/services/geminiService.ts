@@ -1,72 +1,42 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import { GoogleGenAI } from "@google/genai";
+export async function getAIResponse(message: string) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not configured");
+  }
 
-const apiKey = process.env.GEMINI_API_KEY;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-if (!apiKey) {
-  console.warn("GEMINI_API_KEY is not defined in the environment.");
+  const result = await model.generateContent(
+    `You are AkinAI, a helpful and intelligent WhatsApp assistant. 
+     You provide concise, friendly, and accurate answers.
+     User message: ${message}`
+  );
+
+  const response = await result.response;
+  return response.text();
 }
 
-const ai = new GoogleGenAI({ apiKey: apiKey || "" });
-
+/**
+ * Legacy geminiService object for UI components
+ */
 export const geminiService = {
-  async generateResponse(
-    prompt: string | { text: string, inlineData?: { data: string, mimeType: string } }[], 
-    contextPrompt: string, 
-    history: { role: 'user' | 'model', parts: { text: string }[] }[] = []
-  ) {
-    if (!apiKey) {
-      throw new Error("API Key missing. Please check your environment configuration.");
-    }
+  generateResponse: async (promptParts: any[], systemPrompt: string, history: any[]) => {
+    const apiKey = process.env.GEMINI_API_KEY || (typeof window !== 'undefined' ? (window as any).GEMINI_API_KEY : '');
+    if (!apiKey) throw new Error("Gemini API Key missing");
 
-    try {
-      const model = "gemini-3-flash-preview";
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      // Flatten history and current prompt into contents
-      const contents = [
-        ...history,
-        {
-          role: 'user',
-          parts: Array.isArray(prompt) ? prompt : [{ text: prompt }]
-        }
-      ];
-      
-      const response = await ai.models.generateContent({
-        model,
-        config: {
-          systemInstruction: contextPrompt,
-        },
-        contents: contents as any,
-      });
-
-      return response.text;
-    } catch (error: any) {
-      console.error("Gemini API Error:", error);
-      if (error.message?.includes('403') || error.message?.includes('400')) {
-        throw new Error("API Key Invalid or Permission Denied. Please check your API key in Settings > Secrets.");
-      }
-      throw error;
-    }
-  },
-
-  async generateResponseStream(prompt: string, contextPrompt: string, history: any[] = []) {
-    if (!apiKey) {
-      throw new Error("API Key missing.");
-    }
-
-    const model = "gemini-3-flash-preview";
-    const chat = ai.chats.create({
-      model,
-      config: {
-        systemInstruction: contextPrompt,
-      },
-      history,
+    const chat = model.startChat({
+      history: history,
+      systemInstruction: systemPrompt
     });
 
-    return await chat.sendMessageStream({ message: prompt });
+    const result = await chat.sendMessage(promptParts);
+    const response = await result.response;
+    return response.text();
   }
 };

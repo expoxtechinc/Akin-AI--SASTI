@@ -38,7 +38,7 @@ export const WhatsAppMessenger: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     { 
       id: '1', 
-      text: "Neural Link Established. I am AkinAI - your core intelligence partner. How can I assist your evolution today?", 
+      text: "👋 Hi! I'm AkinAI, your helpful intelligence partner. I'm here to assist you with anything you need. How can I help you today?", 
       sender: 'ai', 
       timestamp: new Date() 
     }
@@ -70,20 +70,16 @@ export const WhatsAppMessenger: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const history = messages.map(msg => ({
+      const history = messages.slice(1).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }]
       }));
 
-      const sysPrompt = personality === 'creative' 
-        ? "You are AkinAI, a creative and visionary assistant. Be poetic, expansive, and highly intellectual. Use metaphors and think outside the box."
-        : "You are AkinAI, a hyper-efficient logical core. Be brief, direct, and technical. Use bullet points if necessary.";
-      
-      const response = await geminiService.generateResponse([{ text: input }], sysPrompt, history as any);
+      const response = await geminiService.generateResponse(input, history as any);
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response || "Neural synchronization failed. Please retry.",
+        text: response || "Something went wrong. Please try again.",
         sender: 'ai',
         timestamp: new Date()
       };
@@ -92,7 +88,7 @@ export const WhatsAppMessenger: React.FC = () => {
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Signal Interrupted. Failed to access neural core.",
+        text: "I'm having trouble connecting right now. Please check your connection or try again in a moment.",
         sender: 'ai',
         timestamp: new Date()
       };
@@ -114,8 +110,8 @@ export const WhatsAppMessenger: React.FC = () => {
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#050505] shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
           </div>
           <div>
-             <h2 className="text-lg font-black uppercase tracking-tight italic font-display">AkinAI_Core</h2>
-             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-green-500 animate-pulse">Sync_Active</span>
+             <h2 className="text-lg font-black uppercase tracking-tight italic font-display">AkinAI Assistant</h2>
+             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-green-500 animate-pulse">Online & Ready</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -131,9 +127,9 @@ export const WhatsAppMessenger: React.FC = () => {
       {/* Personality Chips */}
       <div className="px-6 py-4 flex gap-3 overflow-x-auto no-scrollbar z-10">
          {[
-           { id: 'concise', icon: Cpu, label: 'Logic_Core' },
-           { id: 'creative', icon: Sparkles, label: 'Visionary' },
-           { id: 'global', icon: Globe, label: 'Omniscient' }
+           { id: 'concise', icon: Cpu, label: 'Balanced' },
+           { id: 'creative', icon: Sparkles, label: 'Creative' },
+           { id: 'global', icon: Globe, label: 'Search' }
          ].map((p) => (
            <button
              key={p.id}

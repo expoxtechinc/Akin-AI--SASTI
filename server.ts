@@ -51,11 +51,31 @@ async function startServer() {
     }
   });
 
+  // News Generation Route
+  app.post("/api/news/generate", async (req, res) => {
+    try {
+       const prompt = `Generate 6 current "live" news/opportunity items for a dashboard in JSON format. 
+       Categories: 'scholarship', 'tech', 'liberia'. 
+       Focus on opportunities for students and tech enthusiasts in Liberia and West Africa.
+       Return ONLY a JSON array of objects with fields: id, title, excerpt, category, date (Day Month), source, link.`;
+       
+       const text = await getAIResponse(prompt);
+       
+       const jsonStart = text.indexOf('[');
+       const jsonEnd = text.lastIndexOf(']') + 1;
+       const data = JSON.parse(text.slice(jsonStart, jsonEnd));
+       
+       res.json(data);
+    } catch (e: any) {
+       res.status(500).json({ error: "News generation failed", details: e.message });
+    }
+  });
+
   // Standalone AI Chat Route
   app.post("/api/chat", async (req, res) => {
-    const { message } = req.body;
+    const { message, history } = req.body;
     try {
-       const reply = await getAIResponse(message);
+       const reply = await getAIResponse(message, history);
        res.json({ reply });
     } catch (e: any) {
        res.status(500).json({ error: "AI failed", details: e.message });

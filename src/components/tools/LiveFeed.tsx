@@ -97,52 +97,52 @@ const PostModal = ({ post, onClose }: { post: any; onClose: () => void }) => {
            )}
         </div>
 
-        <div className="w-full md:w-2/5 p-12 lg:p-16 flex flex-col overflow-y-auto bg-[#0A0A0A] border-l border-white/5">
+        <div className="w-full md:w-2/5 p-12 lg:p-16 flex flex-col overflow-y-auto bg-white">
            <div className="space-y-10">
               <div className="flex items-center gap-5">
-                 <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-xl shadow-indigo-600/20">AI</div>
+                 <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-xl shadow-indigo-100">AI</div>
                  <div>
-                    <h4 className="font-black uppercase tracking-tighter text-white text-lg italic">AkinAI Official</h4>
-                    <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Verified Platform Partner</p>
+                    <h4 className="font-black uppercase tracking-tighter text-stone-900 text-lg">AkinAI Official</h4>
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Verified Platform Partner</p>
                  </div>
               </div>
 
               <div className="space-y-6">
                  <div className="flex items-center gap-3">
-                    <span className="px-5 py-2 bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">
+                    <span className="px-5 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">
                        {post.type}
                     </span>
-                    <span className="text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
                        {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'Just now'}
                     </span>
                  </div>
-                 <h2 className="text-4xl font-black tracking-tighter leading-none text-white uppercase italic">
+                 <h2 className="text-4xl font-black tracking-tighter leading-none text-stone-900 uppercase italic">
                     {post.title}
                  </h2>
-                 <p className="text-stone-400 text-lg leading-relaxed font-serif italic whitespace-pre-wrap opacity-80">
+                 <p className="text-stone-500 text-lg leading-relaxed font-medium whitespace-pre-wrap">
                     {post.content}
                  </p>
               </div>
 
               <div className="flex flex-wrap gap-3">
                  {post.tags?.map((tag: string, i: number) => (
-                   <span key={i} className="px-6 py-3 bg-white/5 rounded-2xl text-[10px] font-black text-stone-500 uppercase tracking-widest border border-white/10">
+                   <span key={i} className="px-6 py-3 bg-stone-100 rounded-2xl text-[10px] font-black text-stone-500 uppercase tracking-widest border border-stone-200/50">
                      #{tag}
                    </span>
                  ))}
               </div>
 
-              <div className="grid grid-cols-3 gap-6 pt-12 border-t border-white/5">
-                 <button className="flex flex-col items-center gap-3 p-6 rounded-[32px] hover:bg-white/5 transition-all group">
-                    <Heart size={24} className="text-stone-600 group-hover:text-rose-500 transition-colors" />
+              <div className="grid grid-cols-3 gap-6 pt-12 border-t border-stone-100">
+                 <button className="flex flex-col items-center gap-3 p-6 rounded-[32px] hover:bg-stone-50 transition-all group">
+                    <Heart size={24} className="text-stone-400 group-hover:text-rose-500 transition-colors" />
                     <span className="text-[11px] font-black uppercase text-stone-500">2.4K</span>
                  </button>
-                 <button className="flex flex-col items-center gap-3 p-6 rounded-[32px] hover:bg-white/5 transition-all group">
-                    <MessageCircle size={24} className="text-stone-600 group-hover:text-indigo-600 transition-colors" />
+                 <button className="flex flex-col items-center gap-3 p-6 rounded-[32px] hover:bg-stone-50 transition-all group">
+                    <MessageCircle size={24} className="text-stone-400 group-hover:text-indigo-600 transition-colors" />
                     <span className="text-[11px] font-black uppercase text-stone-500">142</span>
                  </button>
-                 <button className="flex flex-col items-center gap-3 p-6 rounded-[32px] hover:bg-white/5 transition-all group">
-                    <Share2 size={24} className="text-stone-600 group-hover:text-white transition-colors" />
+                 <button className="flex flex-col items-center gap-3 p-6 rounded-[32px] hover:bg-stone-50 transition-all group">
+                    <Share2 size={24} className="text-stone-400 group-hover:text-stone-900 transition-colors" />
                     <span className="text-[11px] font-black uppercase text-stone-500">Share</span>
                  </button>
               </div>

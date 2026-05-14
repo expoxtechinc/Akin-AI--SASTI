@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Thermometer, Heart, FileText, Plus, Database, ChevronRight, TrendingUp, User, Clipboard, Microscope, Stethoscope, AlertCircle } from 'lucide-react';
+import { Activity, Thermometer, Heart, FileText, Plus, Database, ChevronRight, TrendingUp, User, Clipboard, Microscope, Stethoscope, AlertCircle, Video, Mic, MicOff, PhoneOff, Settings } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { ToolInterface } from './ToolInterface';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
+import { GoogleGenAI, Modality } from "@google/genai";
 
 const medicalTool = TOOLS.find(t => t.id === 'medical-pro')!;
 
@@ -22,8 +23,134 @@ const sampleVitalsData = [
   { time: '18:00', bp: 124, hr: 74, temp: 98.7 },
 ];
 
+const apiKey = process.env.GEMINI_API_KEY;
+
 export const MedicalPro: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'chat' | 'dashboard' | 'careplan'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'dashboard' | 'careplan' | 'live'>('chat');
+  
+  // Live Consultation State
+  const [isCalling, setIsCalling] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [status, setStatus] = useState<string>('Ready for Consultation');
+  const [aiTranscription, setAiTranscription] = useState<string>('');
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const sessionRef = useRef<any>(null);
+  const videoIntervalRef = useRef<number | null>(null);
+  const nextStartTimeRef = useRef<number>(0);
+
+  const startConsultation = async () => {
+    if (!apiKey) {
+      setStatus('Access Denied: Key Missing');
+      return;
+    }
+
+    try {
+      setIsCalling(true);
+      setStatus('Contacting On-Call AI Specialist...');
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const session = await ai.live.connect({
+        model: "gemini-3.1-flash-live-preview",
+        callbacks: {
+          onopen: () => {
+            setStatus('Clinical Session: ACTIVE');
+            setupStreams();
+          },
+          onmessage: async (message) => {
+            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (base64Audio) playPcmData(base64Audio);
+
+            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
+            if (text) setAiTranscription(text);
+          },
+          onclose: () => stopConsultation(),
+          onerror: () => stopConsultation(),
+        },
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } },
+          },
+          systemInstruction: "You are Dr. Kin, a clinical specialist at AkinAI. Analyze the patient's symptoms and visual presentation. Provide evidence-based clinical insights while maintaining a professional medical demeanor.",
+        }
+      });
+      sessionRef.current = session;
+    } catch (err) {
+      setIsCalling(false);
+      setStatus('Telemedicine Sync Failed');
+    }
+  };
+
+  const setupStreams = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      if (videoRef.current) videoRef.current.srcObject = stream;
+
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      processorRef.current = processor;
+
+      processor.onaudioprocess = (e) => {
+        if (isMuted || !sessionRef.current) return;
+        const inputData = e.inputBuffer.getChannelData(0);
+        const pcmData = new Int16Array(inputData.length);
+        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
+        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
+      };
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+
+      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
+    } catch (err) {
+      setStatus('AV Bridge Blocked');
+    }
+  };
+
+  const captureFrame = () => {
+    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
+    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
+    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
+  };
+
+  const playPcmData = (base64: string) => {
+    if (!audioContextRef.current) return;
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const pcm = new Int16Array(bytes.buffer);
+    const float32 = new Float32Array(pcm.length);
+    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
+    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
+    buffer.getChannelData(0).set(float32);
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    const currentTime = audioContextRef.current.currentTime;
+    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
+    source.start(nextStartTimeRef.current);
+    nextStartTimeRef.current += buffer.duration;
+  };
+
+  const stopConsultation = () => {
+    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
+    sessionRef.current?.close();
+    sessionRef.current = null;
+    if (videoRef.current?.srcObject) (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+    processorRef.current?.disconnect();
+    audioContextRef.current?.close();
+    setIsCalling(false);
+    setStatus('Consultation Ended');
+  };
   
   return (
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden">
@@ -47,6 +174,7 @@ export const MedicalPro: React.FC = () => {
              { id: 'chat', label: 'Clinical AI', icon: Activity },
              { id: 'dashboard', label: 'Surveillance', icon: TrendingUp },
              { id: 'careplan', label: 'NANDA Plans', icon: FileText },
+             { id: 'live', label: 'Live Consult', icon: Video },
            ].map((tab) => (
              <button
                key={tab.id}

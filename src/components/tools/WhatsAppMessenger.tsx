@@ -55,7 +55,7 @@ export const WhatsAppMessenger: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const creatorAvatar = "https://kommodo.ai/i/gO5HPhOr5NCy7nE7ymSo";
+  const creatorAvatar = "/file_00000000b690720abf4d5357155283f7.png";
 
   useEffect(() => {
     if (scrollRef.current) {

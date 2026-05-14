@@ -156,7 +156,7 @@ export const BossLive: React.FC = () => {
     const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
 
     sessionRef.current.sendRealtimeInput({
-      image: { data: base64Data, mimeType: 'image/jpeg' }
+      video: { data: base64Data, mimeType: 'image/jpeg' }
     });
   };
 
@@ -266,9 +266,37 @@ export const BossLive: React.FC = () => {
                    <motion.div 
                      animate={{ rotate: 360 }}
                      transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                     className="w-48 h-48 border border-red-500/20 rounded-full flex items-center justify-center"
+                     className="w-48 h-48 border border-red-500/20 rounded-full flex items-center justify-center relative"
                    >
                       <div className="w-1 h-20 bg-red-500/40 blur-[2px]" />
+                      <AnimatePresence>
+                         {detections.length > 0 && (
+                           <motion.div
+                             initial={{ opacity: 0 }}
+                             animate={{ opacity: 1 }}
+                             className="absolute inset-0"
+                           >
+                              <div className="absolute top-10 left-10 w-4 h-4 border-t border-l border-red-500 animate-pulse" />
+                              <div className="absolute bottom-10 right-10 w-4 h-4 border-b border-r border-red-500 animate-pulse" />
+                              <div className="absolute top-1/2 left-0 w-3 h-px bg-red-500/50" />
+                              <div className="absolute top-1/2 right-0 w-3 h-px bg-red-500/50" />
+                           </motion.div>
+                         )}
+                      </AnimatePresence>
+                   </motion.div>
+                   
+                   <motion.div 
+                      animate={{ 
+                        x: [0, 20, -20, 0],
+                        y: [0, -10, 10, 0],
+                        width: [120, 140, 120]
+                      }}
+                      transition={{ repeat: Infinity, duration: 5 }}
+                      className="absolute top-1/3 left-1/3 border border-red-500/40 p-1"
+                   >
+                      <div className="w-full h-full border border-red-500/20 relative">
+                         <div className="absolute -top-1 -left-1 text-[6px] text-red-500 font-bold bg-black px-1 uppercase tracking-tighter">OBJ_TRK_01</div>
+                      </div>
                    </motion.div>
                 </div>
               )}

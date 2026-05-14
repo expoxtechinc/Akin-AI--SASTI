@@ -178,7 +178,7 @@ export const LiveVideoCall: React.FC = () => {
     const base64Data = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
     sessionRef.current.sendRealtimeInput({
-      image: { data: base64Data, mimeType: 'image/jpeg' }
+      video: { data: base64Data, mimeType: 'image/jpeg' }
     });
   };
 
@@ -359,6 +359,25 @@ export const LiveVideoCall: React.FC = () => {
                 isVideoMuted || !isCalling ? "grayscale blur-xl opacity-20" : "grayscale-0 blur-0 opacity-100"
               )}
             />
+
+            {/* Educational HUD Overlays */}
+            {isCalling && !isVideoMuted && (
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 border-2 border-green-500/20 rounded-lg">
+                  <div className="absolute -top-5 left-0 bg-green-500 text-white text-[8px] px-1 font-bold rounded">AI ANALYSIS: {subject.toUpperCase()}</div>
+                </div>
+                <motion.div 
+                  animate={{ opacity: [0.2, 0.5, 0.2] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="absolute bottom-10 right-10 flex flex-col items-end gap-1"
+                >
+                  <div className="w-16 h-1 bg-green-500/30 rounded-full" />
+                  <div className="w-24 h-1 bg-green-500/30 rounded-full" />
+                  <div className="w-20 h-1 bg-green-500/30 rounded-full" />
+                </motion.div>
+                <div className="absolute inset-0 border border-green-500/5 m-4" />
+              </div>
+            )}
             
             {(!isCalling || isVideoMuted) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-600 gap-3">

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, 
@@ -41,12 +41,26 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
   onLogout
 }) => {
   const [activeTab, setActiveTab] = useState<'home' | 'explore' | 'chat' | 'profile'>('chat');
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000 * 30); // Update every 30 seconds to save cycles
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = time.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: false 
+  });
 
   return (
     <div className="flex flex-col h-screen bg-[#0A0A0A] text-white font-sans overflow-hidden max-w-md mx-auto relative border-x border-white/5 shadow-2xl">
       {/* Status Bar */}
       <div className="h-10 flex-none flex justify-between items-center px-6 pt-4 z-40">
-        <span className="text-xs font-bold tracking-tight">9:41</span>
+        <span className="text-xs font-bold tracking-tight">{formattedTime}</span>
         <div className="flex items-center gap-1.5">
            <TrendingUp size={12} className="text-stone-500" />
            <div className="flex gap-0.5">
@@ -171,7 +185,7 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
                 <div className="w-32 h-32 rounded-[48px] bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] relative z-10 overflow-hidden">
                    <div className="w-full h-full bg-[#0A0A0A] rounded-[46px] overflow-hidden">
                       <img 
-                        src="https://kommodo.ai/i/gO5HPhOr5NCy7nE7ymSo" 
+                        src="/file_00000000b690720abf4d5357155283f7.png" 
                         alt="Akin S. Sokpah" 
                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-110"
                         referrerPolicy="no-referrer"

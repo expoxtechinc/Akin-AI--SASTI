@@ -26,6 +26,15 @@ export const LiveCall: React.FC = () => {
   const sessionRef = useRef<any>(null);
   const nextStartTimeRef = useRef<number>(0);
 
+  const [selectedVoice, setSelectedVoice] = useState<string>('Zephyr');
+  
+  const voices = [
+    { id: 'Zephyr', name: 'Zephyr', description: 'Calm & Professional' },
+    { id: 'Aoede', name: 'Aoede', description: 'Warm & Melodic' },
+    { id: 'Charon', name: 'Charon', description: 'Strong & Steady' },
+    { id: 'Puck', name: 'Puck', description: 'Energetic & Bright' },
+  ];
+
   const startCall = async () => {
     if (!apiKey) {
       setStatus('API Key missing');
@@ -70,9 +79,9 @@ export const LiveCall: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedVoice } },
           },
-          systemInstruction: "You are Kin, the voice of AkinAI. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity.",
+          systemInstruction: `You are Kin, the voice of AkinAI. Your current voice identity is ${selectedVoice}. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity.`,
         },
       });
 
@@ -205,6 +214,31 @@ export const LiveCall: React.FC = () => {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {!isCalling && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap justify-center gap-3 max-w-lg"
+          >
+            {voices.map((voice) => (
+              <button
+                key={voice.id}
+                onClick={() => setSelectedVoice(voice.id)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all",
+                  selectedVoice === voice.id 
+                    ? "bg-stone-900 text-white border-stone-900 shadow-lg" 
+                    : "bg-white text-stone-500 border-stone-200 hover:border-stone-400"
+                )}
+              >
+                {voice.name}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold tracking-tight text-stone-900">AkinAI Live</h2>

@@ -210,7 +210,7 @@ export const LiveFeed: React.FC = () => {
              <div className="relative z-10 space-y-6">
                 <div className="flex items-center gap-4">
                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
-                      <img src="https://kommodo.ai/i/gO5HPhOr5NCy7nE7ymSo" alt="Akin S. Sokpah" className="w-full h-full object-cover" />
+                      <img src="/file_00000000b690720abf4d5357155283f7.png" alt="Akin S. Sokpah" className="w-full h-full object-cover" />
                    </div>
                    <div>
                       <h4 className="font-black uppercase tracking-widest text-[10px]">Akin S. Sokpah • Founder</h4>

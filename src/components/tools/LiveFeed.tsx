@@ -24,7 +24,7 @@ import { db, OperationType, handleFirestoreError } from '../../services/firebase
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { cn } from '../../lib/utils';
 import { AnimatePresence } from 'framer-motion';
-import { X, Send, Heart, MessageCircle, Share2, Volume2, Globe, ArrowRight } from 'lucide-react';
+import { X, Send, Heart, MessageCircle, Share2, Volume2, Globe, ArrowRight, Zap } from 'lucide-react';
 
 const PostModal = ({ post, onClose }: { post: any; onClose: () => void }) => {
   const isVideo = post.type === 'videos';

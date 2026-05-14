@@ -16,7 +16,8 @@ import {
   Bell,
   Settings,
   TrendingUp,
-  Cpu
+  Cpu,
+  Zap
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { AITool } from '../../types';

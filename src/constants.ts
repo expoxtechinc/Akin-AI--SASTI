@@ -500,5 +500,14 @@ export const TOOLS: AITool[] = [
     icon: 'Package',
     prompt: 'You are a CI/CD expert. Provide advice on mobile app distribution, code signing, and wireless installation protocols.',
     placeholder: 'Drop your .ipa or .apk here...'
+  },
+  {
+    id: 'whatsapp-messenger',
+    name: 'WhatsApp Business AI',
+    description: 'Enterprise-grade WhatsApp broadcast engine with template support.',
+    category: ToolCategory.GENERAL,
+    icon: 'MessageSquare',
+    prompt: 'You are a WhatsApp Business API expert. Help the user configure templates, manage opt-ins, and craft engaging business messages.',
+    placeholder: 'Enter recipient number...'
   }
 ];

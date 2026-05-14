@@ -29,6 +29,7 @@ import { AIParty } from './components/tools/AIParty';
 import { GlobalCall } from './components/tools/GlobalCall';
 import { VideoDownloader } from './components/tools/VideoDownloader';
 import { AppDistributor } from './components/tools/AppDistributor';
+import { WhatsAppMessenger } from './components/tools/WhatsAppMessenger';
 import { Pricing } from './components/pages/Pricing';
 import { HelpSupport } from './components/pages/Support';
 import { DeveloperHub } from './components/pages/DeveloperHub';
@@ -155,6 +156,8 @@ export default function App() {
                 <VideoDownloader />
               ) : activeTool.id === 'app-distributor' ? (
                 <AppDistributor />
+              ) : activeTool.id === 'whatsapp-messenger' ? (
+                <WhatsAppMessenger />
               ) : activeTool.id === 'pricing' ? (
                 <Pricing />
               ) : activeTool.id === 'support' ? (

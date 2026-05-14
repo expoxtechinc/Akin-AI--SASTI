@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, GraduationCap, Globe, Cpu, RefreshCw, ExternalLink, Calendar, Bell, Bookmark, Share2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { fetchLatestNews, syncNewsToFeed, NewsItem } from '../../services/newsService';
+import { geminiService } from '../../services/geminiService';
 
 export const NewsHub: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -18,14 +19,12 @@ export const NewsHub: React.FC = () => {
         setNews(realNews);
         syncNewsToFeed(realNews);
       } else {
-        const response = await fetch("/api/news/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-
-        if (!response.ok) throw new Error('Failed to generate news');
-        const data = await response.json();
-        setNews(data);
+        const prompt = `Generate 6 current "live" news/opportunity items for a dashboard. 
+        Categories: 'scholarship', 'tech', 'liberia'. 
+        Focus on West Africa and Liberia.`;
+        
+        const data = await geminiService.generateJson(prompt);
+        setNews(Array.isArray(data) ? data : data.news || []);
       }
     } catch (err) {
       console.error('Failed to fetch news:', err);

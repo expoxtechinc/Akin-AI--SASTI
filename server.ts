@@ -3,7 +3,6 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import twilio from 'twilio';
 import dotenv from 'dotenv';
-import { getAIResponse } from "./src/services/geminiService.js";
 
 dotenv.config();
 
@@ -51,37 +50,6 @@ async function startServer() {
     }
   });
 
-  // News Generation Route
-  app.post("/api/news/generate", async (req, res) => {
-    try {
-       const prompt = `Generate 6 current "live" news/opportunity items for a dashboard in JSON format. 
-       Categories: 'scholarship', 'tech', 'liberia'. 
-       Focus on opportunities for students and tech enthusiasts in Liberia and West Africa.
-       Return ONLY a JSON array of objects with fields: id, title, excerpt, category, date (Day Month), source, link.`;
-       
-       const text = await getAIResponse(prompt);
-       
-       const jsonStart = text.indexOf('[');
-       const jsonEnd = text.lastIndexOf(']') + 1;
-       const data = JSON.parse(text.slice(jsonStart, jsonEnd));
-       
-       res.json(data);
-    } catch (e: any) {
-       res.status(500).json({ error: "News generation failed", details: e.message });
-    }
-  });
-
-  // Standalone AI Chat Route
-  app.post("/api/chat", async (req, res) => {
-    const { message, history } = req.body;
-    try {
-       const reply = await getAIResponse(message, history);
-       res.json({ reply });
-    } catch (e: any) {
-       res.status(500).json({ error: "AI failed", details: e.message });
-    }
-  });
-
   // Twilio WhatsApp Webhook (TwiML)
   app.post("/api/whatsapp", async (req, res) => {
     // Twilio sends data in x-www-form-urlencoded format
@@ -90,29 +58,12 @@ async function startServer() {
 
     console.log(`Incoming Local Webhook from ${from}: ${message}`);
 
-    if (!message) {
-      res.setHeader("Content-Type", "text/xml");
-      return res.status(200).send('<Response><Message>No message body detected.</Message></Response>');
-    }
-
-    try {
-      const reply = await getAIResponse(message);
-
-      res.setHeader("Content-Type", "text/xml");
-      res.status(200).send(`
-        <Response>
-          <Message>${reply}</Message>
-        </Response>
-      `);
-    } catch (error: any) {
-      console.error("Webhook AI Error:", error);
-      res.setHeader("Content-Type", "text/xml");
-      res.status(200).send(`
-        <Response>
-          <Message>AkinAI Context Error: ${error.message}</Message>
-        </Response>
-      `);
-    }
+    res.setHeader("Content-Type", "text/xml");
+    res.status(200).send(`
+      <Response>
+        <Message>AkinAI: Message received. Processing is currently handled in the web interface.</Message>
+      </Response>
+    `);
   });
 
   // Vite middleware for development

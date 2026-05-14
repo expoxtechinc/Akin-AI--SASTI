@@ -75,7 +75,7 @@ export const WhatsAppMessenger: React.FC = () => {
         parts: [{ text: msg.text }]
       }));
 
-      const response = await geminiService.generateResponse(input, history as any);
+      const response = await geminiService.generateResponse(input, history as any, personality);
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -86,6 +86,7 @@ export const WhatsAppMessenger: React.FC = () => {
       
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
+      console.error("AI Communication Error:", error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "I'm having trouble connecting right now. Please check your connection or try again in a moment.",

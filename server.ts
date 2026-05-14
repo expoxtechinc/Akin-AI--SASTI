@@ -50,6 +50,30 @@ async function startServer() {
     }
   });
 
+  // Standalone AI Chat Route
+  app.post("/api/chat", async (req, res) => {
+    const { message } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) return res.status(500).json({ error: "Gemini API key missing" });
+
+    try {
+       // Logic similar to api/chat.ts for matching behavior
+       const result = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           contents: [{ parts: [{ text: `You are AkinAI. Reply concisely: ${message}` }] }]
+         })
+       });
+       const data = await result.json();
+       const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm thinking...";
+       res.json({ reply });
+    } catch (e) {
+       res.status(500).json({ error: "AI failed" });
+    }
+  });
+
   // Twilio WhatsApp Webhook (TwiML)
   app.post("/api/whatsapp", async (req, res) => {
     // Twilio sends data in x-www-form-urlencoded format

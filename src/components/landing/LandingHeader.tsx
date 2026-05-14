@@ -32,24 +32,28 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onStart, onLogin }
 
   return (
     <header className={cn(
-      "fixed top-0 inset-x-0 z-50 transition-all duration-500",
-      isScrolled ? "py-4 bg-black/80 backdrop-blur-xl border-b border-white/5" : "py-8 bg-transparent"
+      "fixed top-0 inset-x-0 z-[100] transition-all duration-700",
+      isScrolled ? "py-4 bg-[#050505]/60 backdrop-blur-2xl border-b border-white/5" : "py-10 bg-transparent"
     )}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-12">
-          <a href="#" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Zap size={20} className="text-white fill-white" />
+      <div className="max-w-[1440px] mx-auto px-8 lg:px-16 flex items-center justify-between">
+        <div className="flex items-center gap-16">
+          <a href="#" className="group flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center relative overflow-hidden group-hover:rotate-12 transition-all duration-500 shadow-lg shadow-indigo-600/30">
+               <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent" />
+               <Zap size={22} className="text-white fill-white relative z-10" />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase italic">AkinAI.</span>
+            <div className="flex flex-col -space-y-1">
+              <span className="text-2xl font-black tracking-tighter uppercase italic font-display text-glow">AkinAI.</span>
+              <span className="text-[7px] font-black uppercase tracking-[0.4em] text-indigo-500/80">Intelligence Hub</span>
+            </div>
           </a>
 
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => (
               <a 
                 key={link.label} 
                 href={link.href} 
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 hover:text-white transition-colors"
+                className="text-[9px] font-black uppercase tracking-[0.3em] text-stone-500 hover:text-white transition-all hover:tracking-[0.4em]"
                 onClick={link.label === 'Help & Support' ? onLogin : undefined}
               >
                 {link.label}
@@ -58,25 +62,31 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onStart, onLogin }
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-8">
           <button 
             onClick={onLogin}
-            className="hidden sm:block text-[10px] font-black uppercase tracking-[0.2em] text-white hover:text-indigo-400 transition-colors px-4"
+            className="hidden sm:block text-[9px] font-black uppercase tracking-[0.25em] text-stone-400 hover:text-indigo-400 transition-colors"
           >
-            Login & Sign Up
+            Terminal Login
           </button>
+          
+          <div className="h-4 w-px bg-white/10 hidden sm:block" />
+
           <button 
             onClick={onStart}
-            className="px-6 py-3 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-white/10"
+            className="group relative px-8 py-3 overflow-hidden rounded-full transition-all duration-500"
           >
-            Launched
+            <div className="absolute inset-0 bg-white group-hover:bg-indigo-500 transition-colors duration-500" />
+            <span className="relative z-10 text-black group-hover:text-white text-[9px] font-black uppercase tracking-[0.25em] transition-colors duration-500 flex items-center gap-2">
+              Launch Platform <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </span>
           </button>
           
           <button 
-            className="lg:hidden p-2 text-white"
+            className="lg:hidden p-2 text-white/50 hover:text-white transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X /> : <Menu />}
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>

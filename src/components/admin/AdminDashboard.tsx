@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
   Newspaper, 
@@ -24,11 +24,12 @@ import {
   Clock,
   ArrowUpRight,
   Loader2,
-  Play
+  Play,
+  Cpu
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { db, auth, OperationType, handleFirestoreError } from '../../services/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -52,36 +53,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-[#0A0A0A] text-white font-sans overflow-hidden max-w-md mx-auto relative border-x border-white/5 shadow-2xl">
+    <div className="flex flex-col h-screen bg-[#050505] text-white font-sans overflow-hidden max-w-md mx-auto relative border-x border-white/5 shadow-2xl bg-mesh">
       {/* Mobile-Style Status Bar Area */}
-      <div className="h-10 flex-none flex justify-between items-center px-6 pt-4">
-        <span className="text-xs font-bold tracking-tight">9:41</span>
+      <div className="h-10 flex-none flex justify-between items-center px-6 pt-4 z-50">
+        <span className="text-xs font-black tracking-tight font-display">9:41</span>
         <div className="flex items-center gap-1.5">
-           <div className="w-4 h-4 rounded-full border border-white/20" />
+           <div className="w-4 h-4 rounded-full border border-white/20 animate-pulse" />
            <div className="w-4 h-4 rounded-full border border-white/20" />
            <div className="w-4 h-4 rounded-full bg-white/20" />
         </div>
       </div>
 
       {/* Header */}
-      <header className="px-6 py-6 flex-none flex justify-between items-center">
+      <header className="px-6 py-8 flex-none flex justify-between items-center z-50">
         <div>
-          <h1 className="text-2xl font-black tracking-tight italic text-indigo-500">Admin.</h1>
-          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AkinAI Control Hub</p>
+          <h1 className="text-3xl font-black tracking-tighter italic text-indigo-500 font-display text-glow">Admin.</h1>
+          <p className="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em]">AkinAI Intelligence Hub</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="relative p-2 bg-white/5 rounded-full border border-white/10 hover:bg-white/10 transition-all">
-            <Bell size={18} className="text-stone-300" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0A0A0A]" />
+        <div className="flex items-center gap-4">
+          <button className="relative p-2.5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group">
+            <Bell size={18} className="text-stone-400 group-hover:text-white transition-colors" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#050505] shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-xs border-2 border-indigo-500/50 shadow-lg shadow-indigo-500/20">
-            AS
+          <div className="p-0.5 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-rose-500 shadow-lg shadow-indigo-500/20">
+            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-[10px] font-black border border-white/10 italic">
+              AS
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Scrollable Content */}
-      <main className="flex-1 overflow-y-auto customized-scrollbar pb-24">
+      <main className="flex-1 overflow-y-auto customized-scrollbar pb-32">
         <motion.div 
           key={activeTab}
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
@@ -98,94 +101,90 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     onClick={() => setActiveTab(item.id)}
                     className="aspect-square bg-white/5 border border-white/10 rounded-[32px] p-6 flex flex-col items-center justify-center gap-3 hover:bg-white/10 transition-all group active:scale-95"
                   >
-                    <div className={cn("p-4 rounded-2xl bg-black/40 border border-white/5 group-hover:scale-110 transition-transform", item.color)}>
-                      <item.icon size={24} />
+                    <div className={cn("p-5 rounded-[24px] bg-black/60 border border-white/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500", item.color)}>
+                      <item.icon size={28} />
                     </div>
-                    <span className="text-xs font-bold text-stone-300 uppercase tracking-widest">{item.label}</span>
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">{item.label}</span>
                   </button>
                 ))}
               </div>
 
               {/* Stats Card */}
-              <div className="bg-indigo-600 rounded-[40px] p-8 space-y-6 relative overflow-hidden shadow-2xl shadow-indigo-500/20">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <BarChart3 size={120} />
+              <div className="bg-indigo-600 rounded-[48px] p-10 space-y-8 relative overflow-hidden shadow-2xl shadow-indigo-600/30 border border-white/10">
+                <div className="absolute -top-10 -right-10 opacity-10 rotate-12 scale-150">
+                  <Cpu size={180} />
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">Weekly Performance</span>
-                  <span className="text-[10px] font-black text-green-300">+24.8%</span>
+                <div className="flex justify-between items-center relative z-10">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-indigo-50">Node_Delta_8</span>
+                  <span className="text-[10px] font-black text-green-300 bg-black/20 px-3 py-1 rounded-full">+48.2%</span>
                 </div>
-                <div>
-                  <h3 className="text-4xl font-black tracking-tighter">84.2K</h3>
-                  <p className="text-xs font-bold text-indigo-200">Active users interacting with AI</p>
+                <div className="relative z-10">
+                  <h3 className="text-5xl font-black tracking-tighter font-display italic">92.4k</h3>
+                  <p className="text-[11px] font-bold text-indigo-100/70 uppercase tracking-widest mt-1">Live AI Synchronizations</p>
                 </div>
-                <div className="h-2 w-full bg-black/20 rounded-full">
-                  <div className="h-full w-3/4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                <div className="h-2 w-full bg-black/20 rounded-full relative z-10 p-0.5 border border-white/5">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: '82%' }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="h-full bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]" 
+                  />
                 </div>
               </div>
 
               {/* Recent Activity List */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-between items-end">
-                  <h3 className="text-lg font-black tracking-tight uppercase">Recent Logs</h3>
-                  <button className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">See all</button>
+                  <h3 className="text-sm font-black tracking-widest uppercase italic font-display text-indigo-400">Security Logs</h3>
+                  <button className="text-[9px] font-bold text-stone-600 uppercase tracking-widest hover:text-white transition-colors">Archive</button>
                 </div>
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <CheckCircle2 size={16} className="text-green-500" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold">New Post: "The Future of AI"</p>
-                        <span className="text-[10px] text-stone-500 font-medium">Just now • Published</span>
-                      </div>
-                      <ArrowUpRight size={14} className="text-stone-600" />
-                    </div>
-                  ))}
+                <div className="space-y-4">
+                  <RecentActivityList />
                 </div>
               </div>
             </>
           )}
 
-          {activeTab === 'news' && <PublishTab title="News" />}
-          {activeTab === 'ads' && <PublishTab title="Ads" />}
-          {activeTab === 'gallery' && <PublishTab title="Gallery" />}
-          {activeTab === 'music' && <PublishTab title="Music" />}
-          {activeTab === 'products' && <PublishTab title="Products" />}
-          {activeTab === 'videos' && <PublishTab title="Videos" />}
+          {activeTab === 'news' && <PublishTab title="News" type="news" />}
+          {activeTab === 'ads' && <PublishTab title="Ads" type="ads" />}
+          {activeTab === 'gallery' && <PublishTab title="Gallery" type="gallery" />}
+          {activeTab === 'music' && <PublishTab title="Music" type="music" />}
+          {activeTab === 'products' && <PublishTab title="Products" type="products" />}
+          {activeTab === 'videos' && <PublishTab title="Videos" type="videos" />}
           
           {activeTab === 'settings' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-black uppercase tracking-tight">System Settings</h2>
-              <div className="space-y-3">
+            <div className="space-y-8">
+              <h2 className="text-3xl font-black uppercase tracking-tight italic font-display text-indigo-500 text-glow">System Settings</h2>
+              <div className="space-y-4">
                 {[
-                  { label: 'Cloud Database', status: 'Healthy', icon: Settings },
-                  { label: 'WhatsApp API', status: 'Connected', icon: Megaphone },
-                  { label: 'User Auth', status: 'Encrypted', icon: Users },
+                  { label: 'Neural Network', status: 'Optimal', icon: Cpu, color: 'text-indigo-400' },
+                  { label: 'Blockchain Core', status: 'Synchronized', icon: LayoutDashboard, color: 'text-purple-400' },
+                  { label: 'Secure Identity', status: 'Encrypted', icon: Users, color: 'text-rose-400' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-3xl">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-white/5 rounded-2xl text-stone-400">
-                        <item.icon size={20} />
+                  <div key={i} className="flex items-center justify-between p-6 glass rounded-3xl group hover:bg-white/10 transition-all border border-white/5">
+                    <div className="flex items-center gap-5">
+                      <div className={cn("p-4 bg-black/40 rounded-2xl group-hover:scale-110 transition-transform", item.color)}>
+                        <item.icon size={22} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold">{item.label}</p>
-                        <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">{item.status}</p>
+                        <p className="text-sm font-black italic">{item.label}</p>
+                        <p className="text-[10px] text-green-500 font-black uppercase tracking-[0.1em]">{item.status}</p>
                       </div>
                     </div>
-                    <div className="w-12 h-6 bg-indigo-600 rounded-full flex items-center px-1">
-                      <div className="w-4 h-4 bg-white rounded-full ml-auto shadow-sm" />
+                    <div className="w-12 h-6 bg-indigo-600/20 border border-indigo-500/30 rounded-full flex items-center px-1">
+                      <div className="w-4 h-4 bg-indigo-500 rounded-full ml-auto shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                     </div>
                   </div>
                 ))}
               </div>
               <button 
                 onClick={onLogout}
-                className="w-full py-5 border border-red-500/20 text-red-400 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 mt-8"
+                className="w-full py-6 mt-10 p-1 rounded-3xl bg-gradient-to-r from-red-500/20 to-transparent border border-red-500/20 shadow-xl shadow-red-500/5 group hover:from-red-500/30 transition-all"
               >
-                <LogOut size={16} />
-                Logout Session
+                <div className="flex items-center justify-center gap-3 text-red-400 font-black uppercase tracking-[0.3em] text-[10px]">
+                  <LogOut size={16} />
+                  Terminate Session
+                </div>
               </button>
             </div>
           )}
@@ -193,124 +192,76 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 inset-x-0 h-20 bg-black/80 backdrop-blur-xl border-t border-white/5 px-6 flex items-center justify-between pb-4 z-50">
+      <nav className="absolute bottom-0 inset-x-0 h-28 bg-black/40 backdrop-blur-3xl border-t border-white/5 px-8 flex items-center justify-between pb-10 z-[100]">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={cn(
-              "flex flex-col items-center gap-1 transition-all",
-              activeTab === item.id || (activeTab !== 'overview' && activeTab !== 'news' && activeTab !== 'ads' && activeTab !== 'settings' && item.id === 'overview')
-                ? "text-indigo-500 scale-110" 
-                : "text-stone-500 hover:text-stone-300"
+              "flex flex-col items-center gap-1.5 transition-all duration-300",
+              activeTab === item.id 
+                ? "text-indigo-500 scale-110 drop-shadow-[0_0_10px_rgba(99,102,241,0.8)]" 
+                : "text-stone-600 hover:text-stone-400"
             )}
           >
-            <item.icon size={20} />
-            <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
+            <div className={cn(
+              "p-2.5 rounded-2xl transition-all duration-500",
+              activeTab === item.id ? "bg-indigo-500/10 rotate-12" : ""
+            )}>
+              <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+            </div>
+            <span className="text-[8px] font-black uppercase tracking-[0.2em]">{item.label}</span>
           </button>
         ))}
       </nav>
 
       {/* Home Indicator */}
-      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/10 rounded-full z-50 shadow-sm" />
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/5 rounded-full z-50" />
     </div>
   );
 };
 
-const OverviewTab = () => {
+const RecentActivityList = () => {
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
-  const [stats, setStats] = useState({
-    posts: 0,
-    visits: '2.4M',
-    users: '84.2K',
-    revenue: '$420K'
-  });
 
   useEffect(() => {
-    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(5));
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(4));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRecentPosts(posts);
-      setStats(prev => ({ ...prev, posts: snapshot.size }));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'posts'));
-
+      setRecentPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
     return () => unsubscribe();
   }, []);
 
+  if (recentPosts.length === 0) {
+    return (
+      <div className="py-12 text-center text-stone-600 font-black uppercase tracking-widest text-[10px] italic">
+        No Activity Detected...
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Visits', val: stats.visits, change: '+12%', icon: BarChart3 },
-          { label: 'Content Posts', val: recentPosts.length || stats.posts, change: '+8%', icon: Newspaper },
-          { label: 'Active Users', val: stats.users, change: '+15%', icon: Users },
-          { label: 'Revenue', val: stats.revenue, change: '+22%', icon: ShoppingBag },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white/5 border border-white/10 p-8 rounded-[32px] space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="p-3 bg-white/10 rounded-2xl text-stone-300">
-                <stat.icon size={20} />
-              </div>
-              <span className="text-[10px] font-black text-green-400 bg-green-500/10 px-2 py-1 rounded-full">{stat.change}</span>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{stat.label}</span>
-              <h3 className="text-3xl font-black tracking-tight">{stat.val}</h3>
-            </div>
+    <>
+      {recentPosts.map((post) => (
+        <div key={post.id} className="flex items-center gap-5 glass p-5 rounded-[32px] group hover:bg-white/10 transition-all cursor-pointer">
+          <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all relative overflow-hidden">
+             <img src={post.mediaUrl} className="absolute inset-0 w-full h-full object-cover opacity-20" alt="" />
+             <CheckCircle2 size={18} className="text-indigo-500 relative z-10 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
           </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white/5 border border-white/10 p-10 rounded-[40px] space-y-8">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-black uppercase tracking-tight">Recent Activity</h3>
-            <button className="text-[10px] font-black uppercase tracking-widest text-indigo-400">View All</button>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[11px] font-black uppercase tracking-tight italic truncate">{post.title}</p>
+            <span className="text-[9px] text-stone-500 font-black uppercase tracking-widest leading-none">
+              {post.type.toUpperCase()} • {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live'}
+            </span>
           </div>
-          <div className="space-y-6">
-            {recentPosts.length > 0 ? recentPosts.map((post) => (
-              <div key={post.id} className="flex items-center gap-4 group cursor-pointer">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-indigo-500 transition-all">
-                  <Clock size={18} className="text-stone-400 group-hover:text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold">Published: {post.title}</p>
-                  <span className="text-[10px] font-bold text-stone-500 uppercase">
-                    {post.createdAt?.toDate().toLocaleTimeString() || 'Just now'}
-                  </span>
-                </div>
-                <ArrowUpRight size={16} className="text-stone-600 group-hover:text-indigo-400 transition-all" />
-              </div>
-            )) : (
-              <div className="text-center py-8 text-stone-500 font-bold uppercase tracking-widest text-xs">
-                No recent activity
-              </div>
-            )}
-          </div>
+          <ArrowUpRight size={14} className="text-stone-700" />
         </div>
-
-        <div className="bg-indigo-600 p-10 rounded-[40px] space-y-8 text-white relative overflow-hidden">
-           <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-           <h3 className="text-3xl font-black leading-tight">System Status: <br /> High Performance</h3>
-           <div className="space-y-4">
-              <div className="flex justify-between items-center transition-all">
-                 <span className="text-xs font-bold uppercase tracking-widest">Server Uptime</span>
-                 <span className="text-xl font-black uppercase tracking-tighter italic">99.99%</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/20 rounded-full">
-                 <div className="h-full w-[99.99%] bg-white rounded-full" />
-              </div>
-           </div>
-           <button className="w-full py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl">
-              Check Diagnostics
-           </button>
-        </div>
-      </div>
-    </div>
+      ))}
+    </>
   );
 };
 
-const PublishTab = ({ title }: { title: string }) => {
+const PublishTab = ({ title, type }: { title: string, type: string }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -318,51 +269,40 @@ const PublishTab = ({ title }: { title: string }) => {
     mediaUrl: ''
   });
   const [isPublishing, setIsPublishing] = useState(false);
-  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [recentUploads, setRecentUploads] = useState<any[]>([]);
 
   useEffect(() => {
     const q = query(
       collection(db, 'posts'), 
       orderBy('createdAt', 'desc'), 
-      limit(6)
+      limit(10)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setRecentPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const allPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setRecentUploads(allPosts.filter((p: any) => p.type === type));
     });
     return () => unsubscribe();
-  }, []);
+  }, [type]);
 
   const handlePublish = async () => {
     if (!formData.title || !formData.description) {
-      alert("Please fill in at least the title and description.");
+      alert("Required: Title and Description.");
       return;
     }
 
     if (!auth.currentUser) {
-      alert("You must be logged in to publish content. Please sign in again.");
+      alert("Authentication required.");
       return;
     }
     
     setIsPublishing(true);
     try {
-      const typeMap: {[key: string]: string} = {
-        'news feed': 'news',
-        'media gallery': 'gallery',
-        'music streaming': 'music',
-        'ads system': 'ads',
-        'product store': 'products',
-        'video studio': 'videos'
-      };
-      
-      const postType = typeMap[title.toLowerCase()] || 'news';
-
-      // Ensure that we include exactly what the validation helper expects
       const payload = {
         title: formData.title,
         content: formData.description,
-        type: postType,
+        type: type,
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
-        mediaUrl: formData.mediaUrl || `https://picsum.photos/seed/${encodeURIComponent(formData.title || 'default')}/1200/800`,
+        mediaUrl: formData.mediaUrl || `https://picsum.photos/seed/${encodeURIComponent(formData.title)}/1200/800`,
         authorId: auth.currentUser.uid,
         createdAt: serverTimestamp()
       };
@@ -370,148 +310,94 @@ const PublishTab = ({ title }: { title: string }) => {
       await addDoc(collection(db, 'posts'), payload);
 
       setFormData({ title: '', description: '', tags: '', mediaUrl: '' });
-      alert(`${title} published successfully! It's now live on the platform.`);
+      alert(`Success: ${title} is now synchronized.`);
     } catch (error) {
-      console.error("Publish Error:", error);
       handleFirestoreError(error, OperationType.CREATE, 'posts');
     } finally {
       setIsPublishing(false);
     }
   };
 
-  const getPlaceholder = () => {
-    if (title.toLowerCase().includes('video')) return "YouTube URL, MP4 link, or Cloudinary Video URL";
-    if (title.toLowerCase().includes('music')) return "MP3 Link or Audio Streaming URL";
-    if (title.toLowerCase().includes('gallery')) return "High-res Image URL";
-    return "Media URL (Image or Video link)";
-  };
+  const placeholderText = title.toLowerCase().includes('video') ? "MP4 / YouTube Link" : 
+                          title.toLowerCase().includes('music') ? "MP3 / Audio URL" : 
+                          "Image / Media URL";
 
   return (
-    <div className="max-w-4xl space-y-12">
+    <div className="space-y-12">
       <div className="space-y-4">
-        <h2 className="text-4xl font-black tracking-tight uppercase">Publish {title}</h2>
-        <p className="text-stone-500">Manage and publish new {title.toLowerCase()} content to the platform.</p>
+        <h2 className="text-4xl font-black tracking-tighter uppercase italic font-display text-indigo-500 text-glow">Forge {title}.</h2>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-500">Injecting new intelligence into the stream</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-           <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Title / Headline</label>
-              <input 
-                type="text" 
-                value={formData.title}
-                onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))}
-                placeholder={`Enter ${title} title...`}
-                className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
-              />
+      <div className="space-y-8">
+         <div className="space-y-3">
+            <label className="text-[9px] font-black uppercase tracking-[0.4em] text-stone-600 block pl-2">System_Headline</label>
+            <input 
+              type="text" 
+              value={formData.title}
+              onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))}
+              placeholder={`Enter ${title} title...`}
+              className="w-full bg-white/5 border border-white/10 p-6 rounded-[32px] outline-none focus:border-indigo-500/50 transition-all font-black text-xs italic"
+            />
+         </div>
+         <div className="space-y-3">
+            <label className="text-[9px] font-black uppercase tracking-[0.4em] text-stone-600 block pl-2">Neural_Description</label>
+            <textarea 
+              rows={4}
+              value={formData.description}
+              onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
+              placeholder={`Synthesize description...`}
+              className="w-full bg-white/5 border border-white/10 p-6 rounded-[32px] outline-none focus:border-indigo-500/50 transition-all font-black text-xs italic resize-none"
+            />
+         </div>
+         <div className="space-y-3 relative">
+            <label className="text-[9px] font-black uppercase tracking-[0.4em] text-stone-600 block pl-2">Media_Source</label>
+            <input 
+              type="text" 
+              value={formData.mediaUrl}
+              onChange={(e) => setFormData(f => ({ ...f, mediaUrl: e.target.value }))}
+              placeholder={placeholderText}
+              className="w-full bg-white/5 border border-white/10 p-6 rounded-[32px] outline-none focus:border-indigo-500/50 transition-all font-black text-xs italic"
+            />
+            <div className="absolute right-4 bottom-4">
+               <ImageIcon size={18} className="text-stone-700" />
+            </div>
+         </div>
+         
+         <button 
+           onClick={handlePublish}
+           disabled={isPublishing}
+           className="w-full relative group py-8 rounded-[40px] overflow-hidden transition-all duration-700"
+         >
+           <div className="absolute inset-0 bg-indigo-600 group-hover:scale-110 transition-transform duration-700" />
+           <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent" />
+           <div className="relative z-10 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.4em] text-white">
+              {isPublishing ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
+              Execute Publish
            </div>
-           <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Description</label>
-              <textarea 
-                rows={4}
-                value={formData.description}
-                onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
-                placeholder={`Describe the ${title.toLowerCase()}...`}
-                className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm resize-none"
-              />
-           </div>
-           <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Category Tags</label>
-              <input 
-                type="text" 
-                value={formData.tags}
-                onChange={(e) => setFormData(f => ({ ...f, tags: e.target.value }))}
-                placeholder="news, tech, music, etc. (comma separated)"
-                className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
-              />
-           </div>
-        </div>
-
-        <div className="space-y-6">
-           <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">{getPlaceholder()}</label>
-              <input 
-                type="text" 
-                value={formData.mediaUrl}
-                onChange={(e) => setFormData(f => ({ ...f, mediaUrl: e.target.value }))}
-                placeholder="https://example.com/media-file.jpg"
-                className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-indigo-500/50 transition-all font-bold text-sm"
-              />
-              <div className="w-full aspect-video bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center p-8 text-center group hover:border-indigo-500/50 transition-all cursor-pointer relative overflow-hidden">
-                 {formData.mediaUrl ? (
-                   <>
-                     {title.toLowerCase().includes('video') ? (
-                       <div className="absolute inset-0 bg-stone-900 flex items-center justify-center">
-                          {formData.mediaUrl.includes('youtube.com') || formData.mediaUrl.includes('youtu.be') ? (
-                            <iframe 
-                              src={formData.mediaUrl.replace('watch?v=', 'embed/').split('&')[0]} 
-                              className="w-full h-full pointer-events-none opacity-60" 
-                            />
-                          ) : (
-                            <video src={formData.mediaUrl} className="w-full h-full object-cover opacity-60" />
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                             <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                                <Play size={32} />
-                             </div>
-                          </div>
-                       </div>
-                     ) : title.toLowerCase().includes('music') ? (
-                       <div className="absolute inset-0 bg-stone-900 flex flex-col items-center justify-center p-8 gap-4">
-                          <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-20" />
-                          <div className="w-24 h-24 bg-white/10 rounded-[32px] flex items-center justify-center text-white backdrop-blur-md">
-                             <Music size={40} />
-                          </div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 z-10">Audio Preview Active</p>
-                       </div>
-                     ) : (
-                       <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
-                     )}
-                   </>
-                 ) : (
-                   <>
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-stone-500 mb-4 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                        <Plus size={32} />
-                    </div>
-                    <p className="text-sm font-bold text-stone-400">Click or drag to upload media files</p>
-                    <span className="text-[10px] font-bold text-stone-600 uppercase mt-2">Max Size: 500MB</span>
-                   </>
-                 )}
-              </div>
-           </div>
-           
-           <div className="pt-4">
-              <button 
-                onClick={handlePublish}
-                disabled={isPublishing}
-                className="w-full py-6 bg-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-              >
-                {isPublishing ? <Loader2 className="animate-spin" /> : null}
-                Publish {title}
-              </button>
-           </div>
-        </div>
+         </button>
       </div>
 
-      <div className="border-t border-white/5 pt-12">
-        <h3 className="text-xl font-black uppercase tracking-tight mb-8">Recent {title} Uploads</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-           {recentPosts.filter(p => p.type === title.toLowerCase().split(' ')[0] || (title.toLowerCase().includes('news') && p.type === 'news')).map((post) => (
-             <div key={post.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden group">
-                <div className="aspect-video bg-stone-900 overflow-hidden">
-                   <img src={post.mediaUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div className="p-4 flex justify-between items-center">
-                   <div>
-                      <h4 className="text-sm font-bold truncate max-w-[150px]">{post.title}</h4>
-                      <span className="text-[10px] font-bold text-stone-500 uppercase">
-                         LIVE • {post.createdAt?.toDate().toLocaleDateString()}
-                      </span>
+      <div className="pt-8 border-t border-white/5 space-y-8">
+        <h3 className="text-sm font-black uppercase tracking-[0.3em] font-display text-indigo-400">Stream Archive</h3>
+        <div className="grid grid-cols-2 gap-4 pb-12">
+           {recentUploads.map((post) => (
+             <div key={post.id} className="glass rounded-[32px] overflow-hidden group border border-white/5">
+                <div className="aspect-[4/3] relative">
+                   <img src={post.mediaUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
+                   <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-[10px] font-black uppercase tracking-tight truncate leading-none mb-1">{post.title}</p>
+                      <span className="text-[8px] font-bold text-stone-500 uppercase tracking-widest">Live • Verified</span>
                    </div>
-                   <CheckCircle2 size={16} className="text-green-500" />
                 </div>
              </div>
            ))}
+           {recentUploads.length === 0 && (
+             <div className="col-span-2 py-10 text-center text-[9px] font-black uppercase tracking-[0.4em] text-stone-700 italic border border-white/5 rounded-[32px]">
+                Fragment Null: No Data Found
+             </div>
+           )}
         </div>
       </div>
     </div>

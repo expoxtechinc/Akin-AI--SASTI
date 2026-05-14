@@ -180,17 +180,17 @@ export const LiveFeed: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A0A] text-white">
+    <div className="flex flex-col h-full bg-[#050505] text-white bg-mesh relative overflow-hidden">
       {/* Category Scroller */}
-      <div className="px-6 py-4 flex-none overflow-x-auto no-scrollbar flex items-center gap-3">
+      <div className="px-6 py-8 flex-none overflow-x-auto no-scrollbar flex items-center gap-4 z-10">
         {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setFilter(cat.id)}
             className={cn(
-              "px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border shrink-0",
+              "px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-[0.3em] whitespace-nowrap transition-all border shrink-0",
               filter === cat.id 
-                ? "bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-100/10" 
+                ? "bg-indigo-600 text-white border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] scale-110" 
                 : "bg-white/5 text-stone-500 border-white/10 hover:border-white/20"
             )}
           >
@@ -208,51 +208,57 @@ export const LiveFeed: React.FC = () => {
           <div className="space-y-6">
             {filteredPosts.map((post, i) => (
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={{ delay: i * 0.08, duration: 0.8 }}
                 key={post.id}
-                className="group bg-white/5 border border-white/10 rounded-[32px] overflow-hidden transition-all flex flex-col active:scale-95 cursor-pointer"
+                className="group relative bg-black/40 border border-white/5 rounded-[48px] overflow-hidden transition-all flex flex-col active:scale-[0.98] cursor-pointer hover:border-indigo-500/30 shadow-2xl"
                 onClick={() => setSelectedPost(post)}
               >
-                <div className="aspect-[16/10] relative bg-stone-900">
+                <div className="aspect-[16/10] relative overflow-hidden">
                   <img 
                     src={post.mediaUrl} 
                     alt="" 
-                    className="w-full h-full object-cover opacity-80"
+                    className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000"
                   />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1.5 bg-black/40 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-widest rounded-full border border-white/10 flex items-center gap-1.5">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+                  
+                  <div className="absolute top-6 left-6">
+                    <span className="px-4 py-2 bg-indigo-600 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)]">
                        {post.type}
                     </span>
                   </div>
+                  
                   {post.type === 'videos' && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                       <div className="w-14 h-14 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white ring-1 ring-white/30">
-                          <Play fill="currentColor" size={20} />
+                       <div className="w-16 h-16 bg-white/10 backdrop-blur-2xl rounded-full flex items-center justify-center text-white ring-1 ring-white/40 shadow-2xl group-hover:scale-125 transition-transform duration-500">
+                          <Play fill="currentColor" size={24} className="ml-1" />
                        </div>
                     </div>
                   )}
                 </div>
 
-                <div className="p-6">
-                  <div className="flex items-center gap-2 text-[8px] font-black text-stone-500 uppercase tracking-widest mb-3">
-                    {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'Just now'}
-                    <span className="w-1 h-1 bg-stone-800 rounded-full" />
-                    <span className="text-indigo-500 uppercase">Live Now</span>
+                <div className="p-8 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.2em]">{post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'Just now'}</span>
+                    <div className="w-1 h-1 bg-stone-800 rounded-full" />
+                    <span className="text-[9px] font-black text-stone-600 uppercase tracking-[0.2em] italic">Intelligence Authenticated</span>
                   </div>
-                  <h3 className="text-lg font-black tracking-tight mb-2 leading-none uppercase italic">
+                  <h3 className="text-2xl font-black tracking-tighter leading-[1.1] font-display uppercase italic text-glow">
                     {post.title}
                   </h3>
-                  <p className="text-stone-500 text-xs leading-relaxed line-clamp-2 font-medium">
+                  <p className="text-stone-400 text-sm leading-relaxed line-clamp-2 font-serif italic opacity-80">
                     {post.content}
                   </p>
-                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/5">
-                     <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-[8px] font-black">AI</div>
-                        <span className="text-[9px] font-black uppercase text-stone-400">AkinAI Official</span>
+                  
+                  <div className="flex items-center justify-between pt-6 mt-2 border-t border-white/5">
+                     <div className="flex items-center gap-3 group/author">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-[10px] font-black shadow-lg shadow-indigo-600/20">AI</div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-stone-500 group-hover/author:text-white transition-colors">AkinAI Official</span>
                      </div>
-                     <ArrowRight size={14} className="text-stone-700" />
+                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-600 transition-all duration-500">
+                        <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
+                     </div>
                   </div>
                 </div>
               </motion.div>

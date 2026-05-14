@@ -41,57 +41,95 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
 const Hero = ({ onStart }: { onStart: () => void }) => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 px-6 overflow-hidden">
-      {/* Background Orbs/Animations */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 px-6 overflow-hidden bg-mesh">
+      {/* Absolute Decorative Elements */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="absolute top-[20%] left-[10%] w-[30vw] h-[30vw] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute bottom-[20%] right-[10%] w-[25vw] h-[25vw] bg-rose-500/10 rounded-full blur-[100px] animate-float" />
       
-      {/* Rotating Fan/Orb Simulation */}
-      <div className="relative mb-12">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-          className="w-32 h-32 md:w-48 md:h-48 border border-white/10 rounded-full flex items-center justify-center p-4 relative"
-        >
-          <div className="absolute inset-0 border-t-2 border-indigo-500 rounded-full animate-pulse" />
-          <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
-            className="w-full h-full border border-white/5 rounded-full flex items-center justify-center"
-          >
-            <Zap className="text-indigo-400 w-12 h-12" />
-          </motion.div>
-        </motion.div>
-        <div className="absolute -inset-8 bg-indigo-500/10 blur-3xl rounded-full" />
-      </div>
-
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center max-w-4xl z-10"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        className="text-center max-w-[1200px] z-10 relative"
       >
-        <span className="inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-6 animate-pulse">
-          AI Journey Starts Here
-        </span>
-        <h1 className="text-5xl md:text-8xl font-black tracking-tight leading-[0.9] mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
-          Train, Optimize, & Deploy <br />
-          <span className="italic font-serif">at Lightning Speed</span>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full glass mb-10"
+        >
+          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-indigo-200">AkinAI Enterprise v4.0 Live</span>
+        </motion.div>
+
+        <h1 className="text-6xl md:text-[140px] font-black tracking-tighter leading-[0.85] mb-12 font-display uppercase italic select-none">
+          Design. <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500">Intelligent.</span> <br />
+          Evolution.
         </h1>
-        <p className="text-stone-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-          The ultimate stack for generative AI. 100+ models, Kubernetes-native GPU clusters, and high-performance inference engines for infinite scalability.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+        <div className="flex flex-col md:flex-row items-center justify-center gap-10 mt-16 group">
+          <div className="md:w-px h-12 md:h-20 bg-white/10 hidden md:block" />
+          <p className="text-stone-400 text-lg md:text-xl max-w-xl text-center md:text-left leading-relaxed font-serif italic">
+            "The future isn't predicted, it's computed. We provide the neural infrastructure for the next era of human creativity."
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-20">
           <button 
             onClick={onStart}
-            className="w-full sm:w-auto px-10 py-5 bg-white text-black font-black uppercase tracking-widest text-sm hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="group relative px-12 py-6 overflow-hidden rounded-2xl transition-all duration-500 bg-white hover:scale-105"
           >
-            Get Started <ArrowRight size={18} />
+            <div className="absolute inset-0 bg-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-right duration-500" />
+            <span className="relative z-10 text-black group-hover:text-white text-xs font-black uppercase tracking-[0.3em] transition-colors duration-500">
+              Enter The Ecosystem
+            </span>
           </button>
-          <button className="w-full sm:w-auto px-10 py-5 bg-white/5 text-white font-black uppercase tracking-widest text-sm border border-white/10 hover:bg-white/10 transition-all">
-            Documentation
+
+          <button className="px-12 py-6 rounded-2xl glass hover:bg-white/10 transition-all text-xs font-black uppercase tracking-[0.3em] text-white">
+            View Blueprint
           </button>
         </div>
+      </motion.div>
+
+      {/* Floating UI Elements */}
+      <motion.div 
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 4, repeat: Infinity }}
+        className="absolute bottom-20 left-10 hidden xl:block glass p-6 rounded-3xl w-64 space-y-4"
+      >
+        <div className="flex items-center gap-3">
+           <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
+              <ShieldCheck size={18} />
+           </div>
+           <span className="text-[10px] font-black uppercase tracking-widest leading-none">Security Verified</span>
+        </div>
+        <div className="space-y-2">
+           <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-full w-full bg-green-500/40 animate-pulse" />
+           </div>
+           <div className="h-1 w-3/4 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-full w-full bg-green-500/20" />
+           </div>
+        </div>
+      </motion.div>
+
+      <motion.div 
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-40 right-10 hidden xl:block glass p-6 rounded-3xl w-72 space-y-4 rotate-3"
+      >
+        <div className="flex justify-between items-center">
+           <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Node Cluster 04</span>
+           <Cpu size={14} className="text-stone-600" />
+        </div>
+        <div className="flex items-end gap-1">
+           {[40, 70, 45, 90, 65].map((h, i) => (
+             <div key={i} className="flex-1 bg-indigo-500/30 rounded-t-sm" style={{ height: `${h}%` }} />
+           ))}
+        </div>
+        <p className="text-[9px] font-bold text-stone-500 uppercase tracking-widest text-center">Inference Engine: 99.8% Load</p>
       </motion.div>
     </section>
   );
@@ -167,32 +205,45 @@ const ModelsShowcase = () => {
 
 const StackSection = () => {
   const services = [
-    { title: 'GPU as a Service', desc: 'Kubernetes-native GPU clusters built for intensive model training.', icon: Cpu },
-    { title: 'AI Voicebot', desc: 'Deploy natural, low-latency voice AI agents for customer support.', icon: Mic },
-    { title: 'AI Chatbot', desc: 'Intelligent, context-aware chatbots trained on your unique data.', icon: MessageSquare },
-    { title: 'AI IDE Lab', desc: 'Cloud-native dev environment with AI-powered code completion.', icon: Terminal },
-    { title: 'Serverless Inferencing', desc: 'Run LLM and ML model inference at scale with zero management.', icon: Layers },
-    { title: 'AI Apps Builder', desc: 'Drag-and-drop studio to build and launch AI applications.', icon: Box },
+    { title: 'Neural Compute', desc: 'Enterprise-grade GPU architecture engineered for massive scalability and ultra-low latency.', icon: Cpu },
+    { title: 'Vocal Intelligence', desc: 'Human-parity voice models capable of complex emotional reasoning and real-time interaction.', icon: Mic },
+    { title: 'Quantum Linguistics', desc: 'Advanced LLM processing with unique contextual memory and cross-domain expertise.', icon: MessageSquare },
+    { title: 'Automated Dev Hub', desc: 'A self-healing code environment that writes and deploys alongside your thoughts.', icon: Terminal },
+    { title: 'Hyper-Inference', desc: 'Global edge network delivering AI outputs in milliseconds, anywhere on the planet.', icon: Layers },
+    { title: 'Studio One', desc: 'The most powerful interface ever built for orchestrating AI agents and workflows.', icon: Box },
   ];
 
   return (
-    <section className="py-32 bg-[#080808] px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-20 space-y-4">
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">Everything you need to build, <br /> deploy & scale AI</h2>
-          <p className="text-stone-500 max-w-xl mx-auto">From raw GPU power to intelligent applications - we give you the full stack to move from idea to production at speed.</p>
+    <section className="py-40 bg-black relative px-6">
+      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#050505] to-transparent" />
+      <div className="max-w-[1440px] mx-auto">
+        <div className="flex flex-col lg:flex-row justify-between items-end mb-24 gap-10">
+          <div className="max-w-2xl space-y-6">
+             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Integrated Ecosystem</span>
+             <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] font-display uppercase italic text-glow">Superior Compute. <br /> Absolute Control.</h2>
+          </div>
+          <p className="text-stone-500 max-w-sm text-lg font-serif italic text-right">
+            "Engineered for the visionaries who require more than just power."
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 border border-white/5 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, i) => (
-            <div key={i} className="p-12 bg-[#080808] hover:bg-[#0a0a0a] transition-all group">
-               <service.icon className="w-10 h-10 text-indigo-500 mb-8 group-hover:scale-110 transition-transform" />
-               <h3 className="text-xl font-bold mb-4 uppercase">{service.title}</h3>
-               <p className="text-stone-400 text-sm leading-relaxed mb-8">{service.desc}</p>
-               <button className="text-[10px] font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-2">
-                  Explore Now <ArrowRight size={14} />
+            <motion.div 
+              key={i} 
+              whileHover={{ scale: 1.02 }}
+              className="p-10 glass rounded-[48px] group relative overflow-hidden"
+            >
+               <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 blur-[60px] group-hover:bg-indigo-600/10 transition-colors" />
+               <div className="w-16 h-16 rounded-3xl bg-black border border-white/10 flex items-center justify-center text-indigo-500 mb-10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-xl">
+                  <service.icon size={32} />
+               </div>
+               <h3 className="text-2xl font-black mb-4 uppercase tracking-tight font-display italic">{service.title}</h3>
+               <p className="text-stone-400 text-sm leading-relaxed mb-10 font-medium">{service.desc}</p>
+               <button className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400 flex items-center gap-4 group-hover:text-white transition-colors">
+                  Initialize <div className="w-8 h-px bg-indigo-500 group-hover:w-16 transition-all" />
                </button>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

@@ -13,7 +13,7 @@ export const WhatsAppMessenger: React.FC = () => {
   const [to, setTo] = useState('whatsapp:+231889824005');
   const [useTemplate, setUseTemplate] = useState(true);
   const [body, setBody] = useState('');
-  const [contentSid, setContentSid] = useState('HX350d429d32e64a552466cafecbe95f3c');
+  const [contentSid, setContentSid] = useState('HXb5b62575e6e4ff6129ad7c8efe1f983e');
   const [var1, setVar1] = useState('12/1');
   const [var2, setVar2] = useState('3pm');
   
@@ -154,7 +154,7 @@ export const WhatsAppMessenger: React.FC = () => {
 
                   <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
                     <p className="text-xs text-emerald-800 font-medium italic leading-relaxed">
-                      "Thank you for your order. Your delivery is scheduled for <span className="font-black text-emerald-600">{var1 || '...'}</span> at <span className="font-black text-emerald-600">{var2 || '...'}</span>. If you need to change it, please reply back."
+                      "Your appointment is coming up on <span className="font-black text-emerald-600">{var1 || '...'}</span> at <span className="font-black text-emerald-600">{var2 || '...'}</span>. If you need to change it, please reply back and let us know."
                     </p>
                   </div>
                 </motion.div>

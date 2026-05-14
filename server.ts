@@ -53,19 +53,30 @@ async function startServer() {
   // Twilio WhatsApp Webhook (TwiML)
   app.post("/api/whatsapp", async (req, res) => {
     // Twilio sends data in x-www-form-urlencoded format
-    // Express needs bodyParser/urlencoded to parse this (already handled or needed)
     const message = req.body.Body || req.query.Body;
+    const from = req.body.From || req.query.From;
+
+    console.log(`Incoming Local Webhook from ${from}: ${message}`);
+
+    if (!message) {
+      res.setHeader("Content-Type", "text/xml");
+      return res.status(200).send('<Response><Message>No message body detected.</Message></Response>');
+    }
 
     try {
-      // Call the AI chat endpoint
+      // Call the AI chat endpoint on your main Vercel app
       const aiResponse = await fetch("https://akinai-official.vercel.app/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ message, from })
       });
 
+      if (!aiResponse.ok) {
+        throw new Error(`AI API failed with status ${aiResponse.status}`);
+      }
+
       const data = await aiResponse.json();
-      const reply = data.reply || "I'm sorry, I couldn't process that request.";
+      const reply = data.reply || data.message || "I'm processing, but couldn't find a direct answer.";
 
       res.setHeader("Content-Type", "text/xml");
       res.status(200).send(`
@@ -78,7 +89,7 @@ async function startServer() {
       res.setHeader("Content-Type", "text/xml");
       res.status(200).send(`
         <Response>
-          <Message>System Error: Could not reach the AI brain.</Message>
+          <Message>AkinAI Context Error: The connection to your AI brain at akinai-official was interrupted.</Message>
         </Response>
       `);
     }

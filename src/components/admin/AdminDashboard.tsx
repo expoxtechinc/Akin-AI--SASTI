@@ -38,82 +38,181 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'news', label: 'News & Articles', icon: Newspaper },
-    { id: 'gallery', label: 'Pictures / Gallery', icon: ImageIcon },
-    { id: 'music', label: 'Music & Audio', icon: Music },
-    { id: 'ads', label: 'Advertisements', icon: Megaphone },
-    { id: 'products', label: 'Products', icon: ShoppingBag },
-    { id: 'videos', label: 'Videos', icon: Video },
+    { id: 'overview', label: 'Home', icon: LayoutDashboard },
+    { id: 'news', label: 'News', icon: Newspaper },
+    { id: 'ads', label: 'Ads', icon: Megaphone },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  const adminMenuItems = [
+    { id: 'gallery', label: 'Gallery', icon: ImageIcon, color: 'text-pink-500' },
+    { id: 'music', label: 'Audio', icon: Music, color: 'text-purple-500' },
+    { id: 'products', label: 'Store', icon: ShoppingBag, color: 'text-orange-500' },
+    { id: 'videos', label: 'Videos', icon: Video, color: 'text-blue-500' },
   ];
 
   return (
-    <div className="flex h-screen bg-[#050505] text-white">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 flex flex-col pt-8">
-        <div className="px-8 mb-12">
-          <h1 className="text-2xl font-black tracking-tighter italic text-indigo-500">AkinAI.</h1>
-          <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Admin Hub</span>
+    <div className="flex flex-col h-screen bg-[#0A0A0A] text-white font-sans overflow-hidden max-w-md mx-auto relative border-x border-white/5 shadow-2xl">
+      {/* Mobile-Style Status Bar Area */}
+      <div className="h-10 flex-none flex justify-between items-center px-6 pt-4">
+        <span className="text-xs font-bold tracking-tight">9:41</span>
+        <div className="flex items-center gap-1.5">
+           <div className="w-4 h-4 rounded-full border border-white/20" />
+           <div className="w-4 h-4 rounded-full border border-white/20" />
+           <div className="w-4 h-4 rounded-full bg-white/20" />
         </div>
+      </div>
 
-        <nav className="flex-1 px-4 space-y-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all",
-                activeTab === item.id 
-                  ? "bg-white text-black" 
-                  : "text-stone-500 hover:text-white hover:bg-white/5"
-              )}
-            >
-              <item.icon size={18} />
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-white/5">
-          <button 
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all"
-          >
-            <LogOut size={18} />
-            Logout
+      {/* Header */}
+      <header className="px-6 py-6 flex-none flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight italic text-indigo-500">Admin.</h1>
+          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AkinAI Control Hub</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="relative p-2 bg-white/5 rounded-full border border-white/10 hover:bg-white/10 transition-all">
+            <Bell size={18} className="text-stone-300" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0A0A0A]" />
           </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="h-20 border-b border-white/5 flex items-center justify-between px-12">
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-full px-6 py-2 w-96">
-            <Search size={16} className="text-stone-500" />
-            <input 
-              type="text" 
-              placeholder="Search content, users, or data..." 
-              className="bg-transparent border-none outline-none text-sm w-full font-medium"
-            />
+          <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-xs border-2 border-indigo-500/50 shadow-lg shadow-indigo-500/20">
+            AS
           </div>
+        </div>
+      </header>
 
-          <div className="flex items-center gap-6">
-            <button className="relative p-2 text-stone-400 hover:text-white transition-all">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-[#050505]" />
-            </button>
-            <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm">
-              AS
+      {/* Main Scrollable Content */}
+      <main className="flex-1 overflow-y-auto customized-scrollbar pb-24">
+        <motion.div 
+          key={activeTab}
+          initial={{ opacity: 0, scale: 0.98, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="px-6 space-y-8"
+        >
+          {activeTab === 'overview' && (
+            <>
+              {/* Quick Actions Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {adminMenuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className="aspect-square bg-white/5 border border-white/10 rounded-[32px] p-6 flex flex-col items-center justify-center gap-3 hover:bg-white/10 transition-all group active:scale-95"
+                  >
+                    <div className={cn("p-4 rounded-2xl bg-black/40 border border-white/5 group-hover:scale-110 transition-transform", item.color)}>
+                      <item.icon size={24} />
+                    </div>
+                    <span className="text-xs font-bold text-stone-300 uppercase tracking-widest">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Stats Card */}
+              <div className="bg-indigo-600 rounded-[40px] p-8 space-y-6 relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <BarChart3 size={120} />
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">Weekly Performance</span>
+                  <span className="text-[10px] font-black text-green-300">+24.8%</span>
+                </div>
+                <div>
+                  <h3 className="text-4xl font-black tracking-tighter">84.2K</h3>
+                  <p className="text-xs font-bold text-indigo-200">Active users interacting with AI</p>
+                </div>
+                <div className="h-2 w-full bg-black/20 rounded-full">
+                  <div className="h-full w-3/4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                </div>
+              </div>
+
+              {/* Recent Activity List */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <h3 className="text-lg font-black tracking-tight uppercase">Recent Logs</h3>
+                  <button className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">See all</button>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                        <CheckCircle2 size={16} className="text-green-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold">New Post: "The Future of AI"</p>
+                        <span className="text-[10px] text-stone-500 font-medium">Just now • Published</span>
+                      </div>
+                      <ArrowUpRight size={14} className="text-stone-600" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'news' && <PublishTab title="News" />}
+          {activeTab === 'ads' && <PublishTab title="Ads" />}
+          {activeTab === 'gallery' && <PublishTab title="Gallery" />}
+          {activeTab === 'music' && <PublishTab title="Music" />}
+          {activeTab === 'products' && <PublishTab title="Products" />}
+          {activeTab === 'videos' && <PublishTab title="Videos" />}
+          
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black uppercase tracking-tight">System Settings</h2>
+              <div className="space-y-3">
+                {[
+                  { label: 'Cloud Database', status: 'Healthy', icon: Settings },
+                  { label: 'WhatsApp API', status: 'Connected', icon: Megaphone },
+                  { label: 'User Auth', status: 'Encrypted', icon: Users },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-3xl">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/5 rounded-2xl text-stone-400">
+                        <item.icon size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">{item.label}</p>
+                        <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">{item.status}</p>
+                      </div>
+                    </div>
+                    <div className="w-12 h-6 bg-indigo-600 rounded-full flex items-center px-1">
+                      <div className="w-4 h-4 bg-white rounded-full ml-auto shadow-sm" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button 
+                onClick={onLogout}
+                className="w-full py-5 border border-red-500/20 text-red-400 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 mt-8"
+              >
+                <LogOut size={16} />
+                Logout Session
+              </button>
             </div>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto p-12 customized-scrollbar">
-          {activeTab === 'overview' && <OverviewTab />}
-          {activeTab !== 'overview' && <PublishTab title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} />}
-        </div>
+          )}
+        </motion.div>
       </main>
+
+      {/* Bottom Navigation */}
+      <nav className="absolute bottom-0 inset-x-0 h-20 bg-black/80 backdrop-blur-xl border-t border-white/5 px-6 flex items-center justify-between pb-4 z-50">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={cn(
+              "flex flex-col items-center gap-1 transition-all",
+              activeTab === item.id || (activeTab !== 'overview' && activeTab !== 'news' && activeTab !== 'ads' && activeTab !== 'settings' && item.id === 'overview')
+                ? "text-indigo-500 scale-110" 
+                : "text-stone-500 hover:text-stone-300"
+            )}
+          >
+            <item.icon size={20} />
+            <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Home Indicator */}
+      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/10 rounded-full z-50 shadow-sm" />
     </div>
   );
 };

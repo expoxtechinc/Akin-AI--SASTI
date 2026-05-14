@@ -13,10 +13,118 @@ import { cn } from '../../lib/utils';
 const scholarTool = TOOLS.find(t => t.id === 'scholar-cam')!;
 
 export const ScholarCam: React.FC = () => {
-  const [mode, setMode] = useState<'camera' | 'upload' | 'chat'>('chat');
+  const [mode, setMode] = useState<'camera' | 'upload' | 'chat' | 'live'>('chat');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [status, setStatus] = useState('Ready to Learn');
+  const [aiTranscription, setAiTranscription] = useState('');
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const sessionRef = useRef<any>(null);
+  const videoIntervalRef = useRef<number | null>(null);
+  const nextStartTimeRef = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const startLiveStudy = async () => {
+    if (!apiKey) return;
+    try {
+      setMode('live');
+      setStatus('Connecting to Tutor...');
+      const ai = new GoogleGenAI({ apiKey });
+      const session = await ai.live.connect({
+        model: "gemini-3.1-flash-live-preview",
+        callbacks: {
+          onopen: () => {
+            setStatus('Live Session Active');
+            setupStreams();
+          },
+          onmessage: async (message) => {
+            const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (audioData) playPcmData(audioData);
+            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
+            if (text) setAiTranscription(text);
+          },
+          onclose: () => stopLiveStudy(),
+          onerror: () => stopLiveStudy()
+        },
+        config: {
+          responseModalities: [Modality.AUDIO],
+          systemInstruction: "You are a professional tutor at AkinAI's ScholarCam. Help students understand complex concepts visualized through their camera. Be encouraging, clear, and academic."
+        }
+      });
+      sessionRef.current = session;
+    } catch (err) {
+      console.error(err);
+      setMode('chat');
+    }
+  };
+
+  const setupStreams = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      if (videoRef.current) videoRef.current.srcObject = stream;
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      processorRef.current = processor;
+      processor.onaudioprocess = (e) => {
+        if (!sessionRef.current) return;
+        const inputData = e.inputBuffer.getChannelData(0);
+        const pcmData = new Int16Array(inputData.length);
+        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
+        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
+      };
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const captureFrame = () => {
+    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
+    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
+    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
+  };
+
+  const playPcmData = (base64: string) => {
+    if (!audioContextRef.current) return;
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const pcm = new Int16Array(bytes.buffer);
+    const float32 = new Float32Array(pcm.length);
+    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
+    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
+    buffer.getChannelData(0).set(float32);
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    const currentTime = audioContextRef.current.currentTime;
+    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
+    source.start(nextStartTimeRef.current);
+    nextStartTimeRef.current += buffer.duration;
+  };
+
+  const stopLiveStudy = () => {
+    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
+    sessionRef.current?.close();
+    sessionRef.current = null;
+    if (videoRef.current?.srcObject) (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+    processorRef.current?.disconnect();
+    audioContextRef.current?.close();
+    setMode('chat');
+    setAiTranscription('');
+  };
 
   const handleCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,6 +180,12 @@ export const ScholarCam: React.FC = () => {
                  {/* Snap Overlay Button */}
                  <div className="absolute top-2 right-4 flex gap-2">
                     <button 
+                       onClick={startLiveStudy}
+                       className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl shadow-rose-500/20 hover:scale-105 transition-all"
+                    >
+                       <Video size={14} /> Live Study
+                    </button>
+                    <button 
                        onClick={() => fileInputRef.current?.click()}
                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl shadow-indigo-500/20 hover:scale-105 transition-all"
                     >
@@ -89,6 +203,50 @@ export const ScholarCam: React.FC = () => {
                       />
                    </div>
                  )}
+              </motion.div>
+            ) : mode === 'live' ? (
+              <motion.div 
+                 key="live"
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 exit={{ opacity: 0 }}
+                 className="h-full bg-stone-900 relative flex flex-col"
+              >
+                 <div className="absolute inset-0">
+                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-60" />
+                    <canvas ref={canvasRef} className="hidden" width="320" height="240" />
+                 </div>
+
+                 <div className="relative z-10 flex-1 flex flex-col p-8 justify-between">
+                    <div className="flex justify-between items-start">
+                       <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                          <span className="text-[10px] font-black text-white uppercase tracking-widest">Live Tutor: {status}</span>
+                       </div>
+                       <button onClick={stopLiveStudy} className="p-3 bg-red-600 text-white rounded-full hover:scale-110 transition-all">
+                          <PhoneOff size={24} />
+                       </button>
+                    </div>
+
+                    <AnimatePresence>
+                       {aiTranscription && (
+                         <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="self-center max-w-xl bg-black/80 backdrop-blur-xl border-l-4 border-indigo-500 p-6 rounded-r-2xl shadow-2xl"
+                         >
+                            <p className="text-white text-sm font-bold leading-relaxed tracking-tight italic">"{aiTranscription}"</p>
+                         </motion.div>
+                       )}
+                    </AnimatePresence>
+
+                    <div className="flex justify-center gap-4">
+                       <div className="px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest italic">
+                          AI is analyzing your coursework...
+                       </div>
+                    </div>
+                 </div>
               </motion.div>
             ) : null}
          </AnimatePresence>

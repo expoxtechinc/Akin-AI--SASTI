@@ -58,9 +58,12 @@ export const GlobalCall: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const sessionRef = useRef<any>(null);
+  const videoIntervalRef = useRef<number | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -106,7 +109,7 @@ export const GlobalCall: React.FC = () => {
         callbacks: {
           onopen: () => {
             setStatus('Live');
-            setupAudio();
+            setupStreams();
           },
           onmessage: async (message) => {
             if (message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
@@ -114,15 +117,21 @@ export const GlobalCall: React.FC = () => {
               setActiveSpeaker('1');
             }
           },
-          onclose: () => setStatus('Disconnected'),
-          onerror: (err) => console.error(err)
+          onclose: () => {
+             setStatus('Disconnected');
+             setIsJoined(false);
+          },
+          onerror: (err) => {
+             console.error(err);
+             setIsJoined(false);
+          }
         },
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } }
           },
-          systemInstruction: "You are Leander, the host of a Global Group Call. You are wise, empathetic, and friendly. Facilitate a group discussion about love, life, and the future. Engage with multiple participants naturally."
+          systemInstruction: "You are Leander, the host of a Global Group Call. You are wise, empathetic, and friendly. Facilitate a group discussion about love, life, and the future. Engage with multiple participants naturally. You can see the user through their camera."
         }
       });
       sessionRef.current = session;
@@ -131,10 +140,12 @@ export const GlobalCall: React.FC = () => {
     }
   };
 
-  const setupAudio = async () => {
+  const setupStreams = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       audioContextRef.current = audioContext;
       const source = audioContext.createMediaStreamSource(stream);
@@ -149,9 +160,20 @@ export const GlobalCall: React.FC = () => {
       };
       source.connect(processor);
       processor.connect(audioContext.destination);
+
+      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const captureFrame = () => {
+    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
+    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
+    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
   };
 
   const playPcmData = (base64: string) => {
@@ -177,6 +199,7 @@ export const GlobalCall: React.FC = () => {
     if (isJoined) {
       startLiveSession();
     } else {
+      if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
       sessionRef.current?.close();
       streamRef.current?.getTracks().forEach(t => t.stop());
       audioContextRef.current?.close();
@@ -256,9 +279,12 @@ export const GlobalCall: React.FC = () => {
                     Video Paused
                  </div>
               </div>
+            ) : p.id === 'user' ? (
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-80 scale-x-[-1]" />
             ) : (
               <img src={p.avatar} alt={p.name} className="w-full h-full object-cover opacity-80" />
             )}
+            <canvas ref={canvasRef} className="hidden" width="320" height="240" />
 
             <div className="absolute top-6 left-6 flex items-center gap-2">
                <div className="px-4 py-2 bg-stone-950/60 backdrop-blur-md rounded-2xl flex items-center gap-3">

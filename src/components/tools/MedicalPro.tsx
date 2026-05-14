@@ -338,10 +338,10 @@ export const MedicalPro: React.FC = () => {
                                { label: 'Primary Diagnosis', value: 'Exacerbation related to seasonal allergens' },
                                { label: 'Risk Factor', value: 'Moderate - Smoker (former), Age 65' },
                             ].map((item, i) => (
-                              <div key={i} className="flex justify-between border-b border-stone-200 pb-3">
-                                 <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{item.label}</span>
-                                 <span className="text-[11px] font-bold text-stone-800">{item.value}</span>
-                              </div>
+                               <div key={i} className="flex justify-between border-b border-stone-200 pb-3">
+                                  <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{item.label}</span>
+                                  <span className="text-[11px] font-bold text-stone-800">{item.value}</span>
+                               </div>
                             ))}
                          </div>
                       </div>
@@ -365,7 +365,7 @@ export const MedicalPro: React.FC = () => {
                       </div>
                    </div>
                 </motion.div>
-              ) : (
+              ) : activeTab === 'careplan' ? (
                 <motion.div 
                    key="careplan"
                    initial={{ opacity: 0, scale: 0.95 }}
@@ -422,6 +422,81 @@ export const MedicalPro: React.FC = () => {
                               <p className="text-[10px] text-stone-400 leading-relaxed">{item.desc}</p>
                            </div>
                          ))}
+                      </div>
+                   </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                   key="live"
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   className="flex-1 flex flex-col bg-stone-950 relative"
+                >
+                   <div className="absolute inset-0 overflow-hidden">
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted 
+                        className={cn(
+                          "w-full h-full object-cover transition-all duration-700",
+                          !isCalling ? "grayscale blur-2xl opacity-20" : "grayscale-0 blur-0 opacity-100"
+                        )}
+                      />
+                      <canvas ref={canvasRef} className="hidden" width="320" height="240" />
+                   </div>
+
+                   <div className="relative z-10 flex-1 flex flex-col p-8 justify-between">
+                      <div className="flex justify-between items-start">
+                         <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                            <div className="flex items-center gap-3">
+                               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                               <span className="text-[10px] font-black text-white uppercase tracking-widest">{status}</span>
+                            </div>
+                         </div>
+                      </div>
+
+                      <AnimatePresence>
+                         {aiTranscription && (
+                           <motion.div 
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              className="self-center max-w-2xl bg-black/60 backdrop-blur-xl border-l-4 border-blue-500 p-6 rounded-r-2xl shadow-2xl"
+                           >
+                              <p className="text-white text-sm font-bold leading-relaxed tracking-tight italic">"{aiTranscription}"</p>
+                           </motion.div>
+                         )}
+                      </AnimatePresence>
+
+                      <div className="flex justify-center gap-6 pb-4">
+                         {!isCalling ? (
+                           <button 
+                             onClick={startConsultation}
+                             className="px-12 py-6 bg-blue-600 text-white rounded-full font-black text-xl shadow-2xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest italic flex items-center gap-4"
+                           >
+                              <Video size={24} /> Start Consultation
+                           </button>
+                         ) : (
+                           <div className="flex items-center gap-4">
+                              <button 
+                                onClick={() => setIsMuted(!isMuted)}
+                                className={cn(
+                                  "w-16 h-16 rounded-3xl flex items-center justify-center transition-all shadow-xl",
+                                  isMuted ? "bg-red-500 text-white" : "bg-white/10 backdrop-blur-md text-white hover:bg-white/20"
+                                )}
+                              >
+                                 {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+                              </button>
+                              <button 
+                                onClick={stopConsultation}
+                                className="px-12 py-6 bg-red-600 text-white rounded-full font-black text-xl shadow-2xl shadow-red-500/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest italic flex items-center gap-4"
+                              >
+                                 <PhoneOff size={24} /> End Session
+                              </button>
+                           </div>
+                         )}
                       </div>
                    </div>
                 </motion.div>

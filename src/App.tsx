@@ -28,6 +28,7 @@ import { Heart2Heart } from './components/tools/Heart2Heart';
 import { AIParty } from './components/tools/AIParty';
 import { GlobalCall } from './components/tools/GlobalCall';
 import { VideoDownloader } from './components/tools/VideoDownloader';
+import { AppDistributor } from './components/tools/AppDistributor';
 import { Pricing } from './components/pages/Pricing';
 import { HelpSupport } from './components/pages/Support';
 import { DeveloperHub } from './components/pages/DeveloperHub';
@@ -152,6 +153,8 @@ export default function App() {
                 <GlobalCall />
               ) : activeTool.id === 'video-downloader' ? (
                 <VideoDownloader />
+              ) : activeTool.id === 'app-distributor' ? (
+                <AppDistributor />
               ) : activeTool.id === 'pricing' ? (
                 <Pricing />
               ) : activeTool.id === 'support' ? (

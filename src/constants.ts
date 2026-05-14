@@ -491,5 +491,14 @@ export const TOOLS: AITool[] = [
     icon: 'Download',
     prompt: 'You are an expert in media extraction. Help the user download videos by providing advice on link quality and formats.',
     placeholder: 'Paste FB Video/Reel link...'
+  },
+  {
+    id: 'app-distributor',
+    name: 'App Distribution Hub',
+    description: 'Wireless iOS & Android build deployment for developers and testers.',
+    category: ToolCategory.TECHNICAL,
+    icon: 'Package',
+    prompt: 'You are a CI/CD expert. Provide advice on mobile app distribution, code signing, and wireless installation protocols.',
+    placeholder: 'Drop your .ipa or .apk here...'
   }
 ];

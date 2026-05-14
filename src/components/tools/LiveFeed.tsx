@@ -200,6 +200,35 @@ export const LiveFeed: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto customized-scrollbar pb-6 px-6 space-y-6 pt-2">
+        {/* Founder's Welcome Card */}
+        {filter === 'all' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-8 bg-indigo-600 rounded-[48px] relative overflow-hidden shadow-2xl shadow-indigo-600/30"
+          >
+             <div className="relative z-10 space-y-6">
+                <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
+                      <img src="https://kommodo.ai/i/gO5HPhOr5NCy7nE7ymSo" alt="Akin S. Sokpah" className="w-full h-full object-cover" />
+                   </div>
+                   <div>
+                      <h4 className="font-black uppercase tracking-widest text-[10px]">Akin S. Sokpah • Founder</h4>
+                      <p className="text-[8px] font-bold text-indigo-200 uppercase tracking-[0.2em]">Mount Barclay, Liberia</p>
+                   </div>
+                </div>
+                <h2 className="text-3xl font-black tracking-tighter leading-none italic uppercase">Architecting the <br /> Liberian Future.</h2>
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                   <span className="text-[9px] font-black uppercase tracking-widest text-indigo-100">Genesis v4.0 Active</span>
+                   <Globe size={14} className="text-indigo-200 animate-spin-slow" />
+                </div>
+             </div>
+             <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Zap size={120} className="text-white fill-white" />
+             </div>
+          </motion.div>
+        )}
+
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-10 h-10 border-2 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin" />

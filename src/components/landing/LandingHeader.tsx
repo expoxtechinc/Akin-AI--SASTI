@@ -44,7 +44,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onStart, onLogin }
             </div>
             <div className="flex flex-col -space-y-1">
               <span className="text-2xl font-black tracking-tighter uppercase italic font-display text-glow">AkinAI.</span>
-              <span className="text-[7px] font-black uppercase tracking-[0.4em] text-indigo-500/80">Intelligence Hub</span>
+              <span className="text-[7px] font-black uppercase tracking-[0.4em] text-indigo-500/80">Sokpah Intelligence Gen</span>
             </div>
           </a>
 

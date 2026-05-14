@@ -57,10 +57,10 @@ const Hero = ({ onStart }: { onStart: () => void }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full glass mb-10"
+          className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full glass mb-10 border border-white/5"
         >
-          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-indigo-200">AkinAI Enterprise v4.0 Live</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-indigo-200">Akin S. Sokpah Presents: AkinAI Core</span>
         </motion.div>
 
         <h1 className="text-6xl md:text-[140px] font-black tracking-tighter leading-[0.85] mb-12 font-display uppercase italic select-none">
@@ -72,7 +72,7 @@ const Hero = ({ onStart }: { onStart: () => void }) => {
         <div className="flex flex-col md:flex-row items-center justify-center gap-10 mt-16 group">
           <div className="md:w-px h-12 md:h-20 bg-white/10 hidden md:block" />
           <p className="text-stone-400 text-lg md:text-xl max-w-xl text-center md:text-left leading-relaxed font-serif italic">
-            "The future isn't predicted, it's computed. We provide the neural infrastructure for the next era of human creativity."
+            "We are not just building tools; we are architecting the medium through which human potential expands. Inspired by the resilience of Liberia, built for the global future."
           </p>
         </div>
 
@@ -356,28 +356,36 @@ const Footer = () => {
                 <div className="col-span-2 space-y-6">
                     <h3 className="text-2xl font-black tracking-tighter">AkinAI.</h3>
                     <p className="text-stone-500 max-w-xs leading-relaxed text-sm italic">
-                        Leading AI and GPU cloud platform delivering high-performance solutions for the modern world.
+                        The neural vision of Akin S. Sokpah. Built from Montserrado, Liberia to serve the digital frontiers of tomorrow.
                     </p>
+                    <div className="flex gap-4">
+                        <a href="https://chat.whatsapp.com/GYEGrtGA4lmD2PpFKDvRuo" target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-indigo-600 transition-colors">
+                            <MessageSquare size={14} />
+                        </a>
+                        <a href="#" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-indigo-600 transition-colors">
+                            <Globe size={14} />
+                        </a>
+                    </div>
                 </div>
                 <div className="space-y-4">
                     <h4 className="text-[10px] font-black uppercase tracking-widest">Products</h4>
                     <ul className="space-y-2 text-sm text-stone-400">
-                        <li>GPUs</li>
-                        <li>Inference</li>
-                        <li>Voicebots</li>
+                        <li>Neural Hub</li>
+                        <li>Sync Intelligence</li>
+                        <li>AkinAI Core</li>
                     </ul>
                 </div>
                 <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest">Company</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest">Connect</h4>
                     <ul className="space-y-2 text-sm text-stone-400">
-                        <li>About</li>
-                        <li>Careers</li>
-                        <li>Legal</li>
+                        <li>WhatsApp Group</li>
+                        <li>Messenger AI</li>
+                        <li>Developer API</li>
                     </ul>
                 </div>
             </div>
             <div className="max-w-7xl mx-auto mt-24 pt-12 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-stone-600 uppercase tracking-widest">
-                <span>2026 © AkinAI. All rights reserved</span>
+                <span>2026 © AkinAI by Akin S. Sokpah. All rights reserved</span>
                 <Globe size={16} />
             </div>
         </footer>

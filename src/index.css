@@ -55,9 +55,18 @@
     animation: float 6s ease-in-out infinite;
   }
 
+  .animate-spin-slow {
+    animation: spin 12s linear infinite;
+  }
+
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-20px); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   .bg-mesh {

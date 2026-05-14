@@ -22,6 +22,8 @@ import { cn } from '../../lib/utils';
 import { AITool } from '../../types';
 import { TOOLS } from '../../constants';
 
+import { NeuralDashboard } from './NeuralDashboard';
+
 interface MobileAppLayoutProps {
   activeTool: AITool | null;
   onSelectTool: (tool: AITool | null) => void;
@@ -37,7 +39,7 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
   userEmail = 'User',
   onLogout
 }) => {
-  const [activeTab, setActiveTab] = useState<'home' | 'explore' | 'chat' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'explore' | 'chat' | 'profile'>('chat');
 
   return (
     <div className="flex flex-col h-screen bg-[#0A0A0A] text-white font-sans overflow-hidden max-w-md mx-auto relative border-x border-white/5 shadow-2xl">
@@ -148,41 +150,10 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
 
       {/* Overlays / Mods */}
       {activeTab === 'explore' && !activeTool && (
-        <motion.div 
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute inset-0 bg-[#0A0A0A] z-[51] p-6 pt-16 overflow-y-auto"
-        >
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-black italic">Toolbox.</h2>
-            <button onClick={() => setActiveTab('home')} className="p-2 bg-white/5 rounded-full">
-              <Settings size={18} />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 mb-24">
-            {TOOLS.map((tool) => (
-              <button
-                key={tool.id}
-                onClick={() => { onSelectTool(tool); setActiveTab('home'); }}
-                className="bg-white/5 border border-white/10 p-5 rounded-[24px] text-left hover:bg-white/10 transition-all active:scale-95 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
-                   <Cpu size={20} />
-                </div>
-                <h3 className="text-xs font-black uppercase tracking-tight leading-none mb-1">{tool.name}</h3>
-                <p className="text-[9px] text-stone-500 font-bold uppercase tracking-widest">{tool.category}</p>
-              </button>
-            ))}
-          </div>
-          
-          <button 
-            onClick={() => setActiveTab('home')}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-xl"
-          >
-            <Home size={20} />
-          </button>
-        </motion.div>
+        <NeuralDashboard 
+          onSelectTool={(tool) => { onSelectTool(tool); setActiveTab('home'); }}
+          onClose={() => setActiveTab('home')}
+        />
       )}
 
       {/* Profile Overlay */}

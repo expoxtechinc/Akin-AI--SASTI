@@ -47,7 +47,9 @@ import { Cloud } from 'lucide-react';
 import { MobileAppLayout } from './components/layout/MobileAppLayout';
 
 export default function App() {
-  const [activeTool, setActiveTool] = useState<AITool | null>(null);
+  const [activeTool, setActiveTool] = useState<AITool | null>(
+    TOOLS.find(t => t.id === 'whatsapp-messenger') || null
+  );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [view, setView] = useState<'landing' | 'dashboard' | 'admin'>('landing');
   const [isAuthOpen, setIsAuthOpen] = useState(false);

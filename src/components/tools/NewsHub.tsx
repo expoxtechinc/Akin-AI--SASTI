@@ -19,20 +19,17 @@ export const NewsHub: React.FC = () => {
       
       if (realNews.length > 0) {
         setNews(realNews);
-        // Automatically sync to official feed
         syncNewsToFeed(realNews);
       } else {
-        // Fallback to Gemini if API returns nothing or fails
         if (!apiKey) throw new Error('API Key missing');
         const ai = new GoogleGenAI({ apiKey });
         
         const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-1.5-flash",
           contents: {
             parts: [{
               text: `Generate 6 current "live" news/opportunity items for a dashboard in JSON format. 
-              Include specialized categories: 'scholarship', 'tech', 'liberia'. 
-              Focus on opportunities for students and tech enthusiasts in Liberia and West Africa.
+              Categories: 'scholarship', 'tech', 'liberia'. 
               Return ONLY a JSON array of objects with fields: id, title, excerpt, category, date (Day Month), source, link.`
             }]
           }
@@ -46,7 +43,6 @@ export const NewsHub: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to fetch news:', err);
-      // Hard fallback
       setNews([
         { id: '1', title: 'GEM Fellowship 2026 Open', excerpt: 'Full funding for STEM graduate degrees in the US.', category: 'scholarship', date: '12 May', source: 'AkinAI Education', link: '#' },
         { id: '2', title: '5G Expansion in Monrovia', excerpt: 'Leading telcos announce rollout of ultra-fast internet.', category: 'liberia', date: '11 May', source: 'LN Daily', link: '#' },
@@ -59,51 +55,49 @@ export const NewsHub: React.FC = () => {
 
   useEffect(() => {
     fetchNews();
-    const interval = setInterval(fetchNews, 300000); // Auto refresh every 5 mins
+    const interval = setInterval(fetchNews, 300000);
     return () => clearInterval(interval);
   }, []);
 
   const filteredNews = filter === 'all' ? news : news.filter(n => n.category === filter);
 
   return (
-    <div className="flex-1 flex flex-col bg-stone-50">
-      <div className="px-8 py-12 max-w-7xl mx-auto w-full space-y-12">
+    <div className="flex-1 flex flex-col bg-[#050505] overflow-y-auto customized-scrollbar-dark">
+      <div className="px-6 py-10 max-w-7xl mx-auto w-full space-y-10">
         
-        {/* Hero / Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-               <div className="p-2 bg-stone-900 rounded-xl text-white">
-                  <Compass size={24} />
-               </div>
-               <h1 className="text-3xl font-bold tracking-tight text-stone-900">AkinAI Discovery Hub</h1>
+        {/* Header */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Intelligence Stream</span>
             </div>
-            <p className="text-stone-500 max-w-lg">
-              Stay ahead with curated real-time updates on scholarships, global tech, and local progress in Liberia.
-            </p>
+            <button 
+              onClick={fetchNews}
+              disabled={isLoading}
+              className="p-2 bg-white/5 rounded-xl border border-white/10 text-stone-500 hover:text-white transition-colors"
+            >
+              <RefreshCw size={16} className={cn(isLoading && "animate-spin")} />
+            </button>
           </div>
           
-          <button 
-            onClick={fetchNews}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-stone-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-stone-600 hover:bg-stone-100 hover:border-stone-300 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
-            {isLoading ? 'Syncing...' : 'Live Updates Active'}
-          </button>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black tracking-tighter italic uppercase text-white leading-none">Global Discovery.</h1>
+            <p className="text-stone-500 text-sm font-medium">Curated intelligence for the next generation.</p>
+          </div>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide py-2">
           {(['all', 'scholarship', 'tech', 'liberia'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "px-6 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border",
+                "px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border shrink-0",
                 filter === f 
-                  ? "bg-stone-900 text-white border-stone-900 shadow-md" 
-                  : "bg-white text-stone-500 border-stone-200 hover:border-stone-300"
+                  ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
+                  : "bg-white/5 text-stone-500 border-white/10 hover:bg-white/10"
               )}
             >
               {f}
@@ -112,7 +106,7 @@ export const NewsHub: React.FC = () => {
         </div>
 
         {/* News Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4">
           <AnimatePresence mode="popLayout">
             {filteredNews.map((item, i) => {
               const Icon = item.category === 'scholarship' ? GraduationCap : item.category === 'tech' ? Cpu : Globe;
@@ -120,118 +114,100 @@ export const NewsHub: React.FC = () => {
                 <motion.div
                   key={item.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.05 }}
-                  className="group bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-xl hover:border-stone-300 transition-all flex flex-col overflow-hidden"
+                  className="group relative bg-[#0A0A0A] rounded-[32px] border border-white/5 p-6 hover:bg-[#0F0F0F] transition-all"
                 >
-                  {item.image && (
-                    <div className="h-48 w-full overflow-hidden">
-                       <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                  )}
-                  <div className="p-6 flex flex-col flex-1 justify-between">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
                         <div className={cn(
-                          "p-2.5 rounded-xl",
-                          item.category === 'scholarship' ? "bg-blue-50 text-blue-600" :
-                          item.category === 'tech' ? "bg-purple-50 text-purple-600" :
-                          "bg-green-50 text-green-600"
+                          "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110",
+                          item.category === 'scholarship' ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" :
+                          item.category === 'tech' ? "bg-rose-500/10 border-rose-500/20 text-rose-400" :
+                          "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                         )}>
-                          <Icon size={20} />
+                          <Icon size={24} />
                         </div>
-                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">
-                          {item.date}
-                        </span>
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-stone-500">{item.category} Protocol</p>
+                          <span className="text-[10px] font-bold text-indigo-500/60 uppercase tracking-tighter">{item.date}</span>
+                        </div>
                       </div>
-
-                      <div className="space-y-2">
-                        <a href={item.link} target="_blank" rel="noreferrer">
-                          <h3 className="text-lg font-bold text-stone-900 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">
-                            {item.title}
-                          </h3>
-                        </a>
-                         <p className="text-sm text-stone-500 leading-relaxed line-clamp-3">
-                           {item.excerpt}
-                         </p>
-                      </div>
-                    </div>
-
-                    <div className="pt-6 mt-6 border-t border-stone-100 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Source</span>
-                        <span className="text-xs font-bold text-stone-900 tracking-tight uppercase">{item.source}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button className="p-2 text-stone-400 hover:text-stone-900 transition-colors">
+                      <div className="flex items-center gap-1">
+                        <button className="p-2 text-stone-600 hover:text-white transition-colors">
                           <Bookmark size={16} />
                         </button>
-                        <a href={item.link} target="_blank" rel="noreferrer" className="p-2 text-stone-400 hover:text-indigo-600 transition-colors">
+                        <a href={item.link} target="_blank" rel="noreferrer" className="p-2 text-stone-600 hover:text-indigo-400 transition-colors">
                            <ExternalLink size={16} />
                         </a>
                       </div>
                     </div>
+
+                    <div className="space-y-3">
+                      <a href={item.link} target="_blank" rel="noreferrer">
+                        <h3 className="text-xl font-black text-white line-clamp-2 leading-tight tracking-tight group-hover:text-indigo-400 transition-colors uppercase italic">
+                          {item.title}
+                        </h3>
+                      </a>
+                      <p className="text-sm text-stone-400 leading-relaxed line-clamp-3 font-medium">
+                        {item.excerpt}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center text-[8px] font-black uppercase text-stone-500">
+                          {item.source.charAt(0)}
+                        </div>
+                        <span className="text-[10px] font-black text-stone-300 uppercase tracking-widest">{item.source}</span>
+                      </div>
+                      <Share2 size={14} className="text-stone-700 cursor-pointer hover:text-white transition-colors" />
+                    </div>
                   </div>
+                  
+                  {/* Hover Accent */}
+                  <div className="absolute inset-x-0 bottom-0 h-1 bg-indigo-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-b-full blur-[2px]" />
                 </motion.div>
               );
             })}
           </AnimatePresence>
         </div>
 
-        {/* Community Banner */}
-        <div className="bg-stone-900 rounded-[40px] p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
-           <div className="absolute inset-0 bg-stone-800/50 mix-blend-overlay pointer-events-none" />
-           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32" />
-           
-           <div className="flex-1 space-y-6 z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur rounded-full border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest">
-                <Bell size={12} className="animate-bounce" /> Official Community
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight">
-                Join the AkinAI <br /> WhatsApp Ecosystem
-              </h2>
-              <p className="text-stone-400 max-w-md">
-                Get instant notifications on your phone. Connect with thousands of Liberian students and tech leaders.
-              </p>
-              <div className="flex flex-wrap gap-4 pt-4">
-                 <a 
-                   href="https://chat.whatsapp.com/GYEGrtGA4lmD2PpFKDvRuo"
-                   target="_blank" rel="noreferrer"
-                   className="flex items-center gap-3 px-8 py-4 bg-green-500 text-white rounded-2xl font-bold hover:bg-green-600 transition-all shadow-lg active:scale-95"
-                 >
-                   Main Discussion Group
-                 </a>
-                 <a 
-                   href="https://whatsapp.com/channel/0029VbCYgbzL7UVcJBJGAu3u"
-                   target="_blank" rel="noreferrer"
-                   className="flex items-center gap-3 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-all backdrop-blur"
-                 >
-                   Follow Channel
-                 </a>
-              </div>
-           </div>
-
-           <div className="w-full md:w-[400px] bg-stone-800 rounded-3xl p-8 border border-white/10 shadow-2xl z-10">
-              <div className="space-y-6">
-                 <h4 className="text-white font-bold tracking-tight">Recent Announcements</h4>
-                 {[1, 2, 3].map(i => (
-                   <div key={i} className="flex gap-4 group cursor-pointer">
-                      <div className="w-12 h-12 bg-stone-700 rounded-2xl shrink-0 flex items-center justify-center text-stone-400 group-hover:bg-green-500/20 group-hover:text-green-500 transition-all">
-                        {i === 1 ? <GraduationCap size={20} /> : i === 2 ? <Globe size={20} /> : <Cpu size={20} />}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-stone-200 font-bold group-hover:text-white transition-colors">
-                          {i === 1 ? 'New Masters Scholarship in UK' : i === 2 ? 'Community Meetup in Monrovia' : 'AI Coding Bootcamp Round 2'}
-                        </p>
-                        <p className="text-[10px] text-stone-500 uppercase font-black">2 Hours Ago</p>
-                      </div>
-                   </div>
-                 ))}
-              </div>
-           </div>
-        </div>
+        {/* Global Connection CTA */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative rounded-[40px] p-8 border border-white/10 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[80px] rounded-full -mr-32 -mt-32" />
+          <div className="relative z-10 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20">
+              <Globe size={10} className="text-indigo-400" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">Neural Network Invite</span>
+            </div>
+            <h2 className="text-3xl font-black tracking-tighter italic uppercase text-white leading-none">Accelerate <br /><span className="text-indigo-400">Collaboration.</span></h2>
+            <p className="text-stone-400 text-sm font-medium max-w-sm">Join the master discussion ecosystem and synchronize with global innovators.</p>
+            <div className="flex flex-col gap-3 pt-2">
+              <a 
+                href="https://chat.whatsapp.com/GYEGrtGA4lmD2PpFKDvRuo"
+                target="_blank" rel="noreferrer"
+                className="w-full py-4 bg-white text-black text-center font-black uppercase tracking-[0.2em] text-[10px] rounded-[20px] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
+              >
+                Join Global Core
+              </a>
+              <a 
+                href="https://whatsapp.com/channel/0029VbCYgbzL7UVcJBJGAu3u"
+                target="_blank" rel="noreferrer"
+                className="w-full py-4 bg-white/5 border border-white/10 text-white text-center font-black uppercase tracking-[0.2em] text-[10px] rounded-[20px] transition-all hover:bg-white/10"
+              >
+                Sync with Channel
+              </a>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

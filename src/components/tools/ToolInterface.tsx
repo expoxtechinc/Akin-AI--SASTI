@@ -110,104 +110,146 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
 
   return (
     <div className={cn(
-      "flex flex-col h-full bg-white transition-all overflow-hidden relative",
+      "flex flex-col h-full bg-[#050505] text-white transition-all overflow-hidden relative bg-mesh",
       isFullscreen ? "fixed inset-0 z-[100]" : "w-full"
     )}>
+      {/* Tool Header */}
+      <div className="px-8 py-6 flex items-center justify-between glass z-20 border-b border-white/5">
+         <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-3xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+               <Cpu size={24} className="text-white" />
+            </div>
+            <div>
+               <h2 className="text-xl font-black tracking-tighter italic font-display uppercase text-glow">{tool.name}</h2>
+               <span className="text-[9px] font-black uppercase tracking-[0.4em] text-indigo-500">Neural_Compute_Active</span>
+            </div>
+         </div>
+         <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-3 bg-white/5 rounded-xl border border-white/10 text-stone-500 hover:text-white transition-all"
+            >
+               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
+            <div className="w-px h-6 bg-white/5" />
+            <button className="p-3 text-stone-500 hover:text-white transition-colors">
+               <Zap size={20} className="text-indigo-500 animate-pulse" />
+            </button>
+         </div>
+      </div>
+
       {/* Chat Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-8 md:px-0 scroll-smooth customized-scrollbar"
+        className="flex-1 overflow-y-auto px-6 py-12 md:px-12 scroll-smooth customized-scrollbar relative z-10"
       >
-        <div className="max-w-3xl mx-auto w-full space-y-12">
+        <div className="max-w-[1200px] mx-auto w-full space-y-16">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20 space-y-6">
-              <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center border border-stone-200">
-                <Zap size={24} className="text-stone-400" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-stone-900 tracking-tight">{tool.name}</h3>
-                <p className="text-sm text-stone-500 max-w-sm mx-auto leading-relaxed">
-                  {tool.description}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                {['Explain like I\'m 5', 'Write a plan', 'Debug my code', 'Creative brainstorming'].map((hint) => (
-                  <button 
-                    key={hint}
-                    onClick={() => setInput(hint)}
-                    className="p-4 border border-stone-100 rounded-2xl text-left text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors uppercase tracking-wider"
-                  >
-                    {hint}
-                  </button>
-                ))}
-              </div>
+            <div className="h-full flex flex-col items-center justify-center text-center py-20 space-y-12">
+               <motion.div 
+                 animate={{ rotate: 360 }}
+                 transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                 className="relative"
+               >
+                 <div className="absolute inset-0 bg-indigo-600 blur-[40px] opacity-20" />
+                 <div className="w-24 h-24 rounded-[32px] bg-black border border-white/10 flex items-center justify-center text-indigo-500 relative z-10">
+                    <BrainCircuit size={48} />
+                 </div>
+               </motion.div>
+              
+               <div className="space-y-4">
+                 <h3 className="text-3xl font-black tracking-tighter uppercase italic font-display text-glow">{tool.name} Readiness</h3>
+                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-600 max-w-sm mx-auto italic">
+                   Node Operational. Select sub-protocol or input unique vector command to begin synchronization.
+                 </p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-4">
+                 {['Explain complex logic', 'Initialize code plan', 'Creative vectoring', 'Technical debug'].map((hint) => (
+                   <button 
+                     key={hint}
+                     onClick={() => setInput(hint)}
+                     className="group relative p-6 bg-white/5 border border-white/5 rounded-[32px] overflow-hidden text-left transition-all hover:bg-white/10 hover:border-indigo-500/30"
+                   >
+                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                        <Zap size={40} />
+                     </div>
+                     <span className="relative z-10 text-[9px] font-black uppercase tracking-[0.3em] text-stone-500 group-hover:text-white transition-colors">{hint}</span>
+                   </button>
+                 ))}
+               </div>
             </div>
           ) : (
-            messages.map((message, index) => (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                key={index}
-                className={cn(
-                  "flex gap-4 md:gap-6 group",
-                  message.role === 'user' ? "flex-row-reverse" : "flex-row"
-                )}
-              >
-                <div className={cn(
-                  "flex-none w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border",
-                  message.role === 'user' 
-                    ? "bg-stone-100 border-stone-200 text-stone-600" 
-                    : "bg-stone-900 border-stone-900 text-white"
-                )}>
-                  {message.role === 'user' ? 'U' : 'AI'}
-                </div>
-                
-                <div className={cn(
-                  "flex-1 min-w-0 space-y-2",
-                  message.role === 'user' ? "text-right" : "text-left"
-                )}>
+            <div className="space-y-12 pb-32">
+              {messages.map((message, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={index}
+                  className={cn(
+                    "flex gap-6 group relative",
+                    message.role === 'user' ? "flex-row-reverse" : "flex-row"
+                  )}
+                >
                   <div className={cn(
-                    "text-[15px] leading-relaxed",
+                    "flex-none w-14 h-14 rounded-2xl flex items-center justify-center text-[10px] font-bold border relative overflow-hidden",
                     message.role === 'user' 
-                      ? "text-stone-800 font-medium" 
-                      : "text-stone-800 prose prose-stone max-w-none prose-p:leading-relaxed prose-pre:bg-stone-900"
+                      ? "bg-white/5 border-white/10 text-stone-400 font-black italic" 
+                      : "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/30"
                   )}>
-                    {message.role === 'user' ? (
-                      message.content
-                    ) : (
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    )}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
+                    <span className="relative z-10 uppercase tracking-tighter">{message.role === 'user' ? 'USER' : 'CORE'}</span>
                   </div>
                   
-                  {message.role === 'model' && (
-                    <div className="flex items-center gap-4 pt-2 border-t border-stone-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => copyToClipboard(message.content, index)}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 hover:text-stone-900 uppercase tracking-widest transition-colors"
-                      >
-                        {copiedIndex === index ? (
-                          <><Check size={12} /> Copied</>
-                        ) : (
-                          <><Copy size={12} /> Copy</>
-                        )}
-                      </button>
-                      <button className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 hover:text-stone-900 uppercase tracking-widest transition-colors">
-                         Like
-                      </button>
+                  <div className={cn(
+                    "flex-1 min-w-0 space-y-4",
+                    message.role === 'user' ? "text-right" : "text-left"
+                  )}>
+                    <div className={cn(
+                      "p-8 rounded-[48px] shadow-2xl transition-all relative overflow-hidden",
+                      message.role === 'user' 
+                        ? "bg-white/5 border border-white/5 text-stone-200 font-display italic tracking-tight text-xl" 
+                        : "glass border border-white/10 text-stone-200 prose prose-invert max-w-none prose-p:leading-relaxed md:prose-p:text-lg"
+                    )}>
+                      {message.role === 'user' ? (
+                        message.content
+                      ) : (
+                        <ReactMarkdown className="markdown-body">{message.content}</ReactMarkdown>
+                      )}
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            ))
+                    
+                    <div className={cn(
+                      "flex items-center gap-6 px-4 opacity-50 group-hover:opacity-100 transition-opacity",
+                      message.role === 'user' ? "flex-row-reverse" : "flex-row"
+                    )}>
+                      {message.role === 'model' && (
+                        <>
+                          <button
+                            onClick={() => copyToClipboard(message.content, index)}
+                            className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 hover:text-white transition-colors"
+                          >
+                            <Copy size={14} /> {copiedIndex === index ? 'S_Sync' : 'Clone'}
+                          </button>
+                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-stone-600">Integrity Check v8.4.2 Passed</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
           
           {isLoading && (
-            <div className="flex gap-4 md:gap-6 animate-pulse">
-               <div className="w-8 h-8 rounded-full bg-stone-900 border border-stone-900 flex items-center justify-center text-[10px] font-bold text-white">AI</div>
-               <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-stone-200 animate-bounce" />
-                  <div className="w-2 h-2 rounded-full bg-stone-200 animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-2 h-2 rounded-full bg-stone-200 animate-bounce [animation-delay:0.4s]" />
+            <div className="flex gap-6 animate-pulse">
+               <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+                  <Loader2 className="animate-spin text-indigo-500" />
+               </div>
+               <div className="flex-1 space-y-3 pt-4">
+                  <div className="h-2 w-full bg-white/5 rounded-full" />
+                  <div className="h-2 w-3/4 bg-white/5 rounded-full" />
+                  <div className="h-2 w-1/2 bg-white/5 rounded-full" />
                </div>
             </div>
           )}
@@ -215,36 +257,39 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
       </div>
 
       {/* Input Area */}
-      <div className="flex-none p-4 md:p-8 bg-gradient-to-t from-white via-white to-transparent">
-        <div className="max-w-3xl mx-auto relative">
-          <form onSubmit={handleSubmit} className="relative bg-stone-100 rounded-[28px] border border-stone-200 focus-within:ring-2 focus-within:ring-stone-200 transition-all shadow-sm">
+      <div className="flex-none p-8 md:p-12 z-20">
+        <div className="max-w-4xl mx-auto relative">
+          <form onSubmit={handleSubmit} className="relative glass rounded-[48px] border border-white/10 focus-within:border-indigo-500/50 transition-all shadow-[0_0_100px_rgba(0,0,0,0.5)]">
             <AnimatePresence>
               {attachedFile && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute bottom-full left-0 mb-3 p-2 bg-white border border-stone-200 rounded-xl flex items-center gap-3 shadow-lg z-10"
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                  className="absolute bottom-full left-8 mb-6 p-4 glass border border-white/10 rounded-3xl flex items-center gap-4 shadow-2xl z-20"
                 >
-                  <div className="w-8 h-8 bg-stone-50 rounded-lg flex items-center justify-center text-stone-500">
-                    {attachedFile.type.startsWith('image/') ? <ImageIcon size={16} /> : <FileIcon size={16} />}
+                  <div className="w-10 h-10 bg-indigo-600/20 rounded-xl flex items-center justify-center text-indigo-500">
+                    {attachedFile.type.startsWith('image/') ? <ImageIcon size={20} /> : <FileIcon size={20} />}
                   </div>
-                  <span className="text-[10px] font-bold text-stone-900 truncate max-w-[120px]">{attachedFile.name}</span>
-                  <button type="button" onClick={() => setAttachedFile(null)} className="p-1 text-stone-400 hover:text-stone-900"><CloseIcon size={12} /></button>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-200 truncate max-w-[150px]">{attachedFile.name}</span>
+                    <span className="text-[8px] font-bold text-stone-500 uppercase">Input_Ready</span>
+                  </div>
+                  <button type="button" onClick={() => setAttachedFile(null)} className="p-2 text-stone-600 hover:text-white transition-colors bg-white/5 rounded-full"><CloseIcon size={14} /></button>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,application/pdf,text/*" />
 
-            <div className="flex items-end gap-2 px-4 py-2">
+            <div className="flex items-center gap-4 px-8 py-4">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mb-1 p-2 text-stone-500 hover:text-stone-900 transition-colors"
-                title="Attach"
+                className="p-4 bg-white/5 rounded-2xl text-stone-500 hover:text-white transition-all transform hover:rotate-12"
+                title="Attach Vector"
               >
-                <Paperclip size={20} />
+                <Paperclip size={24} />
               </button>
               
               <textarea
@@ -257,30 +302,38 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
                     handleSubmit();
                   }
                 }}
-                placeholder="Message AkinAI..."
-                className="flex-1 py-3 bg-transparent outline-none resize-none max-h-48 text-[15px] text-stone-900 placeholder:text-stone-500 leading-relaxed"
+                placeholder="Synchronize command sequence..."
+                className="flex-1 py-4 bg-transparent outline-none resize-none max-h-48 text-lg font-bold font-display italic tracking-tight text-white placeholder:text-stone-700 leading-relaxed"
               />
 
               <button
                 type="submit"
                 disabled={(!input.trim() && !attachedFile) || isLoading}
                 className={cn(
-                  "mb-1 p-2 rounded-xl transition-all",
+                  "p-5 rounded-[28px] transition-all duration-700 flex items-center justify-center",
                   (input.trim() || attachedFile) && !isLoading 
-                    ? "bg-stone-900 text-white shadow-md active:scale-95" 
-                    : "text-stone-300 pointer-events-none"
+                    ? "bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-95 translate-x-1" 
+                    : "bg-white/5 text-stone-800"
                 )}
               >
-                <Send size={18} />
+                <Send size={24} strokeWidth={3} />
               </button>
             </div>
           </form>
           
-          <p className="mt-3 text-center text-[10px] text-stone-400 font-bold uppercase tracking-widest leading-relaxed">
-            AkinAI can make mistakes. Check important info.
-          </p>
+          <div className="mt-6 flex justify-center items-center gap-8 text-[9px] font-black uppercase tracking-[0.4em] text-stone-600 italic">
+            <span>Core v4.0.1</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-stone-900" />
+            <span>Secure_Protocol: AES-512</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-stone-900" />
+            <span>Node_742_Online</span>
+          </div>
         </div>
       </div>
+      
+      {/* Absolute Decorative Orbs */}
+      <div className="absolute top-[30%] -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[20%] -right-40 w-96 h-96 bg-rose-500/5 rounded-full blur-[140px] pointer-events-none" />
     </div>
   );
 };

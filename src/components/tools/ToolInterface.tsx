@@ -127,17 +127,22 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullText = '';
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // Keep the last partial line in the buffer
+        buffer = lines.pop() || '';
         
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6).trim();
+          const trimmedLine = line.trim();
+          if (trimmedLine.startsWith('data: ')) {
+            const dataStr = trimmedLine.slice(6).trim();
             if (dataStr === '[DONE]') continue;
             
             try {
@@ -157,7 +162,7 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
                 throw new Error(data.error);
               }
             } catch (e) {
-              console.error('Error parsing SSE chunk:', e);
+              console.error('Error parsing SSE chunk:', e, dataStr);
             }
           }
         }

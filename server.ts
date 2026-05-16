@@ -3,7 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import twilio from 'twilio';
 import dotenv from 'dotenv';
-import { geminiService } from "./src/services/geminiService";
+import { geminiCore } from "./src/services/geminiCore";
 
 dotenv.config();
 
@@ -17,8 +17,9 @@ async function startServer() {
   // AI Chat Route (Non-streaming)
   app.post("/api/chat", async (req, res) => {
     const { message, history, personality, attachments } = req.body;
+    console.log("Chat Request:", message);
     try {
-      const reply = await geminiService.generateResponse(message, history, personality, attachments);
+      const reply = await geminiCore.generateResponse(message, history, personality, attachments);
       res.json({ reply });
     } catch (error: any) {
       console.error("Chat Error:", error);
@@ -29,13 +30,14 @@ async function startServer() {
   // AI Chat Route (Streaming SSE)
   app.post("/api/chat/stream", async (req, res) => {
     const { message, history, personality, attachments } = req.body;
+    console.log("Stream Request:", message);
     
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     try {
-      const stream = geminiService.generateResponseStream(message, history, personality, attachments);
+      const stream = geminiCore.generateResponseStream(message, history, personality, attachments);
       for await (const chunk of stream) {
         res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
       }

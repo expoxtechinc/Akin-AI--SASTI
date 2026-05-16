@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../services/firebase';
@@ -112,9 +113,26 @@ export const GlobalCall: React.FC = () => {
             setupStreams();
           },
           onmessage: async (message) => {
-            if (message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
-              playPcmData(message.serverContent.modelTurn.parts[0].inlineData.data);
-              setActiveSpeaker('1');
+            const parts = message.serverContent?.modelTurn?.parts;
+            
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data) {
+                  playPcmData(part.inlineData.data);
+                  setActiveSpeaker('1');
+                }
+                
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                }
+              }
             }
           },
           onclose: () => {
@@ -131,6 +149,7 @@ export const GlobalCall: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } }
           },
+          tools: AKIN_TOOLS,
           systemInstruction: "You are Leander, the host of a Global Group Call. You are wise, empathetic, and friendly. Facilitate a group discussion about love, life, and the future. Engage with multiple participants naturally. You can see the user through their camera."
         }
       });

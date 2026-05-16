@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Zap, Eye, Target, Shield, AlertTriangle } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -53,17 +54,33 @@ export const BossLive: React.FC = () => {
             setupStreams();
           },
           onmessage: async (message: LiveServerMessage) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio && !isAiMuted) {
-              playPcmData(base64Audio);
-            }
+            const parts = message.serverContent?.modelTurn?.parts;
+            
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data && !isAiMuted) {
+                  playPcmData(part.inlineData.data);
+                }
+                
+                if (part.text) {
+                  setAiTranscription(part.text);
+                  if (part.text.length > 5) {
+                    setDetections(prev => [part.text, ...prev].slice(0, 5));
+                    setIntensity(Math.min(100, intensity + 10));
+                  }
+                }
 
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) {
-              setAiTranscription(text);
-              if (text.length > 5) {
-                setDetections(prev => [text, ...prev].slice(0, 5));
-                setIntensity(Math.min(100, intensity + 10));
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                  setDetections(prev => [`Neural Intel retrieved: ${part.functionCall?.name}`, ...prev].slice(0, 5));
+                }
               }
             }
           },
@@ -82,6 +99,7 @@ export const BossLive: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } },
           },
+          tools: AKIN_TOOLS,
           systemInstruction: `You are BossLive, the high-alert visual intelligence of AkinAI. 
           IDENTITY: You are authoritative, efficient, and observant. 
           MISSION: Identify EVERYTHING in the user's view. Focus on:

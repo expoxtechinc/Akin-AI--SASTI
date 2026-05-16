@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Play, Camera, Zap, HeartPulse, Activity, Code, BookOpen } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -67,17 +68,32 @@ export const LiveVideoCall: React.FC = () => {
             setupStreams();
           },
           onmessage: async (message: LiveServerMessage) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio && !isAiMuted) {
-              playPcmData(base64Audio);
-            }
+            const parts = message.serverContent?.modelTurn?.parts;
+            
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data && !isAiMuted) {
+                  playPcmData(part.inlineData.data);
+                }
+                
+                if (part.text) {
+                  setAiTranscription(part.text);
+                  if (part.text.length > 20) {
+                    setLectureNotes(prev => [part.text, ...prev].slice(0, 10));
+                  }
+                }
 
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) {
-              setAiTranscription(text);
-              // Advanced interpretation: If AI mentions specific educational concepts, highlight them
-              if (text.length > 20) {
-                setLectureNotes(prev => [text, ...prev].slice(0, 10));
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                  setLectureNotes(prev => [`System executed: ${part.functionCall?.name}`, ...prev].slice(0, 10));
+                }
               }
             }
           },
@@ -96,6 +112,7 @@ export const LiveVideoCall: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
           },
+          tools: AKIN_TOOLS,
           systemInstruction: `You are Kin, an expert Virtual Instructor at AkinAI. 
           Current Subject: ${subject}. 
           Objective: Provide an elite 1-on-1 classroom experience. 

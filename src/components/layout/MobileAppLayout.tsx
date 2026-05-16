@@ -17,7 +17,12 @@ import {
   Settings,
   TrendingUp,
   Cpu,
-  Zap
+  Zap,
+  Menu,
+  Edit3,
+  MoreVertical,
+  AudioLines,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { AITool } from '../../types';
@@ -40,6 +45,7 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
   userEmail = 'User',
   onLogout
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'explore' | 'chat' | 'profile'>('chat');
   const [time, setTime] = useState(new Date());
 
@@ -57,53 +63,53 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-screen bg-[#0A0A0A] text-white font-sans overflow-hidden max-w-md mx-auto relative border-x border-white/5 shadow-2xl">
+     <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden max-w-md mx-auto relative shadow-2xl">
       {/* Status Bar */}
-      <div className="h-10 flex-none flex justify-between items-center px-6 pt-4 z-40">
-        <span className="text-xs font-bold tracking-tight">{formattedTime}</span>
-        <div className="flex items-center gap-1.5">
-           <TrendingUp size={12} className="text-stone-500" />
-           <div className="flex gap-0.5">
-             <div className="w-0.5 h-2 bg-white/20" />
-             <div className="w-0.5 h-3 bg-white/20" />
-             <div className="w-0.5 h-1 bg-white/20" />
+      <div className="h-6 flex-none flex justify-between items-center px-6 pt-2 z-40">
+        <span className="text-[10px] font-bold tracking-tight">{formattedTime}</span>
+        <div className="flex items-center gap-1.5 opacity-60">
+           <div className="flex gap-0.5 items-end">
+             <div className="w-[1.5px] h-1.5 bg-white rounded-full" />
+             <div className="w-[1.5px] h-2.5 bg-white rounded-full" />
+             <div className="w-[1.5px] h-2 bg-white/20 rounded-full" />
+             <div className="w-[1.5px] h-3 bg-white/20 rounded-full" />
            </div>
-           <div className="w-5 h-2.5 rounded-[2px] border border-white/20 relative">
-             <div className="absolute left-[1px] top-[1px] bottom-[1px] w-3 bg-white rounded-[1px]" />
+           <div className="w-5 h-2.5 rounded-[3px] border border-white/40 relative">
+             <div className="absolute left-[1px] top-[1px] bottom-[1px] w-2.5 bg-white rounded-[1px]" />
            </div>
         </div>
       </div>
 
       {/* Header */}
-      <header className="px-6 py-4 flex-none flex justify-between items-center z-40">
-        <div onClick={() => { onSelectTool(null); setActiveTab('home'); }} className="cursor-pointer">
-          <h1 className="text-xl font-black tracking-tighter italic text-indigo-500 flex items-center gap-1">
-            AkinAI<span className="text-white not-italic">.</span>
-          </h1>
-          <p className="text-[9px] font-bold text-stone-500 uppercase tracking-widest leading-none">
-            {activeTool ? activeTool.name : 'AI Ecosystem'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="p-2 bg-white/5 rounded-full border border-white/10 relative">
-            <Bell size={18} className="text-stone-400" />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+      <header className="px-4 py-3 flex-none flex justify-between items-center z-40">
+        <button 
+          onClick={() => setIsMenuOpen(true)}
+          className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/15 rounded-full transition-colors"
+        >
+          <Menu size={20} className="text-white" />
+        </button>
+
+        <div className="flex items-center bg-white/10 rounded-full p-1 border border-white/5">
+          <button 
+            onClick={() => { onSelectTool(null); setActiveTab('chat'); }}
+            className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full transition-colors"
+          >
+            <Edit3 size={18} className="text-white/80" />
           </button>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-stone-800 to-black border border-white/10 flex items-center justify-center text-[10px] font-black shadow-lg">
-            {userEmail.charAt(0).toUpperCase()}
-          </div>
+          <button className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full transition-colors">
+            <MoreVertical size={18} className="text-white/80" />
+          </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto customized-scrollbar-dark pb-24 relative">
+      <main className="flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTool?.id || activeTab}
-            initial={{ opacity: 0, x: activeTool ? 20 : -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: activeTool ? -20 : 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="h-full"
           >
             {children}
@@ -111,63 +117,76 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 inset-x-0 h-20 bg-black/80 backdrop-blur-xl border-t border-white/5 px-8 flex items-center justify-between pb-6 z-50">
-        <button 
-          onClick={() => { setActiveTab('home'); onSelectTool(null); }}
-          className={cn(
-            "flex flex-col items-center gap-1 transition-all",
-            activeTab === 'home' && !activeTool ? "text-indigo-500" : "text-stone-500"
-          )}
-        >
-          <Home size={22} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
-        </button>
+      {/* Side Menu Overlay */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[70]"
+            />
+            <motion.div 
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              className="absolute top-0 bottom-0 left-0 w-4/5 bg-[#171717] z-[80] shadow-2xl p-6 flex flex-col"
+            >
+               <div className="flex items-center gap-3 mb-10 mt-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                     <AudioLines size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black tracking-tight tracking-tighter italic">AkinAI</h2>
+                    <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">Neural Matrix</p>
+                  </div>
+               </div>
 
-        <button 
-          onClick={() => setActiveTab('explore')}
-          className={cn(
-            "flex flex-col items-center gap-1 transition-all",
-            activeTab === 'explore' ? "text-indigo-500" : "text-stone-500"
-          )}
-        >
-          <Search size={22} strokeWidth={activeTab === 'explore' ? 2.5 : 2} />
-        </button>
+               <div className="flex-1 space-y-2">
+                  {[
+                    { id: 'chat', icon: MessageSquare, label: 'Neural Chat' },
+                    { id: 'explore', icon: LayoutDashboard, label: 'Applications' },
+                    { id: 'profile', icon: User, label: 'Founder Profile' },
+                    { id: 'settings', icon: Settings, label: 'System Config' }
+                  ].map((item) => (
+                    <button 
+                      key={item.id}
+                      onClick={() => { 
+                        setActiveTab(item.id as any); 
+                        setIsMenuOpen(false); 
+                        if(item.id === 'chat') onSelectTool(null);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-4 p-4 rounded-2xl transition-all",
+                        activeTab === item.id ? "bg-white/10 text-white" : "text-stone-400 hover:bg-white/5"
+                      )}
+                    >
+                      <item.icon size={20} />
+                      <span className="text-sm font-bold">{item.label}</span>
+                    </button>
+                  ))}
+               </div>
 
-        <div className="relative -top-4">
-          <button 
-            onClick={() => setActiveTab('explore')}
-            className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-600/30 rotate-45"
-          >
-            <Plus size={28} className="text-white -rotate-45" />
-          </button>
-        </div>
+               <div className="pt-6 border-t border-white/5">
+                  <div className="flex items-center gap-3 p-2">
+                     <div className="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center text-[10px] font-black">
+                        {userEmail.charAt(0).toUpperCase()}
+                     </div>
+                     <span className="text-xs font-medium text-stone-400 truncate">{userEmail}</span>
+                  </div>
+               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-        <button 
-          onClick={() => { onSelectTool(TOOLS.find(t => t.id === 'whatsapp-messenger') || null); setActiveTab('chat'); }}
-          className={cn(
-            "flex flex-col items-center gap-1 transition-all",
-            activeTab === 'chat' ? "text-indigo-500" : "text-stone-500"
-          )}
-        >
-          <MessageCircle size={22} strokeWidth={activeTab === 'chat' ? 2.5 : 2} />
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('profile')}
-          className={cn(
-            "flex flex-col items-center gap-1 transition-all",
-            activeTab === 'profile' ? "text-indigo-500" : "text-stone-500"
-          )}
-        >
-          <User size={22} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
-        </button>
-      </nav>
-
-      {/* Overlays / Mods */}
+      {/* Explore Dashboard Overlay */}
       {activeTab === 'explore' && !activeTool && (
         <NeuralDashboard 
-          onSelectTool={(tool) => { onSelectTool(tool); setActiveTab('home'); }}
-          onClose={() => setActiveTab('home')}
+          onSelectTool={(tool) => { onSelectTool(tool); setActiveTab('chat'); }}
+          onClose={() => setActiveTab('chat')}
         />
       )}
 
@@ -185,7 +204,7 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
                 <div className="w-32 h-32 rounded-[48px] bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] relative z-10 overflow-hidden">
                    <div className="w-full h-full bg-[#0A0A0A] rounded-[46px] overflow-hidden">
                       <img 
-                        src="/file_00000000b690720abf4d5357155283f7.png" 
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" 
                         alt="Akin S. Sokpah" 
                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-110"
                         referrerPolicy="no-referrer"

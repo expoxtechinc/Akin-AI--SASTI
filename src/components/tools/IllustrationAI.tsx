@@ -10,6 +10,7 @@ import { ToolInterface } from './ToolInterface';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
 import { GoogleGenAI, Modality } from "@google/genai";
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const illustratorTool = TOOLS.find(t => t.id === 'illustrator')!;
 const apiKey = process.env.GEMINI_API_KEY;
@@ -47,16 +48,31 @@ export const IllustrationAI: React.FC = () => {
              setupStreams();
           },
           onmessage: async (message) => {
-             const audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-             if (audio) playPcmData(audio);
-             const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-             if (text) setAiTranscription(text);
+            const parts = message.serverContent?.modelTurn?.parts;
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data) playPcmData(part.inlineData.data);
+                if (part.text) setAiTranscription(part.text);
+                
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                }
+              }
+            }
           },
           onclose: () => stopLiveVision(),
           onerror: () => stopLiveVision()
         },
         config: {
           responseModalities: [Modality.AUDIO],
+          tools: AKIN_TOOLS,
           systemInstruction: "You are the Creative Director at AkinIllustrator. Help users with their visual designs by analyzing what they show you through their camera. Provide expert artistic advice, suggest colors, and brainstorm compositions."
         }
       });

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { GoogleGenAI, Modality } from "@google/genai";
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -48,16 +49,31 @@ export const SonicStudio: React.FC = () => {
              setupStreams();
           },
           onmessage: async (message) => {
-             const audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-             if (audio) playPcmData(audio);
-             const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-             if (text) setAiTranscription(text);
+            const parts = message.serverContent?.modelTurn?.parts;
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data) playPcmData(part.inlineData.data);
+                if (part.text) setAiTranscription(part.text);
+                
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                }
+              }
+            }
           },
           onclose: () => stopLiveProducer(),
           onerror: () => stopLiveProducer()
         },
         config: {
           responseModalities: [Modality.AUDIO],
+          tools: AKIN_TOOLS,
           systemInstruction: "You are the Executive Producer at AkinAI's Sonic Studio. You have a deep understanding of music theory, West African rhythms, and modern production. Listen to the user's ideas (and see them if their camera is on) and provide expert feedback to help them craft a hit."
         }
       });

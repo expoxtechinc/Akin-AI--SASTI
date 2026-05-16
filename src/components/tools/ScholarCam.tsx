@@ -5,11 +5,14 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, BookOpen, GraduationCap, Sparkles, Upload, History, Brain, Trophy, ChevronRight, Search, Microscope, Calculator } from 'lucide-react';
+import { Camera, BookOpen, GraduationCap, Sparkles, Upload, History, Brain, Trophy, ChevronRight, Search, Microscope, Calculator, Video, PhoneOff } from 'lucide-react';
+import { GoogleGenAI, Modality } from "@google/genai";
 import { ToolInterface } from './ToolInterface';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
+const apiKey = process.env.GEMINI_API_KEY;
 const scholarTool = TOOLS.find(t => t.id === 'scholar-cam')!;
 
 export const ScholarCam: React.FC = () => {
@@ -42,16 +45,30 @@ export const ScholarCam: React.FC = () => {
             setupStreams();
           },
           onmessage: async (message) => {
-            const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (audioData) playPcmData(audioData);
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) setAiTranscription(text);
+            const parts = message.serverContent?.modelTurn?.parts;
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data) playPcmData(part.inlineData.data);
+                if (part.text) setAiTranscription(part.text);
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                }
+              }
+            }
           },
           onclose: () => stopLiveStudy(),
           onerror: () => stopLiveStudy()
         },
         config: {
           responseModalities: [Modality.AUDIO],
+          tools: AKIN_TOOLS,
           systemInstruction: "You are a professional tutor at AkinAI's ScholarCam. Help students understand complex concepts visualized through their camera. Be encouraging, clear, and academic."
         }
       });

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Play, Square } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -56,15 +57,27 @@ export const LiveCall: React.FC = () => {
             setupAudio();
           },
           onmessage: async (message: LiveServerMessage) => {
-            // Handle audio output
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio && !isAiMuted) {
-              playPcmData(base64Audio);
-            }
+            const parts = message.serverContent?.modelTurn?.parts;
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data && !isAiMuted) {
+                  playPcmData(part.inlineData.data);
+                }
+                
+                if (part.text) setAiTranscription(part.text);
 
-            // Handle transcription
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) setAiTranscription(text);
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                }
+              }
+            }
           },
           onerror: (err) => {
             console.error('Live API Error:', err);
@@ -81,7 +94,8 @@ export const LiveCall: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedVoice } },
           },
-          systemInstruction: `You are Kin, the voice of AkinAI. Your current voice identity is ${selectedVoice}. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity.`,
+          tools: AKIN_TOOLS,
+          systemInstruction: `You are Kin, the voice of AkinAI. Your current voice identity is ${selectedVoice}. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity. Use tools if helpful for the conversation context.`,
         },
       });
 

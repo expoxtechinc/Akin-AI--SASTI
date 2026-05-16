@@ -11,6 +11,7 @@ import { ToolInterface } from './ToolInterface';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
 import { GoogleGenAI, Modality } from "@google/genai";
+import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const medicalTool = TOOLS.find(t => t.id === 'medical-pro')!;
 
@@ -61,11 +62,24 @@ export const MedicalPro: React.FC = () => {
             setupStreams();
           },
           onmessage: async (message) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio) playPcmData(base64Audio);
-
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) setAiTranscription(text);
+            const parts = message.serverContent?.modelTurn?.parts;
+            if (parts) {
+              for (const part of parts) {
+                if (part.inlineData?.data) playPcmData(part.inlineData.data);
+                if (part.text) setAiTranscription(part.text);
+                
+                if (part.functionCall) {
+                  const result = await handleLiveToolCall(part.functionCall);
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      name: part.functionCall.name,
+                      response: result,
+                      id: part.functionCall.id
+                    }]
+                  });
+                }
+              }
+            }
           },
           onclose: () => stopConsultation(),
           onerror: () => stopConsultation(),
@@ -75,7 +89,8 @@ export const MedicalPro: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } },
           },
-          systemInstruction: "You are Dr. Kin, a clinical specialist at AkinAI. Analyze the patient's symptoms and visual presentation. Provide evidence-based clinical insights while maintaining a professional medical demeanor.",
+          tools: AKIN_TOOLS,
+          systemInstruction: "You are Dr. Kin, a clinical specialist at AkinAI. Analyze the patient's symptoms and visual presentation. Provide evidence-based clinical insights while maintaining a professional medical demeanor. Use search_web to look up latest medical journals if needed.",
         }
       });
       sessionRef.current = session;

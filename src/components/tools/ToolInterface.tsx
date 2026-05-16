@@ -6,7 +6,30 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { Send, Loader2, Copy, Check, Trash2, Maximize2, Minimize2, Zap, Paperclip, X as CloseIcon, Image as ImageIcon, FileText as FileIcon } from 'lucide-react';
+import { 
+  Send, 
+  Loader2, 
+  Copy, 
+  Check, 
+  Trash2, 
+  Maximize2, 
+  Minimize2, 
+  Zap, 
+  Paperclip, 
+  X as CloseIcon, 
+  Image as ImageIcon, 
+  FileText as FileIcon, 
+  Cpu, 
+  BrainCircuit,
+  ThumbsUp,
+  ThumbsDown,
+  Volume2,
+  Share,
+  MoreHorizontal,
+  Plus,
+  Mic,
+  AudioLines
+} from 'lucide-react';
 import { AITool, ChatMessage } from '../../types';
 import { geminiService } from '../../services/geminiService';
 import { cn } from '../../lib/utils';
@@ -81,18 +104,12 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
         parts: [{ text: msg.content }]
       }));
 
-      const promptParts: any[] = [];
-      if (userMessage) promptParts.push({ text: userMessage });
-      if (currentFile) {
-        promptParts.push({
-          inlineData: {
-            data: currentFile.base64,
-            mimeType: currentFile.type
-          }
-        });
-      }
+      const attachments = currentFile ? [{
+        data: `data:${currentFile.type};base64,${currentFile.base64}`,
+        mimeType: currentFile.type
+      }] : [];
 
-      const response = await geminiService.generateResponse(promptParts, tool.prompt, history as any);
+      const response = await geminiService.generateResponse(userMessage, history as any, tool.prompt, attachments);
       setMessages(prev => [...prev, { role: 'model', content: response || 'No response generated.' }]);
     } catch (error: any) {
       console.error(error);
@@ -113,185 +130,120 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
       "flex flex-col h-full bg-[#050505] text-white transition-all overflow-hidden relative bg-mesh",
       isFullscreen ? "fixed inset-0 z-[100]" : "w-full"
     )}>
-      {/* Tool Header */}
-      <div className="px-8 py-6 flex items-center justify-between glass z-20 border-b border-white/5">
-         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-3xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-               <Cpu size={24} className="text-white" />
-            </div>
-            <div>
-               <h2 className="text-xl font-black tracking-tighter italic font-display uppercase text-glow">{tool.name}</h2>
-               <span className="text-[9px] font-black uppercase tracking-[0.4em] text-indigo-500">Neural_Compute_Active</span>
-            </div>
-         </div>
-         <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-3 bg-white/5 rounded-xl border border-white/10 text-stone-500 hover:text-white transition-all"
-            >
-               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
-            <div className="w-px h-6 bg-white/5" />
-            <button className="p-3 text-stone-500 hover:text-white transition-colors">
-               <Zap size={20} className="text-indigo-500 animate-pulse" />
-            </button>
-         </div>
+      {/* Tool Header - Minimal, showing app name or tool name */}
+      <div className="px-6 py-4 flex items-center justify-between z-20">
+          <div className="flex items-center gap-2">
+             <span className="text-lg font-bold text-white/90">{tool.name}</span>
+             <div className="w-1.5 h-1.5 rounded-full bg-stone-700" />
+             <span className="text-xs font-medium text-stone-500 italic">Core v4.0</span>
+          </div>
       </div>
 
       {/* Chat Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-6 py-12 md:px-12 scroll-smooth customized-scrollbar relative z-10"
+        className="flex-1 overflow-y-auto px-6 py-4 md:px-8 scroll-smooth customized-scrollbar relative z-10"
       >
-        <div className="max-w-[1200px] mx-auto w-full space-y-16">
+        <div className="max-w-2xl mx-auto w-full space-y-10">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20 space-y-12">
+            <div className="h-4/5 flex flex-col items-center justify-center text-center py-20 space-y-8">
                <motion.div 
-                 animate={{ rotate: 360 }}
-                 transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                 animate={{ scale: [1, 1.05, 1] }}
+                 transition={{ repeat: Infinity, duration: 4 }}
                  className="relative"
                >
-                 <div className="absolute inset-0 bg-indigo-600 blur-[40px] opacity-20" />
-                 <div className="w-24 h-24 rounded-[32px] bg-black border border-white/10 flex items-center justify-center text-indigo-500 relative z-10">
-                    <BrainCircuit size={48} />
+                 <div className="absolute inset-0 bg-indigo-600 blur-[60px] opacity-10" />
+                 <div className="w-16 h-16 rounded-[24px] bg-white/5 border border-white/5 flex items-center justify-center text-white relative z-10">
+                    <AudioLines size={32} />
                  </div>
                </motion.div>
               
-               <div className="space-y-4">
-                 <h3 className="text-3xl font-black tracking-tighter uppercase italic font-display text-glow">{tool.name} Readiness</h3>
-                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-600 max-w-sm mx-auto italic">
-                   Node Operational. Select sub-protocol or input unique vector command to begin synchronization.
+               <div className="space-y-2">
+                 <h3 className="text-2xl font-bold tracking-tight text-white">How can I help you today?</h3>
+                 <p className="text-sm font-medium text-stone-500 max-w-xs mx-auto">
+                   AkinAI is ready to synchronize with your creative and technical objectives.
                  </p>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-4">
-                 {['Explain complex logic', 'Initialize code plan', 'Creative vectoring', 'Technical debug'].map((hint) => (
-                   <button 
-                     key={hint}
-                     onClick={() => setInput(hint)}
-                     className="group relative p-6 bg-white/5 border border-white/5 rounded-[32px] overflow-hidden text-left transition-all hover:bg-white/10 hover:border-indigo-500/30"
-                   >
-                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
-                        <Zap size={40} />
-                     </div>
-                     <span className="relative z-10 text-[9px] font-black uppercase tracking-[0.3em] text-stone-500 group-hover:text-white transition-colors">{hint}</span>
-                   </button>
-                 ))}
                </div>
             </div>
           ) : (
-            <div className="space-y-12 pb-32">
+            <div className="space-y-8 pb-40">
               {messages.map((message, index) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={index}
-                  className={cn(
-                    "flex gap-6 group relative",
-                    message.role === 'user' ? "flex-row-reverse" : "flex-row"
-                  )}
-                >
+                <div key={index} className="space-y-4">
                   <div className={cn(
-                    "flex-none w-14 h-14 rounded-2xl flex items-center justify-center text-[10px] font-bold border relative overflow-hidden",
-                    message.role === 'user' 
-                      ? "bg-white/5 border-white/10 text-stone-400 font-black italic" 
-                      : "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/30"
-                  )}>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
-                    <span className="relative z-10 uppercase tracking-tighter">{message.role === 'user' ? 'USER' : 'CORE'}</span>
-                  </div>
-                  
-                  <div className={cn(
-                    "flex-1 min-w-0 space-y-4",
-                    message.role === 'user' ? "text-right" : "text-left"
+                    "flex flex-col group relative",
+                    message.role === 'user' ? "items-end" : "items-start"
                   )}>
                     <div className={cn(
-                      "p-8 rounded-[48px] shadow-2xl transition-all relative overflow-hidden",
+                      "max-w-[85%] rounded-3xl transition-all",
                       message.role === 'user' 
-                        ? "bg-white/5 border border-white/5 text-stone-200 font-display italic tracking-tight text-xl" 
-                        : "glass border border-white/10 text-stone-200 prose prose-invert max-w-none prose-p:leading-relaxed md:prose-p:text-lg"
+                        ? "px-5 py-3 bg-stone-800/80 text-white font-medium" 
+                        : "py-2 text-stone-100"
                     )}>
                       {message.role === 'user' ? (
                         message.content
                       ) : (
-                        <ReactMarkdown className="markdown-body">{message.content}</ReactMarkdown>
+                        <div className="markdown-body text-base leading-relaxed">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
                       )}
                     </div>
                     
-                    <div className={cn(
-                      "flex items-center gap-6 px-4 opacity-50 group-hover:opacity-100 transition-opacity",
-                      message.role === 'user' ? "flex-row-reverse" : "flex-row"
-                    )}>
-                      {message.role === 'model' && (
-                        <>
-                          <button
-                            onClick={() => copyToClipboard(message.content, index)}
-                            className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 hover:text-white transition-colors"
-                          >
-                            <Copy size={14} /> {copiedIndex === index ? 'S_Sync' : 'Clone'}
-                          </button>
-                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
-                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-stone-600">Integrity Check v8.4.2 Passed</span>
-                        </>
-                      )}
-                    </div>
+                    {message.role === 'model' && (
+                      <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-stone-500 hover:text-white" title="Copy">
+                          <Copy size={16} />
+                        </button>
+                        <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-stone-500 hover:text-white">
+                          <ThumbsUp size={16} />
+                        </button>
+                        <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-stone-500 hover:text-white">
+                          <ThumbsDown size={16} />
+                        </button>
+                        <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-stone-500 hover:text-white">
+                          <Volume2 size={16} />
+                        </button>
+                        <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-stone-500 hover:text-white">
+                          <Share size={16} />
+                        </button>
+                        <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-stone-500 hover:text-white">
+                          <MoreHorizontal size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </div>
-          )}
-          
-          {isLoading && (
-            <div className="flex gap-6 animate-pulse">
-               <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
-                  <Loader2 className="animate-spin text-indigo-500" />
-               </div>
-               <div className="flex-1 space-y-3 pt-4">
-                  <div className="h-2 w-full bg-white/5 rounded-full" />
-                  <div className="h-2 w-3/4 bg-white/5 rounded-full" />
-                  <div className="h-2 w-1/2 bg-white/5 rounded-full" />
-               </div>
+              
+              {isLoading && (
+                <div className="flex items-start gap-4">
+                  <div className="p-2">
+                    <Loader2 className="animate-spin text-white/40" size={20} />
+                  </div>
+                  <div className="flex-1 space-y-3 pt-3">
+                    <div className="h-1.5 w-full bg-white/5 rounded-full" />
+                    <div className="h-1.5 w-4/5 bg-white/5 rounded-full" />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="flex-none p-8 md:p-12 z-20">
-        <div className="max-w-4xl mx-auto relative">
-          <form onSubmit={handleSubmit} className="relative glass rounded-[48px] border border-white/10 focus-within:border-indigo-500/50 transition-all shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-            <AnimatePresence>
-              {attachedFile && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                  className="absolute bottom-full left-8 mb-6 p-4 glass border border-white/10 rounded-3xl flex items-center gap-4 shadow-2xl z-20"
-                >
-                  <div className="w-10 h-10 bg-indigo-600/20 rounded-xl flex items-center justify-center text-indigo-500">
-                    {attachedFile.type.startsWith('image/') ? <ImageIcon size={20} /> : <FileIcon size={20} />}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-200 truncate max-w-[150px]">{attachedFile.name}</span>
-                    <span className="text-[8px] font-bold text-stone-500 uppercase">Input_Ready</span>
-                  </div>
-                  <button type="button" onClick={() => setAttachedFile(null)} className="p-2 text-stone-600 hover:text-white transition-colors bg-white/5 rounded-full"><CloseIcon size={14} /></button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
+      {/* Neural Input Pill - Optimized Layer */}
+      <div className="absolute bottom-6 inset-x-0 px-6 z-50">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
+          <form onSubmit={handleSubmit} className="flex-1 flex items-center bg-[#2F2F2F] rounded-[32px] px-2 py-1.5 shadow-2xl transition-all focus-within:ring-1 ring-white/10 relative overflow-visible">
+            <button
+               type="button"
+               onClick={() => fileInputRef.current?.click()}
+               className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            >
+               <Plus size={22} />
+            </button>
             <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,application/pdf,text/*" />
-
-            <div className="flex items-center gap-4 px-8 py-4">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-4 bg-white/5 rounded-2xl text-stone-500 hover:text-white transition-all transform hover:rotate-12"
-                title="Attach Vector"
-              >
-                <Paperclip size={24} />
-              </button>
-              
+            
+            <div className="flex-1 relative flex items-center">
               <textarea
                 rows={1}
                 value={input}
@@ -302,32 +254,49 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
                     handleSubmit();
                   }
                 }}
-                placeholder="Synchronize command sequence..."
-                className="flex-1 py-4 bg-transparent outline-none resize-none max-h-48 text-lg font-bold font-display italic tracking-tight text-white placeholder:text-stone-700 leading-relaxed"
+                placeholder={`Reply to ${tool.name}`}
+                className="w-full bg-transparent outline-none py-2 px-2 text-[15px] font-medium text-white placeholder:text-stone-500 resize-none max-h-32"
               />
-
-              <button
-                type="submit"
-                disabled={(!input.trim() && !attachedFile) || isLoading}
-                className={cn(
-                  "p-5 rounded-[28px] transition-all duration-700 flex items-center justify-center",
-                  (input.trim() || attachedFile) && !isLoading 
-                    ? "bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-95 translate-x-1" 
-                    : "bg-white/5 text-stone-800"
+              
+              <AnimatePresence>
+                {attachedFile && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                    className="absolute bottom-full left-0 mb-4 p-2 bg-stone-800 border border-white/5 rounded-2xl flex items-center gap-3 shadow-2xl"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+                      {attachedFile.type.startsWith('image/') ? <ImageIcon size={16} /> : <FileIcon size={16} />}
+                    </div>
+                    <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{attachedFile.name}</span>
+                    <button type="button" onClick={() => setAttachedFile(null)} className="p-1.5 text-white/50 hover:text-white bg-white/5 rounded-full"><CloseIcon size={10} /></button>
+                  </motion.div>
                 )}
-              >
-                <Send size={24} strokeWidth={3} />
-              </button>
+              </AnimatePresence>
+            </div>
+
+            <div className="flex items-center gap-1">
+               <button type="button" className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white transition-colors">
+                  <Mic size={20} />
+               </button>
+               {input.trim() || attachedFile ? (
+                 <button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center transition-all active:scale-95"
+                 >
+                   <Send size={14} fill="currentColor" />
+                 </button>
+               ) : null}
             </div>
           </form>
-          
-          <div className="mt-6 flex justify-center items-center gap-8 text-[9px] font-black uppercase tracking-[0.4em] text-stone-600 italic">
-            <span>Core v4.0.1</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-stone-900" />
-            <span>Secure_Protocol: AES-512</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-stone-900" />
-            <span>Node_742_Online</span>
-          </div>
+
+          {!input.trim() && !attachedFile && (
+            <button className="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+               <AudioLines size={20} />
+            </button>
+          )}
         </div>
       </div>
       

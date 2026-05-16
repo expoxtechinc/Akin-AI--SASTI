@@ -7,6 +7,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { 
   getFirestore, 
+  initializeFirestore,
   collection, 
   addDoc, 
   getDocs, 
@@ -21,9 +22,12 @@ import {
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)' 
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-  : getFirestore(app);
+
+// Use initializeFirestore for better configuration (e.g. long polling for problematic networks)
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+}, firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId);
+
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -72,25 +76,3 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
-
-// Connection test
-async function testConnection() {
-  try {
-    // Attempt to read a non-existent document to trigger a light-weight check
-    // We use getDocs on a non-existent collection to avoid "permission denied" errors 
-    // that might occur if security rules are strictly production-ready.
-    await getDocs(query(collection(db, '_connection_test_'), limit(1)));
-    console.log("Firebase connection established successfully.");
-  } catch (error: any) {
-    console.error("Firebase Connection Error Details:", {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
-    
-    if (error.message?.includes('the client is offline') || error.code === 'unavailable') {
-      console.error("Firebase appears to be offline or unreachable. Please verify that: \n1. Firestore is enabled in your Firebase Console.\n2. The Project ID 'akinai-d2a38' is correct.\n3. You have a stable internet connection.");
-    }
-  }
-}
-testConnection();

@@ -20,7 +20,7 @@ export interface NewsItem {
 const API_KEY = process.env.VITE_NEWSDATA_API_KEY || 'pub_1cde5f81113e44efafd866a26437daea';
 const BASE_URL = 'https://newsdata.io/api/1/news';
 
-export async function fetchLatestNews(queryStr: string = 'tech,scholarship,liberia'): Promise<NewsItem[]> {
+export async function fetchLatestNews(queryStr: string = 'tech,science,africa,future,ai,space'): Promise<NewsItem[]> {
   try {
     const response = await fetch(`${BASE_URL}?apikey=${API_KEY}&q=${encodeURIComponent(queryStr)}&language=en`);
     const data = await response.json();

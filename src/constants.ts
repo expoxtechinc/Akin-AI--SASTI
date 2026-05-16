@@ -509,5 +509,14 @@ export const TOOLS: AITool[] = [
     icon: 'MessageSquare',
     prompt: 'You are a WhatsApp Business API expert. Help the user configure templates, manage opt-ins, and craft engaging business messages.',
     placeholder: 'Enter recipient number...'
+  },
+  {
+    id: 'social-space',
+    name: 'Social Space',
+    description: 'Post reels and updates, like and connect with the AkinAI community.',
+    category: ToolCategory.GENERAL,
+    icon: 'Users',
+    prompt: 'You are the Social Space moderator. Encourage users to share their progress, tech finds, and creative work. Be welcoming and community-focused.',
+    placeholder: 'What\'s on your mind?'
   }
 ];

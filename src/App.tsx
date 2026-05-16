@@ -35,6 +35,7 @@ import { HelpSupport } from './components/pages/Support';
 import { DeveloperHub } from './components/pages/DeveloperHub';
 import { LiveFeed } from './components/tools/LiveFeed';
 import { AdOverlay } from './components/tools/AdOverlay';
+import { SocialSpace } from './components/tools/SocialSpace';
 import { LandingPage } from './components/landing/LandingPage';
 import { LandingHeader } from './components/landing/LandingHeader';
 import { AuthModal } from './components/landing/AuthModal';
@@ -127,6 +128,8 @@ export default function App() {
           <AppDistributor />
         ) : activeTool.id === 'whatsapp-messenger' ? (
           <WhatsAppMessenger />
+        ) : activeTool.id === 'social-space' ? (
+          <SocialSpace />
         ) : activeTool.id === 'pricing' ? (
           <Pricing />
         ) : activeTool.id === 'support' ? (

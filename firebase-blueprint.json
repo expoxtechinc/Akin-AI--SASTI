@@ -33,12 +33,42 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["text", "sender", "senderId", "type", "createdAt"]
+    },
+    "SocialPost": {
+      "title": "Social Post",
+      "description": "A post or reel created by a user in the social feed.",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string", "description": "Text content of the post." },
+        "type": { "type": "string", "enum": ["post", "reel"], "description": "Content type." },
+        "mediaUrl": { "type": "string", "description": "Photo or video URL." },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "likesCount": { "type": "number", "default": 0 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "type", "authorId", "authorName", "createdAt"]
     }
   },
   "firestore": {
     "/posts/{postId}": {
       "schema": "Post",
       "description": "Public stream of all content published by administrators."
+    },
+    "/social_posts/{postId}": {
+      "schema": "SocialPost",
+      "description": "User-generated social feed items."
+    },
+    "/social_posts/{postId}/likes/{userId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Likes on a social post."
     },
     "/group_messages/{messageId}": {
       "schema": "GroupMessage",

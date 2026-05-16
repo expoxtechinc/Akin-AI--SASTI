@@ -54,6 +54,19 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
+    function isValidSocialPost(data) {
+      return data.keys().hasAll(['content', 'type', 'authorId', 'authorName', 'createdAt'])
+        && data.keys().size() <= 8
+        && data.content is string && data.content.size() <= 2000
+        && data.type in ['post', 'reel']
+        && data.authorId == request.auth.uid
+        && data.authorName is string && data.authorName.size() <= 100
+        && (!('authorAvatar' in data) || (data.authorAvatar is string && data.authorAvatar.size() <= 1000))
+        && (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 1000))
+        && data.likesCount is number
+        && data.createdAt == request.time;
+    }
+
     match /posts/{postId} {
       // 3. Path Variable Hardening
       allow get: if isValidId(postId);
@@ -72,6 +85,26 @@ service cloud.firestore {
         );
 
       allow delete: if isVerifiedAdmin();
+    }
+
+    match /social_posts/{postId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidSocialPost(incoming());
+      allow update: if isSignedIn() 
+        && isValidSocialPost(incoming())
+        && incoming().authorId == existing().authorId
+        && (
+          // Action: Edit content
+          (incoming().authorId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'mediaUrl'])) ||
+          // Action: Like (Atomic counter update)
+          (incoming().diff(existing()).affectedKeys().hasOnly(['likesCount']) && (incoming().likesCount == existing().likesCount + 1 || incoming().likesCount == existing().likesCount - 1))
+        );
+      allow delete: if isSignedIn() && existing().authorId == request.auth.uid;
+
+      match /likes/{userId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isSignedIn() && userId == request.auth.uid;
+      }
     }
 
     match /group_messages/{messageId} {

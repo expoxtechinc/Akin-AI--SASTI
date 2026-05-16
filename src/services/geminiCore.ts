@@ -43,7 +43,7 @@ export const geminiCore = {
       }
     });
 
-    return response.text;
+    return (response as any).text;
   },
 
   generateResponseStream: async function* (message: string, history: any[] = [], personality: string = 'concise', attachments: { data: string, mimeType: string }[] = []) {
@@ -77,7 +77,7 @@ export const geminiCore = {
       });
     }
 
-    const result = await ai.models.generateContentStream({
+    const resultIter = await ai.models.generateContentStream({
       model: "gemini-3-flash-preview",
       contents: [
         ...history,
@@ -88,9 +88,10 @@ export const geminiCore = {
       }
     });
 
-    for await (const chunk of result) {
-      if (chunk.text) {
-        yield chunk.text;
+    for await (const chunk of resultIter) {
+      const chunkText = (chunk as any).text;
+      if (chunkText) {
+        yield chunkText;
       }
     }
   }

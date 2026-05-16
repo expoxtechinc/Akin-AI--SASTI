@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import twilio from 'twilio';
 import dotenv from 'dotenv';
+import { geminiService } from "./src/services/geminiService";
 
 dotenv.config();
 
@@ -12,6 +13,40 @@ async function startServer() {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // AI Chat Route (Non-streaming)
+  app.post("/api/chat", async (req, res) => {
+    const { message, history, personality, attachments } = req.body;
+    try {
+      const reply = await geminiService.generateResponse(message, history, personality, attachments);
+      res.json({ reply });
+    } catch (error: any) {
+      console.error("Chat Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // AI Chat Route (Streaming SSE)
+  app.post("/api/chat/stream", async (req, res) => {
+    const { message, history, personality, attachments } = req.body;
+    
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+      const stream = geminiService.generateResponseStream(message, history, personality, attachments);
+      for await (const chunk of stream) {
+        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+      }
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } catch (error: any) {
+      console.error("Stream Error:", error);
+      res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+      res.end();
+    }
+  });
 
   // Twilio Proxy Route
   app.post("/api/whatsapp/send", async (req, res) => {

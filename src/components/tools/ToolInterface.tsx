@@ -31,7 +31,6 @@ import {
   AudioLines
 } from 'lucide-react';
 import { AITool, ChatMessage } from '../../types';
-import { geminiService } from '../../services/geminiService';
 import { cn } from '../../lib/utils';
 
 interface AttachedFile {
@@ -98,22 +97,78 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({ tool }) => {
     }]);
     setIsLoading(true);
 
+    const history = messages.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
+
+    const attachments = currentFile ? [{
+      data: `data:${currentFile.type};base64,${currentFile.base64}`,
+      mimeType: currentFile.type
+    }] : [];
+
+    // Add placeholder for the upcoming model message
+    setMessages(prev => [...prev, { role: 'model', content: '' }]);
+
     try {
-      const history = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }));
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          history: history as any,
+          personality: tool.prompt,
+          attachments
+        }),
+      });
 
-      const attachments = currentFile ? [{
-        data: `data:${currentFile.type};base64,${currentFile.base64}`,
-        mimeType: currentFile.type
-      }] : [];
+      if (!response.body) throw new Error('No response body');
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
 
-      const response = await geminiService.generateResponse(userMessage, history as any, tool.prompt, attachments);
-      setMessages(prev => [...prev, { role: 'model', content: response || 'No response generated.' }]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === '[DONE]') continue;
+            
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.text) {
+                fullText += data.text;
+                // Update the last message in state
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  if (lastMessage && lastMessage.role === 'model') {
+                    lastMessage.content = fullText;
+                  }
+                  return newMessages;
+                });
+              } else if (data.error) {
+                throw new Error(data.error);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE chunk:', e);
+            }
+          }
+        }
+      }
     } catch (error: any) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'model', content: error.message || 'Sorry, I encountered an error. Please try again.' }]);
+      // Remove the empty placeholder and show error
+      setMessages(prev => {
+        const filtered = prev.filter((_, i) => i !== prev.length - 1);
+        return [...filtered, { role: 'model', content: error.message || 'Sorry, I encountered an error. Please try again.' }];
+      });
     } finally {
       setIsLoading(false);
     }

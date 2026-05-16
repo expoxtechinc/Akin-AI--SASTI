@@ -27,7 +27,6 @@ import {
   Loader2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { geminiService } from '../../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
@@ -110,36 +109,79 @@ export const WhatsAppMessenger: React.FC = () => {
     setAttachments([]);
     setIsTyping(true);
 
+    // Add placeholder for the upcoming AI message
+    const aiMessageId = (Date.now() + 1).toString();
+    const aiMessage: Message = {
+      id: aiMessageId,
+      text: "",
+      sender: 'ai',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, aiMessage]);
+    setIsTyping(true);
+
     try {
       const history = messages.slice(1).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }]
       }));
 
-      const response = await geminiService.generateResponse(
-        input, 
-        history as any, 
-        personality, 
-        currentAttachments.map(a => ({ data: a.data, mimeType: a.mimeType }))
-      );
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: input, 
+          history: history as any, 
+          personality, 
+          attachments: currentAttachments.map(a => ({ data: a.data, mimeType: a.mimeType }))
+        })
+      });
+
+      if (!response.body) throw new Error('No response body');
       
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response || "Something went wrong. Please try again.",
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      setIsTyping(false); // Stop showing the typing indicator once we start receiving chunks
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === '[DONE]') continue;
+            
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.text) {
+                fullText += data.text;
+                // Update the specifically created AI message
+                setMessages(prev => {
+                  return prev.map(m => m.id === aiMessageId ? { ...m, text: fullText } : m);
+                });
+              } else if (data.error) {
+                throw new Error(data.error);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE chunk:', e);
+            }
+          }
+        }
+      }
+    } catch (error: any) {
       console.error("AI Communication Error:", error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "I'm having trouble connecting right now. Please check your connection or try again in a moment.",
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => {
+        return prev.map(m => m.id === aiMessageId 
+          ? { ...m, text: "I'm having trouble connecting right now. Please check your connection or try again in a moment." } 
+          : m);
+      });
     } finally {
       setIsTyping(false);
     }

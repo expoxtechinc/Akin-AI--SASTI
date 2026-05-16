@@ -22,7 +22,10 @@ import {
   Edit3,
   MoreVertical,
   AudioLines,
-  MessageSquare
+  MessageSquare,
+  Wallet,
+  CreditCard,
+  QrCode
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { AITool } from '../../types';
@@ -204,7 +207,7 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
                 <div className="w-32 h-32 rounded-[48px] bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] relative z-10 overflow-hidden">
                    <div className="w-full h-full bg-[#0A0A0A] rounded-[46px] overflow-hidden">
                       <img 
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" 
+                        src="https://www.image2url.com/r2/default/images/1778929771651-e009e7f8-04ee-4936-b20d-662457f923fc.png" 
                         alt="Akin S. Sokpah" 
                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-110"
                         referrerPolicy="no-referrer"
@@ -238,6 +241,35 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
                  <p className="text-sm font-medium text-stone-400 leading-relaxed italic">
                     "Driving the neural evolution from the heart of Mount Barclay community to the global stage."
                  </p>
+              </div>
+
+              {/* Founder Support Section */}
+              <div className="w-full glass p-6 rounded-[32px] border border-indigo-500/30 bg-indigo-500/5 space-y-4 shadow-lg shadow-indigo-500/10">
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white">
+                       <Wallet size={20} />
+                    </div>
+                    <div>
+                       <h3 className="text-xs font-black uppercase tracking-widest text-white">Founder Support</h3>
+                       <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Monetization Active</p>
+                    </div>
+                 </div>
+                 
+                 <div className="space-y-3">
+                    <p className="text-[11px] font-medium text-stone-400 leading-relaxed">
+                       Support the evolution of the Neural Matrix. Your contributions directly fund advanced AI development in Mount Barclay.
+                    </p>
+                    
+                    <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-2">
+                       <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest block">Mobile Money Number</span>
+                       <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-white tracking-widest">+231 889 792 996</span>
+                          <div className="flex gap-2">
+                             <CreditCard size={14} className="text-indigo-400" />
+                          </div>
+                       </div>
+                    </div>
+                 </div>
               </div>
 
               {/* Creator Stats */}

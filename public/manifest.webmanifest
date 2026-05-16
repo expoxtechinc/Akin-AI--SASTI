@@ -1,7 +1,7 @@
 {
   "name": "AkinAI Neural Matrix",
   "short_name": "AkinAI",
-  "description": "Advanced AI Suite by Akin S. Sokpah. Integrating creative synthesis and high-performance intelligence to empower the community and the global digital ecosystem.",
+  "description": "Premium AI Ecosystem for Neural Matrix Computing and Creative Intelligence.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -11,13 +11,12 @@
       "src": "https://www.image2url.com/r2/default/images/1778929771651-e009e7f8-04ee-4936-b20d-662457f923fc.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "https://www.image2url.com/r2/default/images/1778929771651-e009e7f8-04ee-4936-b20d-662457f923fc.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     }
   ]
 }

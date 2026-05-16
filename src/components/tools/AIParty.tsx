@@ -47,7 +47,7 @@ const AI_MEMBERS: AIMember[] = [
     id: 'sage',
     name: 'Sage',
     role: 'Wise Guide',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+    avatar: 'https://www.image2url.com/r2/default/images/1778929771651-e009e7f8-04ee-4936-b20d-662457f923fc.png',
     color: 'bg-indigo-400',
     personality: 'Impartial, wise, and thoughtful. You provide deep insights and balanced perspectives.'
   },

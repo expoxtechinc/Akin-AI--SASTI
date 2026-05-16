@@ -2,5 +2,5 @@
   "name": "AkinAI",
   "description": "The Neural Matrix of Liberia: An advanced AI suite by Akin S. Sokpah. Integrating WhatsApp Business automation, creative synthesis, and high-performance intelligence to empower the community of Mount Barclay and the global digital ecosystem.",
   "requestFramePermissions": ["camera", "microphone"],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -30,7 +30,7 @@ import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../services/firebase';
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 interface Participant {
   id: string;
@@ -106,7 +106,7 @@ export const GlobalCall: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
             setStatus('Live');

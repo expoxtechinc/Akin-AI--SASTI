@@ -24,7 +24,7 @@ const sampleVitalsData = [
   { time: '18:00', bp: 124, hr: 74, temp: 98.7 },
 ];
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 export const MedicalPro: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'chat' | 'dashboard' | 'careplan' | 'live'>('chat');
@@ -55,7 +55,7 @@ export const MedicalPro: React.FC = () => {
       
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
             setStatus('Clinical Session: ACTIVE');

@@ -10,7 +10,7 @@ import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
 import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 export const BossLive: React.FC = () => {
   const [isCalling, setIsCalling] = useState(false);
@@ -47,7 +47,7 @@ export const BossLive: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey });
       
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
             setStatus('BossLive: Active Surveillance');

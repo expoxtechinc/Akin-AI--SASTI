@@ -12,7 +12,7 @@ import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
 import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 const scholarTool = TOOLS.find(t => t.id === 'scholar-cam')!;
 
 export const ScholarCam: React.FC = () => {
@@ -38,7 +38,7 @@ export const ScholarCam: React.FC = () => {
       setStatus('Connecting to Tutor...');
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
             setStatus('Live Session Active');

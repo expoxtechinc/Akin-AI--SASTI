@@ -21,7 +21,7 @@ import {
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 interface Companion {
   id: 'seraphina' | 'leander';
@@ -86,7 +86,7 @@ export const Heart2Heart: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey });
       
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
             setStatus('Heart-to-Heart Live');

@@ -13,7 +13,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const illustratorTool = TOOLS.find(t => t.id === 'illustrator')!;
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 export const IllustrationAI: React.FC = () => {
   const [activeLayer, setActiveLayer] = useState(1);
@@ -41,7 +41,7 @@ export const IllustrationAI: React.FC = () => {
       setStatus('Initializing Visual Design Engine...');
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
              setStatus('Live Vision ACTIVE');

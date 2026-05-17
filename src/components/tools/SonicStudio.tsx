@@ -9,7 +9,7 @@ import { cn } from '../../lib/utils';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 export const SonicStudio: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -42,7 +42,7 @@ export const SonicStudio: React.FC = () => {
       setStatus('Connecting to Executive Producer...');
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.0-flash",
         callbacks: {
           onopen: () => {
              setStatus('Live Session: ON AIR');
@@ -156,7 +156,7 @@ export const SonicStudio: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey });
       
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.0-flash",
         contents: {
           parts: [{
             text: `You are a world-class AI Music Producer (Sonic Studio by AkinAI). 

@@ -52,16 +52,11 @@ export const SonicStudio: React.FC = () => {
     if (!prompt) return;
     setIsGenerating(true);
     try {
-      if (!apiKey) throw new Error('API Key missing');
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{
-          role: "user",
-          parts: [{
-            text: `You are a world-class AI Music Producer (Sonic Studio by AkinAI). 
-            The user wants to create: "${prompt}". 
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `The user wants to create: "${prompt}". 
             Generate a detailed "Sonic Blueprint" in JSON format including:
             - title: A catchy song title
             - lyrics: Full verses and chorus
@@ -70,18 +65,22 @@ export const SonicStudio: React.FC = () => {
             - bpm: Beats per minute (number)
             - key: Musical key (string)
             
-            Return ONLY the valid JSON.`
-          }]
-        }]
+            Return ONLY the valid JSON.`,
+          personality: 'music'
+        })
       });
 
-      const text = response.text;
+      const data = await response.json();
+      if (!data.reply) throw new Error(data.error || 'Failed to generate content');
+
+      const text = data.reply;
       const jsonStart = text.indexOf('{');
       const jsonEnd = text.lastIndexOf('}') + 1;
-      const data = JSON.parse(text.slice(jsonStart, jsonEnd));
-      setResult(data);
+      const blueprint = JSON.parse(text.slice(jsonStart, jsonEnd));
+      setResult(blueprint);
     } catch (err) {
       console.error(err);
+      setStatus('Production Failed');
     } finally {
       setIsGenerating(false);
     }

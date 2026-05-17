@@ -6,7 +6,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Zap, Eye, Target, Shield, AlertTriangle } from 'lucide-react';
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { cn } from '../../lib/utils';
 import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
@@ -51,7 +50,7 @@ export const BossLive: React.FC = () => {
             { role: 'user', parts: [{ text: "Initiate Vision" }] },
             { role: 'model', parts: [{ text: "Visual systems activated. Surveillance log initialized. Point sensor at target and describe what you see." }] }
           ],
-          personality: 'concise'
+          personality: 'boss'
         })
       });
       const data = await response.json();

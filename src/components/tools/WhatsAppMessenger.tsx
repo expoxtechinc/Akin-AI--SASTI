@@ -149,9 +149,15 @@ export const WhatsAppMessenger: React.FC = () => {
       }
     } catch (error: any) {
       console.error("AI Communication Error:", error);
+      
+      const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
+      const errorMessage = isQuota 
+        ? "Wow, I'm popular! I've reached my current conversation limit. Please wait about 60 seconds and try again—I'm looking forward to continuing our chat! 🚀"
+        : `Connection Error: ${error.message || "Something went wrong on our end."}`;
+
       setMessages(prev => {
         return prev.map(m => m.id === aiMessageId 
-          ? { ...m, text: "I'm having trouble connecting right now. Please check your connection or try again in a moment." } 
+          ? { ...m, text: errorMessage } 
           : m);
       });
     } finally {

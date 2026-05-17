@@ -10,7 +10,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ToolInterface } from './ToolInterface';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
-import { GoogleGenAI, Modality } from "@google/genai";
 import { AKIN_TOOLS, handleLiveToolCall } from '../../services/liveTools';
 
 const medicalTool = TOOLS.find(t => t.id === 'medical-pro')!;
@@ -71,7 +70,7 @@ export const MedicalPro: React.FC = () => {
             { role: 'user', parts: [{ text: "Hello Dr. Kin" }] },
             { role: 'model', parts: [{ text: "Hello, I am Dr. Kin. I've reviewed your charts. What symptoms are you currently experiencing?" }] }
           ],
-          personality: 'concise'
+          personality: 'medical'
         })
       });
       const data = await response.json();

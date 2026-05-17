@@ -6,7 +6,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, BookOpen, GraduationCap, Sparkles, Upload, History, Brain, Trophy, ChevronRight, Search, Microscope, Calculator, Video, PhoneOff } from 'lucide-react';
-import { GoogleGenAI, Modality } from "@google/genai";
 import { ToolInterface } from './ToolInterface';
 import { TOOLS } from '../../constants';
 import { cn } from '../../lib/utils';
@@ -49,7 +48,7 @@ export const ScholarCam: React.FC = () => {
             { role: 'user', parts: [{ text: "Hello" }] },
             { role: 'model', parts: [{ text: "Welcome to your personalized study session. How can I help you master your curriculum today?" }] }
           ],
-          personality: 'concise'
+          personality: 'tutor'
         })
       });
       const data = await response.json();

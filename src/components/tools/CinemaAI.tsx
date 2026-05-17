@@ -27,15 +27,11 @@ export const CinemaAI: React.FC = () => {
     if (!prompt) return;
     setIsGenerating(true);
     try {
-      if (!apiKey) throw new Error('API Key missing');
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: {
-          parts: [{
-            text: `You are a world-class AI Film Director (Cinema AI by AkinAI). 
-            The user wants to generate a video: "${prompt}". 
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `The user wants to generate a video: "${prompt}". 
             Generate a detailed "Direction Blueprint" in JSON format including:
             - title: A cinematic title
             - description: Vivid description of the visuals
@@ -45,16 +41,19 @@ export const CinemaAI: React.FC = () => {
             - resolution: Resolution (e.g., "4K Ultra HD")
             - fps: Frames per second (number)
             
-            Return ONLY the valid JSON.`
-          }]
-        }
+            Return ONLY the valid JSON.`,
+          personality: 'creative'
+        })
       });
 
-      const text = response.text;
+      const data = await response.json();
+      if (!data.reply) throw new Error(data.error || 'Failed to generate direction');
+
+      const text = data.reply;
       const jsonStart = text.indexOf('{');
       const jsonEnd = text.lastIndexOf('}') + 1;
-      const data = JSON.parse(text.slice(jsonStart, jsonEnd));
-      setResult(data);
+      const blueprint = JSON.parse(text.slice(jsonStart, jsonEnd));
+      setResult(blueprint);
     } catch (err) {
       console.error(err);
     } finally {

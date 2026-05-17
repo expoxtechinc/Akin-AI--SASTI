@@ -64,7 +64,7 @@ export const LiveVideoCall: React.FC = () => {
             { role: 'user', parts: [{ text: "Start Lesson" }] },
             { role: 'model', parts: [{ text: `Welcome to your elite 1-on-1 session on ${subject}. I am your Virtual Instructor, Kin. How may I assist you today?` }] }
           ],
-          personality: 'concise'
+          personality: 'tutor'
         })
       });
       const data = await response.json();

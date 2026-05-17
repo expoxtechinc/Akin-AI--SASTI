@@ -49,40 +49,29 @@ export const BananaDesign: React.FC = () => {
     setError(null);
 
     try {
-      if (!apiKey) throw new Error('API Key missing');
-      
-      const ai = new GoogleGenAI({ apiKey });
-
-      const imageData = await originalFile.arrayBuffer();
-      const base64Data = Buffer.from(imageData).toString("base64");
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                data: base64Data,
-                mimeType: originalFile.type
-              }
-            },
-            {
-              text: `You are a Creative Director for 'Banana Design AI'. 
-              The user wants to transform this image with the prompt: "${prompt}". 
-              Provide a detailed technical description of the transformation. 
-              Then, explain that as an AI Assistant, you are processing this design through the experimental 'Nano Banana' engine.`
-            }
-          ]
-        }
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `The user wants to transform this image with the prompt: "${prompt}". 
+            Provide a detailed technical description of the transformation. 
+            Then, explain that as an AI Assistant, you are processing this design through the experimental 'Nano Banana' engine.`,
+          personality: 'vision',
+          attachments: [{
+            data: originalImage!,
+            mimeType: originalFile.type
+          }]
+        })
       });
 
-      console.log('AI Creative Analysis:', response.text);
+      const data = await response.json();
+      if (!data.reply) throw new Error(data.error || 'Failed to analyze design');
+
+      console.log('AI Creative Analysis:', data.reply);
 
       // Simulate generation time
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // For this demo, we'll use the original image but apply a creative "filter" or use a high-quality tech placeholder
-      // In a live environment with Imagen API, we would set the real URL here.
       setResultImage(originalImage); 
       setStep('result');
     } catch (err: any) {

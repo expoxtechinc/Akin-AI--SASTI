@@ -54,7 +54,7 @@ export const WhatsAppMessenger: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const creatorAvatar = "/file_00000000b690720abf4d5357155283f7.png";
+  const creatorAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=AkinAI";
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -104,12 +104,18 @@ export const WhatsAppMessenger: React.FC = () => {
       attachments: currentAttachments
     };
 
+    // Capture current messages + user message for history
+    // Gemini history MUST start with 'user', so we skip the initial welcome message from AI
+    const historyForAI = messages.slice(1).map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }));
+
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setAttachments([]);
     setIsTyping(true);
 
-    // Add placeholder for the upcoming AI message
     const aiMessageId = (Date.now() + 1).toString();
     const aiMessage: Message = {
       id: aiMessageId,
@@ -119,20 +125,14 @@ export const WhatsAppMessenger: React.FC = () => {
     };
     
     setMessages(prev => [...prev, aiMessage]);
-    setIsTyping(true);
 
     try {
-      const history = messages.slice(1).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      }));
-
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input, 
-          history: history as any, 
+          history: historyForAI, 
           personality, 
           attachments: currentAttachments.map(a => ({ data: a.data, mimeType: a.mimeType }))
         })

@@ -17,7 +17,7 @@ async function startServer() {
   // AI Chat Route (Non-streaming)
   app.post("/api/chat", async (req, res) => {
     const { message, history, personality, attachments } = req.body;
-    console.log("Chat Request:", message);
+    console.log("Chat Request:", message, "History length:", history?.length);
     try {
       const reply = await geminiCore.generateResponse(message, history, personality, attachments);
       res.json({ reply });
@@ -30,7 +30,7 @@ async function startServer() {
   // AI Chat Route (Streaming SSE)
   app.post("/api/chat/stream", async (req, res) => {
     const { message, history, personality, attachments } = req.body;
-    console.log("Stream Request:", message);
+    console.log("Stream Request:", message, "History length:", history?.length);
     
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');

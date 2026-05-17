@@ -127,7 +127,7 @@ export const WhatsAppMessenger: React.FC = () => {
     setMessages(prev => [...prev, aiMessage]);
 
     try {
-      const response = await fetch('/api/chat/stream', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,47 +138,14 @@ export const WhatsAppMessenger: React.FC = () => {
         })
       });
 
-      if (!response.body) throw new Error('No response body');
+      const data = await response.json();
       
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let buffer = '';
-
-      setIsTyping(false); // Stop showing the typing indicator once we start receiving chunks
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        
-        // Keep the last partial line in the buffer
-        buffer = lines.pop() || '';
-        
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (trimmedLine.startsWith('data: ')) {
-            const dataStr = trimmedLine.slice(6).trim();
-            if (dataStr === '[DONE]') continue;
-            
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.text) {
-                fullText += data.text;
-                // Update the specifically created AI message
-                setMessages(prev => {
-                  return prev.map(m => m.id === aiMessageId ? { ...m, text: fullText } : m);
-                });
-              } else if (data.error) {
-                throw new Error(data.error);
-              }
-            } catch (e) {
-              console.error('Error parsing SSE chunk:', e, dataStr);
-            }
-          }
-        }
+      if (data.reply) {
+        setMessages(prev => {
+          return prev.map(m => m.id === aiMessageId ? { ...m, text: data.reply } : m);
+        });
+      } else if (data.error) {
+        throw new Error(data.error);
       }
     } catch (error: any) {
       console.error("AI Communication Error:", error);

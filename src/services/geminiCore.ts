@@ -16,8 +16,8 @@ const getApiKey = () => {
   return key;
 };
 
-// Model selection - Using gemini-1.5-flash for maximum stability and quota compliance
-const MODEL_ID = "gemini-1.5-flash";
+// Model selection - Using gemini-3-flash-preview for maximum stability and quota compliance
+const MODEL_ID = "gemini-3-flash-preview";
 
 export const geminiCore = {
   generateResponse: async (message: string, history: any[] = [], personality: string = 'concise', attachments: { data: string, mimeType: string }[] = []) => {

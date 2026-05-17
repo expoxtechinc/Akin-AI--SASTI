@@ -47,196 +47,62 @@ export const LiveVideoCall: React.FC = () => {
   ];
 
   const startCall = async () => {
-    if (!apiKey) {
-      setStatus('API Key missing');
-      return;
-    }
+    setIsCalling(true);
+    setStatus(`Live: ${subject.charAt(0).toUpperCase() + subject.slice(1)} Session`);
+    setAiTranscription(`Welcome to your elite 1-on-1 session on ${subject}. I am your Virtual Instructor, Kin. How may I assist you today?`);
+  };
 
+  const handleLessonMessage = async (message: string) => {
     try {
-      setIsCalling(true);
-      setStatus('Connecting to Classroom...');
-      nextStartTimeRef.current = 0;
-      setLectureNotes([]);
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus(`Live: ${subject.charAt(0).toUpperCase() + subject.slice(1)} Session`);
-            setupStreams();
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data && !isAiMuted) {
-                  playPcmData(part.inlineData.data);
-                }
-                
-                if (part.text) {
-                  setAiTranscription(part.text);
-                  if (part.text.length > 20) {
-                    setLectureNotes(prev => [part.text, ...prev].slice(0, 10));
-                  }
-                }
-
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                  setLectureNotes(prev => [`System executed: ${part.functionCall?.name}`, ...prev].slice(0, 10));
-                }
-              }
-            }
-          },
-          onerror: (err) => {
-            console.error('Live Video API Error:', err);
-            setStatus('Connection Error');
-            stopCall();
-          },
-          onclose: () => {
-            setStatus('Disconnected');
-            stopCall();
-          }
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
-          },
-          tools: AKIN_TOOLS,
-          systemInstruction: `You are Kin, an expert Virtual Instructor at AkinAI. 
-          Current Subject: ${subject}. 
-          Objective: Provide an elite 1-on-1 classroom experience. 
-          VISUAL INTELLIGENCE: You are extremely observant. You can see the student's room, their facial expressions, and any materials (papers, books, phones, tools) they show you. 
-          TEACHING STYLE: 
-          - Be conversational yet academic. 
-          - Identify objects shown on camera instantly. 
-          - If the student looks confused (visually), ask if they need clarification. 
-          - If teaching Nursing/Medical, evaluate their technique or the 'case study' materials they show you.
-          - If teaching Tech, discuss the code or diagrams they show you.
-          - Speak clearly and at a professional lecture pace.`,
-        },
+      setStatus('Kin is formulating response...');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: [
+            { role: 'user', parts: [{ text: "Start Lesson" }] },
+            { role: 'model', parts: [{ text: `Welcome to your elite 1-on-1 session on ${subject}. I am your Virtual Instructor, Kin. How may I assist you today?` }] }
+          ],
+          personality: 'concise'
+        })
       });
-
-      sessionRef.current = session;
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+        setLectureNotes(prev => [data.reply, ...prev].slice(0, 10));
+      }
+      setStatus(`Live: ${subject.charAt(0).toUpperCase() + subject.slice(1)} Session`);
     } catch (error) {
-      console.error(error);
-      setStatus('Failed to start session');
-      setIsCalling(false);
+      console.error("Lesson Error:", error);
+      setStatus('Session Error');
     }
   };
 
   const setupStreams = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }, 
-        video: { width: 640, height: 480, frameRate: 15 } 
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      // Audio setup
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      sourceRef.current = source;
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        if (isMuted || !sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-          pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        }
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({
-          audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-        });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-
-      // Video frames setup (1 fps for efficiency)
-      videoIntervalRef.current = window.setInterval(captureAndSendFrame, 1000);
-
+      if (videoRef.current) videoRef.current.srcObject = stream;
     } catch (err) {
-      console.error('AV access error:', err);
-      setStatus('AV access denied');
+      console.error(err);
     }
   };
 
-  const captureAndSendFrame = () => {
-    if (!sessionRef.current || isVideoMuted || !videoRef.current || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const base64Data = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-
-    sessionRef.current.sendRealtimeInput({
-      video: { data: base64Data, mimeType: 'image/jpeg' }
-    });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
-    const pcmData = new Int16Array(bytes.buffer);
-    const float32Data = new Float32Array(pcmData.length);
-    for (let i = 0; i < pcmData.length; i++) float32Data[i] = pcmData[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000);
-    buffer.getChannelData(0).set(float32Data);
-    
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) {
-      nextStartTimeRef.current = currentTime;
-    }
-    
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
-  };
+  const playPcmData = () => {};
 
   const stopCall = () => {
-    if (videoIntervalRef.current) window.clearInterval(videoIntervalRef.current);
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    streamRef.current?.getTracks().forEach(track => track.stop());
-    streamRef.current = null;
-    processorRef.current?.disconnect();
-    sourceRef.current?.disconnect();
-    audioContextRef.current?.close();
     setIsCalling(false);
     setStatus('Ready for Video Call');
     setAiTranscription('');
+    streamRef.current?.getTracks().forEach(track => track.stop());
   };
+
+  useEffect(() => {
+    if (isCalling) {
+      setupStreams();
+    }
+  }, [isCalling]);
 
   return (
     <div className="flex flex-col h-full bg-stone-950 overflow-hidden">
@@ -354,9 +220,21 @@ export const LiveVideoCall: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="mt-8 max-w-md bg-stone-900/80 backdrop-blur border border-white/10 p-5 rounded-2xl text-center shadow-2xl z-10"
+                className="mt-8 max-w-md bg-stone-900/80 backdrop-blur border border-white/10 p-5 rounded-2xl text-center shadow-2xl z-10 space-y-4"
               >
                 <p className="text-stone-200 text-sm leading-relaxed italic">"{aiTranscription}"</p>
+                <div className="flex gap-2">
+                   <input 
+                     placeholder="Respond to Kin..."
+                     className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-white transition-all font-bold"
+                     onKeyDown={(e) => {
+                       if (e.key === 'Enter') {
+                         handleLessonMessage((e.target as HTMLInputElement).value);
+                         (e.target as HTMLInputElement).value = '';
+                       }
+                     }}
+                   />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

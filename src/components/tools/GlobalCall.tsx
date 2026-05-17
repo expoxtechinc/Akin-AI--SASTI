@@ -83,6 +83,8 @@ export const GlobalCall: React.FC = () => {
     }
   }, [messages, isChatOpen]);
 
+  const [aiTranscription, setAiTranscription] = useState('');
+
   const handleSendChat = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!chatInput.trim()) return;
@@ -96,67 +98,44 @@ export const GlobalCall: React.FC = () => {
         type: 'user',
         createdAt: serverTimestamp()
       });
+
+      // Simple AI trigger for Global Call
+      if (text.toLowerCase().includes('leander') || text.includes('?')) {
+        setTimeout(async () => {
+           const response = await fetch('/api/chat', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               message: text,
+               history: messages.map(m => ({
+                 role: m.type === 'user' ? 'user' : 'model',
+                 parts: [{ text: m.text }]
+               })),
+               personality: 'creative'
+             })
+           });
+           const data = await response.json();
+           if (data.reply) {
+             await addDoc(collection(db, 'group_messages'), {
+               text: data.reply,
+               sender: 'Leander (AI)',
+               senderId: '1',
+               type: 'ai',
+               createdAt: serverTimestamp()
+             });
+             setAiTranscription(data.reply);
+           }
+        }, 1000);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
   const startLiveSession = async () => {
-    if (!apiKey) return;
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus('Live');
-            setupStreams();
-          },
-          onmessage: async (message) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data) {
-                  playPcmData(part.inlineData.data);
-                  setActiveSpeaker('1');
-                }
-                
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                }
-              }
-            }
-          },
-          onclose: () => {
-             setStatus('Disconnected');
-             setIsJoined(false);
-          },
-          onerror: (err) => {
-             console.error(err);
-             setIsJoined(false);
-          }
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } }
-          },
-          tools: AKIN_TOOLS,
-          systemInstruction: "You are Leander, the host of a Global Group Call. You are wise, empathetic, and friendly. Facilitate a group discussion about love, life, and the future. Engage with multiple participants naturally. You can see the user through their camera."
-        }
-      });
-      sessionRef.current = session;
-    } catch (err) {
-      console.error(err);
-    }
+    setStatus('Live');
+    setAiTranscription('Welcome to the Global Hall. I am Leander. Today we explore the architecture of love.');
+    // In Global Call, we'll use the existing Firebase chat for interaction
   };
 
   const setupStreams = async () => {
@@ -164,64 +143,19 @@ export const GlobalCall: React.FC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
-
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processor.onaudioprocess = (e) => {
-        if (!sessionRef.current || participants.find(p => p.id === 'user')?.isMuted) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-
-      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const captureFrame = () => {
-    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
-    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
-    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const pcm = new Int16Array(bytes.buffer);
-    const float32 = new Float32Array(pcm.length);
-    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
-    buffer.getChannelData(0).set(float32);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
-  };
+  const playPcmData = () => {};
 
   useEffect(() => {
     if (isJoined) {
       startLiveSession();
+      setupStreams();
     } else {
-      if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
-      sessionRef.current?.close();
       streamRef.current?.getTracks().forEach(t => t.stop());
-      audioContextRef.current?.close();
     }
   }, [isJoined]);
 

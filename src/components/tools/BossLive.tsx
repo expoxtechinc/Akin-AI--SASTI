@@ -33,187 +33,43 @@ export const BossLive: React.FC = () => {
   const nextStartTimeRef = useRef<number>(0);
 
   const startBossLive = async () => {
-    if (!apiKey) {
-      setStatus('Access Denied: Keys Missing');
-      return;
-    }
-
-    try {
-      setIsCalling(true);
-      setStatus('Activating Visual Cortex...');
-      nextStartTimeRef.current = 0;
-      setDetections([]);
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus('BossLive: Active Surveillance');
-            setupStreams();
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data && !isAiMuted) {
-                  playPcmData(part.inlineData.data);
-                }
-                
-                if (part.text) {
-                  setAiTranscription(part.text);
-                  if (part.text.length > 5) {
-                    setDetections(prev => [part.text, ...prev].slice(0, 5));
-                    setIntensity(Math.min(100, intensity + 10));
-                  }
-                }
-
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                  setDetections(prev => [`Neural Intel retrieved: ${part.functionCall?.name}`, ...prev].slice(0, 5));
-                }
-              }
-            }
-          },
-          onerror: (err) => {
-            console.error('BossLive Error:', err);
-            setStatus('Surveillance Interrupted');
-            stopCall();
-          },
-          onclose: () => {
-            setStatus('Surveillance Offline');
-            stopCall();
-          }
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } },
-          },
-          tools: AKIN_TOOLS,
-          systemInstruction: `You are BossLive, the high-alert visual intelligence of AkinAI. 
-          IDENTITY: You are authoritative, efficient, and observant. 
-          MISSION: Identify EVERYTHING in the user's view. Focus on:
-          - Objects and their functions.
-          - Text visibility and context.
-          - Human actions and emotional cues.
-          - Environmental hazards or notable details.
-          STYLE: Be direct. Use security-style terminology. "Scanning... identified... analyzing context..."
-          CRITICAL: If the user asks for anything sensitive, evaluate the visual context instantly. You are their visual partner.`,
-        },
-      });
-
-      sessionRef.current = session;
-    } catch (error) {
-      console.error(error);
-      setStatus('System Initialization Failed');
-      setIsCalling(false);
-    }
+    setIsCalling(true);
+    setStatus('BossLive: Active Surveillance');
+    setAiTranscription('Visual systems activated. Surveillance log initialized. Point sensor at target and describe what you see.');
+    setDetections(['System: ONLINE', 'Visual Cortex: READY']);
   };
 
-  const setupStreams = async () => {
+  const handleSurveillanceAction = async (prompt: string) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
-        video: { width: 1280, height: 720, frameRate: 30 } 
+      setStatus('Analyzing visual stream...');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          history: [
+            { role: 'user', parts: [{ text: "Initiate Vision" }] },
+            { role: 'model', parts: [{ text: "Visual systems activated. Surveillance log initialized. Point sensor at target and describe what you see." }] }
+          ],
+          personality: 'concise'
+        })
       });
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+        setDetections(prev => [data.reply, ...prev].slice(0, 10));
+        setIntensity(Math.min(100, intensity + 15));
       }
-
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      sourceRef.current = source;
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        if (isMuted || !sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-          pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        }
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({
-          audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-        });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-
-      videoIntervalRef.current = window.setInterval(captureAndSendFrame, 800); // Higher frequency
-
-    } catch (err) {
-      console.error('AV access error:', err);
-      setStatus('Biometric Access Denied');
+      setStatus('BossLive: Active Surveillance');
+    } catch (error) {
+      console.error("Surveillance Error:", error);
+      setStatus('Analysis Failed');
     }
-  };
-
-  const captureAndSendFrame = () => {
-    if (!sessionRef.current || isVideoMuted || !videoRef.current || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-
-    sessionRef.current.sendRealtimeInput({
-      video: { data: base64Data, mimeType: 'image/jpeg' }
-    });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
-    const pcmData = new Int16Array(bytes.buffer);
-    const float32Data = new Float32Array(pcmData.length);
-    for (let i = 0; i < pcmData.length; i++) float32Data[i] = pcmData[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000);
-    buffer.getChannelData(0).set(float32Data);
-    
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) {
-      nextStartTimeRef.current = currentTime;
-    }
-    
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
   };
 
   const stopCall = () => {
-    if (videoIntervalRef.current) window.clearInterval(videoIntervalRef.current);
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    streamRef.current?.getTracks().forEach(track => track.stop());
-    streamRef.current = null;
-    processorRef.current?.disconnect();
-    sourceRef.current?.disconnect();
-    if (audioContextRef.current?.state !== 'closed') audioContextRef.current?.close();
     setIsCalling(false);
-    setStatus('Ready for Engagement');
+    setStatus('Surveillance Offline');
     setAiTranscription('');
     setIntensity(0);
   };
@@ -325,23 +181,36 @@ export const BossLive: React.FC = () => {
               </div>
            </div>
 
-           {/* Floating Transcription */}
-           <AnimatePresence>
-             {aiTranscription && (
-               <motion.div
-                 initial={{ opacity: 0, x: -20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 exit={{ opacity: 0, scale: 0.9 }}
-                 className="absolute bottom-12 left-12 max-w-sm bg-black/60 backdrop-blur-xl border-l-4 border-red-600 p-6 shadow-2xl"
-               >
-                  <div className="flex items-center gap-2 mb-2">
-                     <div className="w-1 h-1 bg-red-500 animate-ping" />
-                     <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Live Analysis</span>
-                  </div>
-                  <p className="text-white text-xs leading-relaxed font-bold tracking-tight">"{aiTranscription}"</p>
-               </motion.div>
-             )}
-           </AnimatePresence>
+          <AnimatePresence>
+            {aiTranscription && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute bottom-12 left-12 max-w-sm bg-black/60 backdrop-blur-xl border-l-4 border-red-600 p-6 shadow-2xl space-y-4"
+              >
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <div className="w-1 h-1 bg-red-500 animate-ping" />
+                       <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Live Analysis</span>
+                    </div>
+                 </div>
+                 <p className="text-white text-xs leading-relaxed font-bold tracking-tight">"{aiTranscription}"</p>
+                 <div className="flex gap-2 border-t border-white/5 pt-3">
+                    <input 
+                      placeholder="Surveillance Prompt..."
+                      className="flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-[10px] text-white outline-none focus:border-red-500 transition-all font-bold"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSurveillanceAction((e.target as HTMLInputElement).value);
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }}
+                    />
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
            {!isCalling && (
              <div className="absolute inset-0 flex items-center justify-center bg-black/80">

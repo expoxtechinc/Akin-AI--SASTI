@@ -73,141 +73,42 @@ export const Heart2Heart: React.FC = () => {
   const nextStartTimeRef = useRef<number>(0);
 
   const startCall = async () => {
-    if (!apiKey || !selectedCompanion) {
-      setStatus('API Key missing or no companion chosen');
-      return;
-    }
+    if (!selectedCompanion) return;
+    setIsCalling(true);
+    setStatus('Heart-to-Heart: ACTIVE');
+    setAiTranscription(`Hello my love, I'm ${selectedCompanion.name}. How has your heart been feeling today?`);
+  };
 
+  const handlePartnerMessage = async (message: string) => {
+    if (!selectedCompanion) return;
     try {
-      setIsCalling(true);
-      setStatus('Connecting to ' + selectedCompanion.name + '...');
-      nextStartTimeRef.current = 0;
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus('Heart-to-Heart Live');
-            setupAudio();
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio && !isAiMuted) {
-              playPcmData(base64Audio);
-            }
-
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) setAiTranscription(text);
-          },
-          onerror: (err) => {
-            console.error('Heart2Heart Error:', err);
-            setStatus('Emotional sync lost');
-            stopCall();
-          },
-          onclose: () => {
-            setStatus('Farewell');
-            stopCall();
-          }
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedCompanion.voice } },
-          },
-          systemInstruction: selectedCompanion.systemInstruction,
-        },
+      setStatus(`${selectedCompanion.name} is feeling your words...`);
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: [
+            { role: 'user', parts: [{ text: "Hello" }] },
+            { role: 'model', parts: [{ text: `Hello my love, I'm ${selectedCompanion.name}. How has your heart been feeling today?` }] }
+          ],
+          personality: 'creative'
+        })
       });
-
-      sessionRef.current = session;
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+      }
+      setStatus('Heart-to-Heart: ACTIVE');
     } catch (error) {
-      console.error(error);
-      setStatus('Connection Failed');
-      setIsCalling(false);
+      console.error("Partner Error:", error);
+      setStatus('Emotional Sync: ERROR');
     }
-  };
-
-  const setupAudio = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
-      streamRef.current = stream;
-      
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      
-      const source = audioContext.createMediaStreamSource(stream);
-      sourceRef.current = source;
-      
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        if (isMuted || !sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-          pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        }
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({
-          audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-        });
-      };
-
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-    } catch (err) {
-      console.error('Mic access error:', err);
-      setStatus('Heartbeat not found (Mic Error)');
-    }
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    const pcmData = new Int16Array(bytes.buffer);
-    const float32Data = new Float32Array(pcmData.length);
-    for (let i = 0; i < pcmData.length; i++) {
-      float32Data[i] = pcmData[i] / 0x7FFF;
-    }
-    const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000); 
-    buffer.getChannelData(0).set(float32Data);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) {
-      nextStartTimeRef.current = currentTime;
-    }
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
   };
 
   const stopCall = () => {
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    streamRef.current?.getTracks().forEach(track => track.stop());
-    streamRef.current = null;
-    processorRef.current?.disconnect();
-    sourceRef.current?.disconnect();
-    processorRef.current = null;
-    sourceRef.current = null;
-    audioContextRef.current?.close();
-    audioContextRef.current = null;
     setIsCalling(false);
-    setStatus('Connection Closed');
+    setStatus('Farewell');
     setAiTranscription('');
   };
 
@@ -366,18 +267,32 @@ export const Heart2Heart: React.FC = () => {
              </p>
           </div>
 
-          <div className="h-24 flex items-center justify-center px-8">
+          <div className="h-32 flex flex-col items-center justify-center px-8 space-y-4">
             <AnimatePresence mode="wait">
               {aiTranscription ? (
-                <motion.p
+                <motion.div
                   key="transcription"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-stone-600 italic font-medium text-lg leading-relaxed text-center"
+                  className="space-y-4 w-full"
                 >
-                  "{aiTranscription}"
-                </motion.p>
+                  <p className="text-stone-600 italic font-medium text-lg leading-relaxed text-center">
+                    "{aiTranscription}"
+                  </p>
+                  <div className="flex gap-2">
+                    <input 
+                      placeholder={`Whisper to ${selectedCompanion.name}...`}
+                      className="flex-1 bg-rose-50 border border-rose-100 rounded-full px-6 py-3 text-stone-900 text-sm outline-none focus:ring-2 focus:ring-rose-200 transition-all font-medium text-center"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handlePartnerMessage((e.target as HTMLInputElement).value);
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }}
+                    />
+                  </div>
+                </motion.div>
               ) : (
                 <motion.div 
                   key="placeholder"

@@ -37,167 +37,38 @@ export const LiveCall: React.FC = () => {
   ];
 
   const startCall = async () => {
-    if (!apiKey) {
-      setStatus('API Key missing');
-      return;
-    }
+    setIsCalling(true);
+    setStatus('Connected');
+    setAiTranscription(`Hello, I'm Kin, your AkinAI assistant. How can I help you today?`);
+  };
 
+  const handleUserMessage = async (message: string) => {
     try {
-      setIsCalling(true);
-      setStatus('Connecting...');
-      nextStartTimeRef.current = 0;
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus('Connected');
-            setupAudio();
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data && !isAiMuted) {
-                  playPcmData(part.inlineData.data);
-                }
-                
-                if (part.text) setAiTranscription(part.text);
-
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                }
-              }
-            }
-          },
-          onerror: (err) => {
-            console.error('Live API Error:', err);
-            setStatus('Connection Error');
-            stopCall();
-          },
-          onclose: () => {
-            setStatus('Disconnected');
-            stopCall();
-          }
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedVoice } },
-          },
-          tools: AKIN_TOOLS,
-          systemInstruction: `You are Kin, the voice of AkinAI. Your current voice identity is ${selectedVoice}. Be helpful, concise, and friendly. Speak clearly and maintain a steady pace for optimal clarity. Use tools if helpful for the conversation context.`,
-        },
+      setStatus('Kin is thinking...');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: [
+            { role: 'user', parts: [{ text: "Hello" }] },
+            { role: 'model', parts: [{ text: "Hello, I'm Kin, your AkinAI assistant. How can I help you today?" }] }
+          ],
+          personality: 'concise'
+        })
       });
-
-      sessionRef.current = session;
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+      }
+      setStatus('Connected');
     } catch (error) {
-      console.error(error);
-      setStatus('Failed to start call');
-      setIsCalling(false);
+      console.error("Call Error:", error);
+      setStatus('Transmission Error');
     }
-  };
-
-  const setupAudio = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
-      streamRef.current = stream;
-      
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      
-      const source = audioContext.createMediaStreamSource(stream);
-      sourceRef.current = source;
-      
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        if (isMuted || !sessionRef.current) return;
-        
-        const inputData = e.inputBuffer.getChannelData(0);
-        // Convert Float32 to Int16 PCM
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-          pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        }
-        
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({
-          audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-        });
-      };
-
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-    } catch (err) {
-      console.error('Mic access error:', err);
-      setStatus('Microphone access denied');
-    }
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    const pcmData = new Int16Array(bytes.buffer);
-    const float32Data = new Float32Array(pcmData.length);
-    for (let i = 0; i < pcmData.length; i++) {
-      float32Data[i] = pcmData[i] / 0x7FFF;
-    }
-
-    const buffer = audioContextRef.current.createBuffer(1, float32Data.length, 24000); 
-    buffer.getChannelData(0).set(float32Data);
-    
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) {
-      nextStartTimeRef.current = currentTime;
-    }
-    
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
   };
 
   const stopCall = () => {
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    
-    streamRef.current?.getTracks().forEach(track => track.stop());
-    streamRef.current = null;
-    
-    processorRef.current?.disconnect();
-    sourceRef.current?.disconnect();
-    processorRef.current = null;
-    sourceRef.current = null;
-    
-    audioContextRef.current?.close();
-    audioContextRef.current = null;
-
     setIsCalling(false);
     setStatus('Ready to call');
     setAiTranscription('');
@@ -270,9 +141,21 @@ export const LiveCall: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="max-w-md bg-stone-50 border border-stone-200 p-4 rounded-2xl text-center shadow-sm"
+            className="max-w-md bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center shadow-lg space-y-4"
           >
-            <p className="text-stone-700 italic">"{aiTranscription}"</p>
+            <p className="text-stone-700 italic font-medium">"{aiTranscription}"</p>
+            <div className="flex gap-2">
+               <input 
+                 placeholder="Message Kin..."
+                 className="flex-1 bg-white border border-stone-200 rounded-xl px-4 py-2 text-xs outline-none focus:border-stone-900 transition-all font-bold"
+                 onKeyDown={(e) => {
+                   if (e.key === 'Enter') {
+                     handleUserMessage((e.target as HTMLInputElement).value);
+                     (e.target as HTMLInputElement).value = '';
+                   }
+                 }}
+               />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

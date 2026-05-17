@@ -32,115 +32,43 @@ export const ScholarCam: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startLiveStudy = async () => {
-    if (!apiKey) return;
+    setMode('live');
+    setStatus('Live Session Active');
+    setAiTranscription('Welcome to your personalized study session. How can I help you master your curriculum today?');
+  };
+
+  const handleStudyMessage = async (message: string) => {
     try {
-      setMode('live');
-      setStatus('Connecting to Tutor...');
-      const ai = new GoogleGenAI({ apiKey });
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus('Live Session Active');
-            setupStreams();
-          },
-          onmessage: async (message) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data) playPcmData(part.inlineData.data);
-                if (part.text) setAiTranscription(part.text);
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                }
-              }
-            }
-          },
-          onclose: () => stopLiveStudy(),
-          onerror: () => stopLiveStudy()
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          tools: AKIN_TOOLS,
-          systemInstruction: "You are a professional tutor at AkinAI's ScholarCam. Help students understand complex concepts visualized through their camera. Be encouraging, clear, and academic."
-        }
+      setStatus('Tutor is analyzing...');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: [
+            { role: 'user', parts: [{ text: "Hello" }] },
+            { role: 'model', parts: [{ text: "Welcome to your personalized study session. How can I help you master your curriculum today?" }] }
+          ],
+          personality: 'concise'
+        })
       });
-      sessionRef.current = session;
-    } catch (err) {
-      console.error(err);
-      setMode('chat');
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+      }
+      setStatus('Live Session Active');
+    } catch (error) {
+      console.error("Study Error:", error);
+      setStatus('Tutor Unavailable');
     }
   };
 
-  const setupStreams = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-      processor.onaudioprocess = (e) => {
-        if (!sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const captureFrame = () => {
-    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
-    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
-    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const pcm = new Int16Array(bytes.buffer);
-    const float32 = new Float32Array(pcm.length);
-    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
-    buffer.getChannelData(0).set(float32);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
-  };
+  const playPcmData = () => {};
 
   const stopLiveStudy = () => {
-    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    if (videoRef.current?.srcObject) (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
     setMode('chat');
     setAiTranscription('');
+    setStatus('Ready to Learn');
   };
 
   const handleCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,9 +179,21 @@ export const ScholarCam: React.FC = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            className="self-center max-w-xl bg-black/80 backdrop-blur-xl border-l-4 border-indigo-500 p-6 rounded-r-2xl shadow-2xl"
+                            className="self-center max-w-xl bg-black/80 backdrop-blur-xl border-l-4 border-indigo-500 p-6 rounded-r-2xl shadow-2xl space-y-4"
                          >
                             <p className="text-white text-sm font-bold leading-relaxed tracking-tight italic">"{aiTranscription}"</p>
+                            <div className="flex gap-2 border-t border-white/5 pt-3">
+                               <input 
+                                 placeholder="Ask your tutor..."
+                                 className="flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-[10px] text-white outline-none focus:border-indigo-500 transition-all font-bold"
+                                 onKeyDown={(e) => {
+                                   if (e.key === 'Enter') {
+                                     handleStudyMessage((e.target as HTMLInputElement).value);
+                                     (e.target as HTMLInputElement).value = '';
+                                   }
+                                 }}
+                               />
+                            </div>
                          </motion.div>
                        )}
                     </AnimatePresence>

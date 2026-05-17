@@ -16,8 +16,8 @@ const getApiKey = () => {
   return key;
 };
 
-// Model selection - Using a stable alias that works across most tiers
-const MODEL_ID = "gemini-2.0-flash";
+// Model selection - Using gemini-1.5-flash for maximum stability and quota compliance
+const MODEL_ID = "gemini-1.5-flash";
 
 export const geminiCore = {
   generateResponse: async (message: string, history: any[] = [], personality: string = 'concise', attachments: { data: string, mimeType: string }[] = []) => {

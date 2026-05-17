@@ -34,119 +34,43 @@ export const IllustrationAI: React.FC = () => {
   const nextStartTimeRef = useRef<number>(0);
 
   const startLiveVision = async () => {
-    if (!apiKey) return;
+    setMode('live');
+    setIsCalling(true);
+    setStatus('Live Vision ACTIVE');
+    setAiTranscription('Creative Director initialized. I’m ready to review your sketches and compositions. What specific feedback do you need?');
+  };
+
+  const handleDesignMessage = async (message: string) => {
     try {
-      setMode('live');
-      setIsCalling(true);
-      setStatus('Initializing Visual Design Engine...');
-      const ai = new GoogleGenAI({ apiKey });
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-             setStatus('Live Vision ACTIVE');
-             setupStreams();
-          },
-          onmessage: async (message) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data) playPcmData(part.inlineData.data);
-                if (part.text) setAiTranscription(part.text);
-                
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                }
-              }
-            }
-          },
-          onclose: () => stopLiveVision(),
-          onerror: () => stopLiveVision()
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          tools: AKIN_TOOLS,
-          systemInstruction: "You are the Creative Director at AkinIllustrator. Help users with their visual designs by analyzing what they show you through their camera. Provide expert artistic advice, suggest colors, and brainstorm compositions."
-        }
+      setStatus('Analyzing artistic intent...');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: [
+            { role: 'user', parts: [{ text: "Hello" }] },
+            { role: 'model', parts: [{ text: "Creative Director initialized. I’m ready to review your sketches and compositions. What specific feedback do you need?" }] }
+          ],
+          personality: 'creative'
+        })
       });
-      sessionRef.current = session;
-    } catch (err) {
-      console.error(err);
-      setMode('canvas');
-      setIsCalling(false);
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+      }
+      setStatus('Live Vision ACTIVE');
+    } catch (error) {
+      console.error("Design Error:", error);
+      setStatus('Director Offline');
     }
-  };
-
-  const setupStreams = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-      processor.onaudioprocess = (e) => {
-        if (!sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const captureFrame = () => {
-    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
-    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
-    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const pcm = new Int16Array(bytes.buffer);
-    const float32 = new Float32Array(pcm.length);
-    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
-    buffer.getChannelData(0).set(float32);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
   };
 
   const stopLiveVision = () => {
-    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    if (videoRef.current?.srcObject) (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
     setMode('canvas');
     setIsCalling(false);
     setAiTranscription('');
+    setStatus('Standby');
   };
   
   const handleIllustrationRequest = (request: string) => {
@@ -271,9 +195,21 @@ export const IllustrationAI: React.FC = () => {
                                  <motion.div 
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="self-center max-w-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-8 rounded-[32px] shadow-3xl text-center"
+                                    className="self-center max-w-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-8 rounded-[32px] shadow-3xl text-center space-y-4"
                                  >
                                     <p className="text-white text-lg font-bold leading-relaxed tracking-tight">"{aiTranscription}"</p>
+                                    <div className="flex gap-2 border-t border-white/5 pt-4">
+                                       <input 
+                                         placeholder="Message Creative Director..."
+                                         className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-purple-500 transition-all font-bold"
+                                         onKeyDown={(e) => {
+                                           if (e.key === 'Enter') {
+                                             handleDesignMessage((e.target as HTMLInputElement).value);
+                                             (e.target as HTMLInputElement).value = '';
+                                           }
+                                         }}
+                                       />
+                                    </div>
                                  </motion.div>
                                )}
                             </AnimatePresence>

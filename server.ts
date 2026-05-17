@@ -17,13 +17,16 @@ async function startServer() {
   // AI Chat Route (Non-streaming)
   app.post("/api/chat", async (req, res) => {
     const { message, history, personality, attachments } = req.body;
-    console.log("Chat Request:", message, "History length:", history?.length);
+    console.log(`[Server] Chat Request: "${message.substring(0, 50)}..." | History: ${history?.length || 0}`);
     try {
       const reply = await geminiCore.generateResponse(message, history, personality, attachments);
       res.json({ reply });
     } catch (error: any) {
-      console.error("Chat Error:", error);
-      res.status(500).json({ error: error.message });
+      console.error("[Server Error] Chat failure:", error);
+      res.status(500).json({ 
+        error: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   });
 

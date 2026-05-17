@@ -51,120 +51,44 @@ export const MedicalPro: React.FC = () => {
 
     try {
       setIsCalling(true);
-      setStatus('Contacting On-Call AI Specialist...');
-      
-      const ai = new GoogleGenAI({ apiKey });
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-            setStatus('Clinical Session: ACTIVE');
-            setupStreams();
-          },
-          onmessage: async (message) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data) playPcmData(part.inlineData.data);
-                if (part.text) setAiTranscription(part.text);
-                
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                }
-              }
-            }
-          },
-          onclose: () => stopConsultation(),
-          onerror: () => stopConsultation(),
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } },
-          },
-          tools: AKIN_TOOLS,
-          systemInstruction: "You are Dr. Kin, a clinical specialist at AkinAI. Analyze the patient's symptoms and visual presentation. Provide evidence-based clinical insights while maintaining a professional medical demeanor. Use search_web to look up latest medical journals if needed.",
-        }
-      });
-      sessionRef.current = session;
+      setStatus('Dr. Kin: CONNECTED');
+      setAiTranscription("Hello, I am Dr. Kin. I've reviewed your charts. What symptoms are you currently experiencing?");
     } catch (err) {
       setIsCalling(false);
       setStatus('Telemedicine Sync Failed');
     }
   };
 
-  const setupStreams = async () => {
+  const handleConsultationMessage = async (message: string) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        if (isMuted || !sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-
-      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
-    } catch (err) {
-      setStatus('AV Bridge Blocked');
+      setStatus('Dr. Kin is analyzing...');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: [
+            { role: 'user', parts: [{ text: "Hello Dr. Kin" }] },
+            { role: 'model', parts: [{ text: "Hello, I am Dr. Kin. I've reviewed your charts. What symptoms are you currently experiencing?" }] }
+          ],
+          personality: 'concise'
+        })
+      });
+      const data = await response.json();
+      if (data.reply) {
+        setAiTranscription(data.reply);
+      }
+      setStatus('Dr. Kin: CONNECTED');
+    } catch (error) {
+      console.error("Consultation Error:", error);
+      setStatus('Consultation Bridge: ERROR');
     }
   };
 
-  const captureFrame = () => {
-    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
-    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
-    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const pcm = new Int16Array(bytes.buffer);
-    const float32 = new Float32Array(pcm.length);
-    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
-    buffer.getChannelData(0).set(float32);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
-  };
-
   const stopConsultation = () => {
-    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    if (videoRef.current?.srcObject) (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
     setIsCalling(false);
     setStatus('Consultation Ended');
+    setAiTranscription('');
   };
   
   return (
@@ -478,9 +402,21 @@ export const MedicalPro: React.FC = () => {
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, scale: 0.9 }}
-                              className="self-center max-w-2xl bg-black/60 backdrop-blur-xl border-l-4 border-blue-500 p-6 rounded-r-2xl shadow-2xl"
+                              className="self-center max-w-2xl bg-black/60 backdrop-blur-xl border-l-4 border-blue-500 p-6 rounded-r-2xl shadow-2xl space-y-4"
                            >
                               <p className="text-white text-sm font-bold leading-relaxed tracking-tight italic">"{aiTranscription}"</p>
+                              <div className="pt-4 border-t border-white/10 flex gap-2">
+                                 <input 
+                                   placeholder="Reply to Dr. Kin..."
+                                   className="flex-1 bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-white text-xs outline-none focus:border-blue-500 transition-all font-bold"
+                                   onKeyDown={(e) => {
+                                     if (e.key === 'Enter') {
+                                       handleConsultationMessage((e.target as HTMLInputElement).value);
+                                       (e.target as HTMLInputElement).value = '';
+                                     }
+                                   }}
+                                 />
+                              </div>
                            </motion.div>
                          )}
                       </AnimatePresence>

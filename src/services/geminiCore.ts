@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const getSystemPrompt = (personality: string) => {
   return personality === 'creative' 
@@ -7,29 +7,38 @@ const getSystemPrompt = (personality: string) => {
 };
 
 const getApiKey = () => {
-  return process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!key) {
+    console.warn("[Gemini Service] WARNING: No API key found in GEMINI_API_KEY or VITE_GEMINI_API_KEY.");
+  } else {
+    console.log("[Gemini Service] API key source:", process.env.GEMINI_API_KEY ? "GEMINI_API_KEY" : "VITE_GEMINI_API_KEY");
+  }
+  return key;
 };
 
-// Model selection - Gemini 1.5 Flash is the most stable for general chat
-const MODEL_ID = "gemini-1.5-flash";
+// Model selection - Using a stable alias that works across most tiers
+const MODEL_ID = "gemini-2.0-flash";
 
 export const geminiCore = {
   generateResponse: async (message: string, history: any[] = [], personality: string = 'concise', attachments: { data: string, mimeType: string }[] = []) => {
     const apiKey = getApiKey();
     if (!apiKey) throw new Error("Gemini API Key missing. Please provide GEMINI_API_KEY or VITE_GEMINI_API_KEY in environment variables.");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_ID,
-      systemInstruction: getSystemPrompt(personality)
+    const ai = new GoogleGenAI({ 
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
     });
 
-    const userParts: any[] = [{ text: message }];
+    const userMessageParts: any[] = [{ text: message }];
     
     if (attachments && attachments.length > 0) {
       attachments.forEach(attachment => {
         const base64Data = attachment.data.split(',')[1] || attachment.data;
-        userParts.push({
+        userMessageParts.push({
           inlineData: {
             data: base64Data,
             mimeType: attachment.mimeType
@@ -38,34 +47,48 @@ export const geminiCore = {
       });
     }
 
-    const chat = model.startChat({
-      history: history.map(h => ({
-        role: h.role,
-        parts: h.parts.map((p: any) => ({ text: typeof p === 'string' ? p : (p.text || "") }))
+    const formattedHistory = history.map(h => ({
+      role: h.role === 'user' ? 'user' : 'model',
+      parts: h.parts.map((p: any) => ({ 
+        text: typeof p === 'string' ? p : (p.text || "") 
       }))
+    }));
+
+    console.log(`[Gemini] Request: model=${MODEL_ID}, historyLength=${formattedHistory.length}`);
+    const response = await ai.models.generateContent({
+      model: MODEL_ID,
+      contents: [
+        ...formattedHistory,
+        { role: "user", parts: userMessageParts }
+      ],
+      config: {
+        systemInstruction: getSystemPrompt(personality)
+      }
     });
 
-    const result = await chat.sendMessage(userParts);
-    const response = await result.response;
-    return response.text();
+    console.log(`[Gemini] Response received`);
+    return response.text || "";
   },
 
   generateResponseStream: async function* (message: string, history: any[] = [], personality: string = 'concise', attachments: { data: string, mimeType: string }[] = []) {
     const apiKey = getApiKey();
     if (!apiKey) throw new Error("Gemini API Key missing. Please provide GEMINI_API_KEY or VITE_GEMINI_API_KEY in environment variables.");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_ID,
-      systemInstruction: getSystemPrompt(personality)
+    const ai = new GoogleGenAI({ 
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
     });
 
-    const userParts: any[] = [{ text: message }];
+    const userMessageParts: any[] = [{ text: message }];
     
     if (attachments && attachments.length > 0) {
       attachments.forEach(attachment => {
         const base64Data = attachment.data.split(',')[1] || attachment.data;
-        userParts.push({
+        userMessageParts.push({
           inlineData: {
             data: base64Data,
             mimeType: attachment.mimeType
@@ -74,19 +97,29 @@ export const geminiCore = {
       });
     }
 
-    const chat = model.startChat({
-      history: history.map(h => ({
-        role: h.role,
-        parts: h.parts.map((p: any) => ({ text: typeof p === 'string' ? p : (p.text || "") }))
+    const formattedHistory = history.map(h => ({
+      role: h.role === 'user' ? 'user' : 'model',
+      parts: h.parts.map((p: any) => ({ 
+        text: typeof p === 'string' ? p : (p.text || "") 
       }))
+    }));
+
+    console.log(`[Gemini Stream] Request: model=${MODEL_ID}, historyLength=${formattedHistory.length}`);
+    const result = await ai.models.generateContentStream({
+      model: MODEL_ID,
+      contents: [
+        ...formattedHistory,
+        { role: "user", parts: userMessageParts }
+      ],
+      config: {
+        systemInstruction: getSystemPrompt(personality)
+      }
     });
 
-    const result = await chat.sendMessageStream(userParts);
-
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      if (chunkText) {
-        yield chunkText;
+    for await (const chunk of result) {
+      const chunkText = chunk.text;
+      if (chunkText !== undefined && chunkText !== null) {
+        yield String(chunkText);
       }
     }
   }

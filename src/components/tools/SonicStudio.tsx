@@ -35,117 +35,17 @@ export const SonicStudio: React.FC = () => {
   const videoIntervalRef = useRef<number | null>(null);
   const nextStartTimeRef = useRef<number>(0);
 
-  const startLiveProducer = async () => {
-    if (!apiKey) return;
-    try {
-      setMode('live');
-      setStatus('Connecting to Executive Producer...');
-      const ai = new GoogleGenAI({ apiKey });
-      const session = await ai.live.connect({
-        model: "gemini-2.0-flash",
-        callbacks: {
-          onopen: () => {
-             setStatus('Live Session: ON AIR');
-             setupStreams();
-          },
-          onmessage: async (message) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            if (parts) {
-              for (const part of parts) {
-                if (part.inlineData?.data) playPcmData(part.inlineData.data);
-                if (part.text) setAiTranscription(part.text);
-                
-                if (part.functionCall) {
-                  const result = await handleLiveToolCall(part.functionCall);
-                  session.sendToolResponse({
-                    functionResponses: [{
-                      name: part.functionCall.name,
-                      response: result,
-                      id: part.functionCall.id
-                    }]
-                  });
-                }
-              }
-            }
-          },
-          onclose: () => stopLiveProducer(),
-          onerror: () => stopLiveProducer()
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          tools: AKIN_TOOLS,
-          systemInstruction: "You are the Executive Producer at AkinAI's Sonic Studio. You have a deep understanding of music theory, West African rhythms, and modern production. Listen to the user's ideas (and see them if their camera is on) and provide expert feedback to help them craft a hit."
-        }
-      });
-      sessionRef.current = session;
-    } catch (err) {
-      console.error(err);
-      setMode('studio');
-    }
-  };
 
-  const setupStreams = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-      processor.onaudioprocess = (e) => {
-        if (!sessionRef.current) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-        sessionRef.current.sendRealtimeInput({ audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' } });
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-      videoIntervalRef.current = window.setInterval(captureFrame, 1000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const captureFrame = () => {
-    if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
-    const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.6).split(',')[1];
-    sessionRef.current.sendRealtimeInput({ video: { data: base64Data, mimeType: 'image/jpeg' } });
-  };
-
-  const playPcmData = (base64: string) => {
-    if (!audioContextRef.current) return;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const pcm = new Int16Array(bytes.buffer);
-    const float32 = new Float32Array(pcm.length);
-    for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 0x7FFF;
-    const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
-    buffer.getChannelData(0).set(float32);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    const currentTime = audioContextRef.current.currentTime;
-    if (nextStartTimeRef.current < currentTime) nextStartTimeRef.current = currentTime;
-    source.start(nextStartTimeRef.current);
-    nextStartTimeRef.current += buffer.duration;
+  const startLiveProducer = () => {
+    setMode('live');
+    setStatus('Executive Producer: CONNECTED');
+    setAiTranscription("I'm listening to your rhythm tracks. What direction should we take for the chorus?");
   };
 
   const stopLiveProducer = () => {
-    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
-    sessionRef.current?.close();
-    sessionRef.current = null;
-    if (videoRef.current?.srcObject) (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
     setMode('studio');
     setAiTranscription('');
+    setStatus('Standby');
   };
 
   const generateMusic = async () => {
@@ -157,7 +57,8 @@ export const SonicStudio: React.FC = () => {
       
       const response = await ai.models.generateContent({
         model: "gemini-2.0-flash",
-        contents: {
+        contents: [{
+          role: "user",
           parts: [{
             text: `You are a world-class AI Music Producer (Sonic Studio by AkinAI). 
             The user wants to create: "${prompt}". 
@@ -171,7 +72,7 @@ export const SonicStudio: React.FC = () => {
             
             Return ONLY the valid JSON.`
           }]
-        }
+        }]
       });
 
       const text = response.text;

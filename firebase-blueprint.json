@@ -1,78 +1,69 @@
 {
   "entities": {
-    "Post": {
-      "title": "Post",
-      "description": "A piece of content published by an admin.",
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User security settings and status.",
       "type": "object",
       "properties": {
-        "title": { "type": "string", "description": "The title or headline of the post." },
-        "content": { "type": "string", "description": "The main text or body of the post." },
-        "type": { 
-          "type": "string", 
-          "enum": ["news", "gallery", "music", "ads", "products", "videos"],
-          "description": "The category of the content." 
+        "userId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "deviceName": { "type": "string" },
+        "shieldEnabled": { "type": "boolean" },
+        "gpsTrackingActive": { "type": "boolean" },
+        "vpnStatus": { "type": "string", "enum": ["connected", "disconnected", "error"] },
+        "lastScanAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email"]
+    },
+    "SecurityLog": {
+      "title": "Security Log",
+      "description": "Log of security events like intruder attempts or wrong passwords.",
+      "type": "object",
+      "properties": {
+        "logId": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["intruder_alert", "wrong_password", "malware_detected", "system_breach"] },
+        "description": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
         },
-        "mediaUrl": { "type": "string", "description": "URL to the media asset (image, video, audio)." },
-        "tags": { "type": "array", "items": { "type": "string" }, "description": "List of comma separated tags." },
-        "authorId": { "type": "string", "description": "UID of the admin who posted this." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." }
+        "imageUrl": { "type": "string", "description": "URL to intruder selfie" }
       },
-      "required": ["title", "type", "authorId", "createdAt"]
+      "required": ["userId", "type", "timestamp"]
     },
-    "GroupMessage": {
-      "title": "Group Message",
-      "description": "A message sent in the AI Party group chat.",
+    "VaultFile": {
+      "title": "Vault File",
+      "description": "Metadata for a file stored in the secure vault.",
       "type": "object",
       "properties": {
-        "text": { "type": "string" },
-        "sender": { "type": "string" },
-        "senderId": { "type": "string" },
-        "type": { "type": "string", "enum": ["user", "ai"] },
-        "avatar": { "type": "string" },
-        "color": { "type": "string" },
+        "fileId": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "size": { "type": "number" },
+        "encryptedData": { "type": "string" },
+        "mimeType": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["text", "sender", "senderId", "type", "createdAt"]
-    },
-    "SocialPost": {
-      "title": "Social Post",
-      "description": "A post or reel created by a user in the social feed.",
-      "type": "object",
-      "properties": {
-        "content": { "type": "string", "description": "Text content of the post." },
-        "type": { "type": "string", "enum": ["post", "reel"], "description": "Content type." },
-        "mediaUrl": { "type": "string", "description": "Photo or video URL." },
-        "authorId": { "type": "string" },
-        "authorName": { "type": "string" },
-        "authorAvatar": { "type": "string" },
-        "likesCount": { "type": "number", "default": 0 },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["content", "type", "authorId", "authorName", "createdAt"]
+      "required": ["userId", "name", "encryptedData"]
     }
   },
   "firestore": {
-    "/posts/{postId}": {
-      "schema": "Post",
-      "description": "Public stream of all content published by administrators."
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual user profiles and settings."
     },
-    "/social_posts/{postId}": {
-      "schema": "SocialPost",
-      "description": "User-generated social feed items."
+    "/users/{userId}/logs/{logId}": {
+      "schema": "SecurityLog",
+      "description": "Security event logs for a specific user."
     },
-    "/social_posts/{postId}/likes/{userId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "userId": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Likes on a social post."
-    },
-    "/group_messages/{messageId}": {
-      "schema": "GroupMessage",
-      "description": "Messages for the AI Party group chat room."
+    "/users/{userId}/vault/{fileId}": {
+      "schema": "VaultFile",
+      "description": "Encrypted files in the user's private vault."
     }
   }
 }

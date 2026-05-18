@@ -11,21 +11,30 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // AI Chat Route (Non-streaming)
   app.post("/api/chat", async (req, res) => {
-    const { message, history, personality, attachments } = req.body;
-    console.log(`[Server] Chat Request: "${message.substring(0, 50)}..." | History: ${history?.length || 0}`);
     try {
+      const { message, history, personality, attachments } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      console.log(`[Server] Chat Request: "${message.substring(0, 50)}..."`);
+      
       const reply = await geminiCore.generateResponse(message, history, personality, attachments);
-      res.json({ reply });
+      return res.json({ reply });
     } catch (error: any) {
-      console.error("[Server Error] Chat failure:", error);
-      res.status(500).json({ 
-        error: error.message,
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      console.error("[Server Error] Chat failed:", error);
+      
+      // Ensure we always return JSON
+      return res.status(500).json({ 
+        error: error.message || "An unexpected server error occurred",
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        type: "server_error"
       });
     }
   });

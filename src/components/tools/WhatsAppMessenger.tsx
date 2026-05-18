@@ -138,8 +138,20 @@ export const WhatsAppMessenger: React.FC = () => {
         })
       });
 
-      const data = await response.json();
+      let data: any;
+      const contentType = response.headers.get("content-type");
       
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(text.substring(0, 100) || `Server returned ${response.status}`);
+      }
+      
+      if (!response.ok) {
+        throw new Error(data.error || data.details || `Error ${response.status}`);
+      }
+
       if (data.reply) {
         setMessages(prev => {
           return prev.map(m => m.id === aiMessageId ? { ...m, text: data.reply } : m);

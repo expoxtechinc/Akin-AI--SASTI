@@ -22,22 +22,17 @@ const getSystemPrompt = (personality: string) => {
 const getApiKey = () => {
   const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   if (!key) {
-    console.error("[Gemini Service] CRITICAL ERROR: No API key found. Checked: GEMINI_API_KEY, VITE_GEMINI_API_KEY, NEXT_PUBLIC_GEMINI_API_KEY.");
-  } else {
-    // Mask key for security but confirm it exists
-    const maskedKey = key.substring(0, 4) + "..." + key.substring(key.length - 4);
-    console.log(`[Gemini Service] API key detected (${maskedKey}). Source prioritized from environment.`);
+    console.error("[Gemini Service] CRITICAL: No API key found in GEMINI_API_KEY, VITE_GEMINI_API_KEY, or NEXT_PUBLIC_GEMINI_API_KEY.");
   }
   return key;
 };
 
-// Fallback model sequence to ensure continuous service despite quota limits or availability
+// Recommended models from skill documentation
 const MODELS = [
+  "gemini-3-flash-preview",
+  "gemini-3.1-flash-lite",
   "gemini-flash-latest",
-  "gemini-2.0-flash-lite-preview-02-05",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash-latest",
-  "gemini-3-flash-preview"
+  "gemini-3.1-pro-preview"
 ];
 
 export const geminiCore = {
@@ -92,26 +87,24 @@ export const geminiCore = {
           }
         });
 
-        console.log(`[Gemini] Result from ${modelId}`);
-        return response.text || "";
+        if (!response || !response.text) {
+          console.warn(`[Gemini] Model ${modelId} returned empty response`);
+          continue;
+        }
+
+        console.log(`[Gemini] Success with ${modelId}`);
+        return response.text;
       } catch (error: any) {
         lastError = error;
-        console.warn(`[Gemini] Model ${modelId} failed:`, error.message);
+        const msg = error.message || String(error);
+        console.warn(`[Gemini] Model ${modelId} failed: ${msg.substring(0, 100)}`);
         
-        // Resilience: Fallback for quota, model not found, or temporary server errors
-        if (
-          error.message?.includes('RESOURCE_EXHAUSTED') || 
-          error.message?.includes('404') || 
-          error.message?.includes('503') ||
-          error.message?.includes('500')
-        ) {
-          continue; 
-        }
         // If it's a critical error like invalid key, stop early
-        if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('401')) {
-          break;
+        if (msg.includes('API_KEY_INVALID') || msg.includes('401') || msg.includes('not found')) {
+          console.error(`[Gemini] Critical failure on ${modelId}: ${msg}`);
+          // Don't break if it's "model not found", maybe next model exists
+          if (msg.includes('API_KEY_INVALID') || msg.includes('401')) break;
         }
-        // Otherwise try next model anyway
         continue;
       }
     }

@@ -31,10 +31,11 @@ const getApiKey = () => {
     return key;
 };
 
-// Stable models for deployment limits
+// Robust, supported model aliases from gemini-api skill
 const MODELS = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro"
+  "gemini-3-flash-preview",
+  "gemini-3.1-flash-lite",
+  "gemini-flash-latest"
 ];
 
 export const geminiCore = {

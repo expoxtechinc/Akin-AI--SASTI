@@ -20,11 +20,13 @@ const getSystemPrompt = (personality: string) => {
 };
 
 const getApiKey = () => {
-  const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   if (!key) {
-    console.warn("[Gemini Service] WARNING: No API key found in GEMINI_API_KEY or VITE_GEMINI_API_KEY.");
+    console.error("[Gemini Service] CRITICAL ERROR: No API key found. Checked: GEMINI_API_KEY, VITE_GEMINI_API_KEY, NEXT_PUBLIC_GEMINI_API_KEY.");
   } else {
-    console.log("[Gemini Service] API key source:", process.env.GEMINI_API_KEY ? "GEMINI_API_KEY" : "VITE_GEMINI_API_KEY");
+    // Mask key for security but confirm it exists
+    const maskedKey = key.substring(0, 4) + "..." + key.substring(key.length - 4);
+    console.log(`[Gemini Service] API key detected (${maskedKey}). Source prioritized from environment.`);
   }
   return key;
 };

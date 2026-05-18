@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { geminiService } from "../src/services/geminiService";
+import { geminiCore } from "../src/services/geminiCore";
 
 // This file is designed for Vercel/Serverless deployment or as a reference for the Express server
 export default async function handler(req: any, res: any) {
@@ -19,8 +19,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Call the AI Service directly
-    const reply = await geminiService.generateResponse(message, [], 'creative');
+    // Call the AI Service engine directly (geminiCore)
+    const reply = await geminiCore.generateResponse(message, [], 'creative');
 
     res.setHeader("Content-Type", "text/xml");
     res.status(200).send(`

@@ -20,19 +20,21 @@ const getSystemPrompt = (personality: string) => {
 };
 
 const getApiKey = () => {
-  const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  if (!key) {
-    console.error("[Gemini Service] CRITICAL: No API key found in GEMINI_API_KEY, VITE_GEMINI_API_KEY, or NEXT_PUBLIC_GEMINI_API_KEY.");
-  }
-  return key;
+    const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!key) {
+      const availableVars = Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('GEMINI'));
+      console.error("[Gemini Service] CRITICAL: No API key found. Available related env vars:", availableVars);
+    } else {
+      const source = process.env.GEMINI_API_KEY ? "GEMINI_API_KEY" : (process.env.VITE_GEMINI_API_KEY ? "VITE_GEMINI_API_KEY" : "NEXT_PUBLIC_GEMINI_API_KEY");
+      console.log(`[Gemini Service] Key found from ${source}: ${key.substring(0, 4)}...${key.substring(key.length - 4)}`);
+    }
+    return key;
 };
 
-// Recommended models from skill documentation
+// Stable models for deployment limits
 const MODELS = [
-  "gemini-3-flash-preview",
-  "gemini-3.1-flash-lite",
-  "gemini-flash-latest",
-  "gemini-3.1-pro-preview"
+  "gemini-1.5-flash",
+  "gemini-1.5-pro"
 ];
 
 export const geminiCore = {
@@ -97,14 +99,16 @@ export const geminiCore = {
       } catch (error: any) {
         lastError = error;
         const msg = error.message || String(error);
-        console.warn(`[Gemini] Model ${modelId} failed: ${msg.substring(0, 100)}`);
+        console.warn(`[Gemini] Model ${modelId} failed: ${msg.substring(0, 150)}`);
         
-        // If it's a critical error like invalid key, stop early
-        if (msg.includes('API_KEY_INVALID') || msg.includes('401') || msg.includes('not found')) {
-          console.error(`[Gemini] Critical failure on ${modelId}: ${msg}`);
-          // Don't break if it's "model not found", maybe next model exists
-          if (msg.includes('API_KEY_INVALID') || msg.includes('401')) break;
+        // Stop early only on Auth/Key issues
+        if (msg.includes('API_KEY_INVALID') || msg.includes('401')) {
+          console.error(`[Gemini] Critical Auth failure on ${modelId}`);
+          break;
         }
+        
+        // For other errors (quota, 500, model not found), try next model
+        console.log(`[Gemini] Falling back from ${modelId} due to: ${msg.substring(0, 50)}...`);
         continue;
       }
     }

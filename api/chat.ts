@@ -12,6 +12,10 @@ export default async function handler(req: any, res: any) {
 
   const { message, personality, history, attachments } = req.body;
 
+  // Debug deployment env
+  const keyExists = !!(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+  console.log(`[API/Chat] Incoming request. Key detected: ${keyExists}`);
+
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
   }

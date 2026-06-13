@@ -3,140 +3,184 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  Lock, 
-  Eye, 
-  MapPin, 
-  Files, 
-  Zap, 
-  Settings, 
-  Bell, 
-  Smartphone,
-  Cpu,
-  Fingerprint,
-  Wifi,
-  MoreVertical,
-  AlertTriangle,
-  CheckCircle2,
-  Activity,
-  Scan,
-  ShieldCheck,
-  ShieldAlert,
-  Menu,
-  X
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { DashboardHub } from './components/shield/DashboardHub';
-import { SecurityLogs } from './components/shield/SecurityLogs';
-import { FileVault } from './components/shield/FileVault';
-import { ThreatScanner } from './components/shield/ThreatScanner';
-import { GPSLocator } from './components/shield/GPSLocator';
-import { Sidebar } from './components/shield/Sidebar';
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { auth } from './services/firebase';
+import { MobileAppLayout } from './components/layout/MobileAppLayout';
+import { LandingPage } from './components/landing/LandingPage';
+import { AuthModal } from './components/landing/AuthModal';
+import { AdminDashboard } from './components/admin/AdminDashboard';
+import { ToolInterface } from './components/tools/ToolInterface';
+import { TOOLS } from './constants';
+import { AITool } from './types';
+
+// Dynamic Tool Imports - Named Exports
+import { WhatsAppMessenger } from './components/tools/WhatsAppMessenger';
+import { SonicStudio } from './components/tools/SonicStudio';
+import { CinemaAI } from './components/tools/CinemaAI';
+import { BananaDesign } from './components/tools/BananaDesign';
+import { LiveCall } from './components/tools/LiveCall';
+import { LiveVideoCall } from './components/tools/LiveVideoCall';
+import { BossLive } from './components/tools/BossLive';
+import { MedicalPro } from './components/tools/MedicalPro';
+import { CloudArchitect } from './components/tools/CloudArchitect';
+import { ScholarCam } from './components/tools/ScholarCam';
+import { SocialSpace } from './components/tools/SocialSpace';
+import { NewsHub } from './components/tools/NewsHub';
+import { Heart2Heart } from './components/tools/Heart2Heart';
+import { AIParty } from './components/tools/AIParty';
+import { GlobalCall } from './components/tools/GlobalCall';
+import { VideoDownloader } from './components/tools/VideoDownloader';
+import { AppDistributor } from './components/tools/AppDistributor';
+import { IllustrationAI } from './components/tools/IllustrationAI';
+import { MapTool } from './components/tools/MapTool';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'logs' | 'vault' | 'scanner' | 'gps'>('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [shieldStatus, setShieldStatus] = useState<'healthy' | 'alert' | 'breach'>('healthy');
-  
-  return (
-    <div className="min-h-screen bg-[#05080a] text-[#c0d6df] font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Background Glows */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-900/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/10 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
-      </div>
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [activeTool, setActiveTool] = useState<AITool | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-      <div className="relative flex h-screen overflow-hidden border-t border-cyan-500/20">
-        <Sidebar 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          isOpen={isSidebarOpen}
-          setIsOpen={setIsSidebarOpen}
+  // Monitor Auth State
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        // Is user the founder or registered admin
+        const adminEmails = ['aki.sokpah.link@gmail.com', 'luckyglobalnews@gmail.com'];
+        const isUserAdmin = currentUser.email ? adminEmails.includes(currentUser.email) : false;
+        setIsAdmin(isUserAdmin);
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      setIsAdmin(false);
+      setActiveTool(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  const renderActiveTool = (tool: AITool | null) => {
+    if (!tool) {
+      // Default to general chat when no tool is selected
+      return <ToolInterface tool={TOOLS[0]} />;
+    }
+
+    switch (tool.id) {
+      case 'whatsapp-messenger':
+        return <WhatsAppMessenger />;
+      case 'sonic-studio':
+        return <SonicStudio />;
+      case 'cinema-ai':
+        return <CinemaAI />;
+      case 'banana-design':
+        return <BananaDesign />;
+      case 'live-call':
+        return <LiveCall />;
+      case 'live-video':
+        return <LiveVideoCall />;
+      case 'boss-live':
+        return <BossLive />;
+      case 'medical-pro':
+        return <MedicalPro />;
+      case 'cloud-architect':
+        return <CloudArchitect tool={tool} />;
+      case 'scholar-cam':
+        return <ScholarCam />;
+      case 'social-space':
+        return <SocialSpace />;
+      case 'news-hub':
+        return <NewsHub />;
+      case 'heart-2-heart':
+        return <Heart2Heart />;
+      case 'ai-party':
+        return <AIParty />;
+      case 'global-call':
+        return <GlobalCall />;
+      case 'video-downloader':
+        return <VideoDownloader />;
+      case 'app-distributor':
+        return <AppDistributor />;
+      case 'illustrator':
+        return <IllustrationAI />;
+      case 'maps':
+        return <MapTool />;
+      default:
+        return <ToolInterface tool={tool} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-t-2 border-indigo-500 rounded-full animate-spin" />
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-500">
+            Synchronizing Neural Matrix...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in -> Show Landing Page
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black">
+        <LandingPage onStart={() => setIsAuthOpen(true)} />
+        <AuthModal 
+          isOpen={isAuthOpen} 
+          onClose={() => setIsAuthOpen(false)} 
+          onSuccess={(adminStatus) => {
+            setIsAuthOpen(false);
+            if (adminStatus) setIsAdmin(true);
+          }} 
         />
-
-        <main className="flex-1 overflow-y-auto customized-scrollbar relative">
-          {/* Header */}
-          <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-4 bg-[#05080a]/80 backdrop-blur-md border-b border-cyan-500/10">
-            <div className="flex items-center gap-4">
-              {!isSidebarOpen && (
-                <button 
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="p-2 hover:bg-cyan-500/10 rounded-lg transition-colors border border-cyan-500/20"
-                >
-                  <Menu size={20} className="text-cyan-400" />
-                </button>
-              )}
-              <div>
-                <h1 className="text-xl font-display font-bold tracking-wider text-white flex items-center gap-2">
-                   <Shield className="text-cyan-400" size={24} />
-                   FREEME <span className="text-cyan-400">SHIELD</span>
-                </h1>
-                <p className="text-[10px] font-mono text-cyan-500/60 uppercase tracking-widest">Quantum Encryption Active</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/5 border border-cyan-500/20 rounded-full">
-                <div className={`w-2 h-2 rounded-full ${shieldStatus === 'healthy' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)] animate-pulse'}`} />
-                <span className="text-[11px] font-mono uppercase tracking-tight">System {shieldStatus}</span>
-              </div>
-              
-              <button className="relative p-2 text-cyan-400 hover:text-white transition-colors">
-                <Bell size={20} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-[#05080a]" />
-              </button>
-              
-              <div className="w-8 h-8 rounded-full border border-cyan-500/30 bg-cyan-500/10 flex items-center justify-center cursor-pointer hover:border-cyan-400 transition-colors">
-                <Fingerprint size={18} className="text-cyan-400" />
-              </div>
-            </div>
-          </header>
-
-          {/* Content Area */}
-          <div className="p-8 pb-24">
-            <AnimatePresence mode="wait">
-              {activeTab === 'dashboard' && (
-                <motion.div
-                  key="dashboard"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <DashboardHub />
-                </motion.div>
-              )}
-              {activeTab === 'logs' && <SecurityLogs key="logs" />}
-              {activeTab === 'vault' && <FileVault key="vault" />}
-              {activeTab === 'scanner' && <ThreatScanner key="scanner" />}
-              {activeTab === 'gps' && <GPSLocator key="gps" />}
-            </AnimatePresence>
-          </div>
-        </main>
       </div>
+    );
+  }
 
-      {/* Global Status Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 h-8 bg-[#05080a] border-t border-cyan-500/10 px-4 flex items-center justify-between text-[10px] font-mono text-cyan-500/40 z-50">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1"><Wifi size={10} /> VPN: CONNECTED (AES-256)</span>
-          <span className="flex items-center gap-1"><Cpu size={10} /> AI LOAD: 4.2%</span>
+  // Admin View (Founder dashboard)
+  if (isAdmin && !activeTool) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        {/* Toggle to switch between admin view and general platform view */}
+        <div className="relative w-full max-w-md h-screen flex flex-col">
+          <AdminDashboard onLogout={handleLogout} />
+          <button 
+            onClick={() => setActiveTool(TOOLS[0])}
+            className="absolute top-28 left-6 px-4 py-2 bg-indigo-600/90 hover:bg-indigo-600 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-white transition-all shadow-md z-[110]"
+          >
+            Launch Platform
+          </button>
         </div>
-        <div className="flex items-center gap-4 uppercase">
-          <span>Shield Build v2.4.0</span>
-          <span className="text-cyan-400/60">Ready for scan</span>
-        </div>
-      </footer>
+      </div>
+    );
+  }
+
+  // Logged-in User Emulator Screen
+  return (
+    <div className="min-h-screen bg-[#070707] flex items-center justify-center py-6 sm:py-12 px-4 select-none">
+      <div className="relative w-full max-w-md bg-black rounded-[60px] overflow-hidden shadow-[0_0_80px_rgba(99,102,241,0.15)] ring-1 ring-white/10">
+        <MobileAppLayout 
+          activeTool={activeTool} 
+          onSelectTool={setActiveTool} 
+          userEmail={user.email || 'Guest Engine'} 
+          onLogout={handleLogout}
+        >
+          {renderActiveTool(activeTool)}
+        </MobileAppLayout>
+      </div>
     </div>
   );
 }
-
-
-

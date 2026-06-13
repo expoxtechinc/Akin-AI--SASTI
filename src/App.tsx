@@ -34,12 +34,14 @@ import { VideoDownloader } from './components/tools/VideoDownloader';
 import { AppDistributor } from './components/tools/AppDistributor';
 import { IllustrationAI } from './components/tools/IllustrationAI';
 import { MapTool } from './components/tools/MapTool';
+import { AkinAIChatWorkspace } from './components/chat/AkinAIChatWorkspace';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<AITool | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminView, setShowAdminView] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Monitor Auth State
@@ -51,8 +53,12 @@ export default function App() {
         const adminEmails = ['aki.sokpah.link@gmail.com', 'luckyglobalnews@gmail.com'];
         const isUserAdmin = currentUser.email ? adminEmails.includes(currentUser.email) : false;
         setIsAdmin(isUserAdmin);
+        if (isUserAdmin) {
+          setShowAdminView(true);
+        }
       } else {
         setIsAdmin(false);
+        setShowAdminView(false);
       }
       setLoading(false);
     });
@@ -64,6 +70,7 @@ export default function App() {
       await signOut(auth);
       setUser(null);
       setIsAdmin(false);
+      setShowAdminView(false);
       setActiveTool(null);
     } catch (err) {
       console.error('Logout error:', err);
@@ -151,14 +158,14 @@ export default function App() {
   }
 
   // Admin View (Founder dashboard)
-  if (isAdmin && !activeTool) {
+  if (isAdmin && showAdminView) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         {/* Toggle to switch between admin view and general platform view */}
         <div className="relative w-full max-w-md h-screen flex flex-col">
           <AdminDashboard onLogout={handleLogout} />
           <button 
-            onClick={() => setActiveTool(TOOLS[0])}
+            onClick={() => setShowAdminView(false)}
             className="absolute top-28 left-6 px-4 py-2 bg-indigo-600/90 hover:bg-indigo-600 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-white transition-all shadow-md z-[110]"
           >
             Launch Platform
@@ -168,19 +175,13 @@ export default function App() {
     );
   }
 
-  // Logged-in User Emulator Screen
+  // Logged-in User Conversational AI Workspace Screen
   return (
-    <div className="min-h-screen bg-[#070707] flex items-center justify-center py-6 sm:py-12 px-4 select-none">
-      <div className="relative w-full max-w-md bg-black rounded-[60px] overflow-hidden shadow-[0_0_80px_rgba(99,102,241,0.15)] ring-1 ring-white/10">
-        <MobileAppLayout 
-          activeTool={activeTool} 
-          onSelectTool={setActiveTool} 
-          userEmail={user.email || 'Guest Engine'} 
-          onLogout={handleLogout}
-        >
-          {renderActiveTool(activeTool)}
-        </MobileAppLayout>
-      </div>
-    </div>
+    <AkinAIChatWorkspace 
+      userEmail={user.email || 'Guest Engine'} 
+      onLogout={handleLogout}
+      isAdmin={isAdmin}
+      onBackToAdmin={isAdmin ? () => setShowAdminView(true) : undefined}
+    />
   );
 }

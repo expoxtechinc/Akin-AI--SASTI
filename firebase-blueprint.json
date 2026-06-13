@@ -50,6 +50,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "name", "encryptedData"]
+    },
+    "ChatSession": {
+      "title": "Chat Session",
+      "description": "Conversation threads with AkinAI.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "personality": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "messages": {
+          "type": "array"
+        }
+      },
+      "required": ["title", "personality"]
     }
   },
   "firestore": {
@@ -64,6 +78,10 @@
     "/users/{userId}/vault/{fileId}": {
       "schema": "VaultFile",
       "description": "Encrypted files in the user's private vault."
+    },
+    "/users/{userId}/chats/{chatId}": {
+      "schema": "ChatSession",
+      "description": "Stored chat session threads for a specific user under AkinAI."
     }
   }
 }

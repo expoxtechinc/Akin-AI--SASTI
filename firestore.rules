@@ -63,6 +63,15 @@ service cloud.firestore {
         && (!('createdAt' in data) || data.createdAt == request.time);
     }
 
+    function isValidChatSession(data) {
+      return data.keys().hasAll(['title', 'personality', 'messages'])
+        && data.keys().size() <= 8
+        && data.title is string && data.title.size() <= 500
+        && data.personality is string && data.personality.size() <= 100
+        && data.messages is list
+        && (!('createdAt' in data) || data.createdAt == request.time);
+    }
+
     // Collection Rules
     match /users/{userId} {
       allow get: if isValidId(userId) && isOwner(userId);
@@ -89,6 +98,17 @@ service cloud.firestore {
           && incoming().userId == existing().userId
           && (
             incoming().diff(existing()).affectedKeys().hasOnly(['name', 'encryptedData', 'size', 'mimeType'])
+          );
+        allow delete: if isOwner(userId);
+      }
+
+      match /chats/{chatId} {
+        allow get: if isValidId(chatId) && isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidChatSession(incoming());
+        allow update: if isOwner(userId) && isValidChatSession(incoming())
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'messages'])
           );
         allow delete: if isOwner(userId);
       }

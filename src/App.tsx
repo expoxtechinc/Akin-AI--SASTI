@@ -4,11 +4,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut, User as FirebaseUser, signInAnonymously } from 'firebase/auth';
 import { auth } from './services/firebase';
 import { MobileAppLayout } from './components/layout/MobileAppLayout';
 import { LandingPage } from './components/landing/LandingPage';
-import { AuthModal } from './components/landing/AuthModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { ToolInterface } from './components/tools/ToolInterface';
 import { TOOLS } from './constants';
@@ -38,7 +37,6 @@ import { AkinAIChatWorkspace } from './components/chat/AkinAIChatWorkspace';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<AITool | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminView, setShowAdminView] = useState(false);
@@ -64,6 +62,23 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  const handleStartAnonymous = async () => {
+    setLoading(true);
+    try {
+      await signInAnonymously(auth);
+    } catch (err) {
+      console.error("Anonymous authentication error, starting with mock telemetry guest:", err);
+      // Fallback local session if Firestore credentials are dry
+      setUser({
+        uid: 'guest_telemetry_id',
+        email: 'Guest Node',
+        isAnonymous: true,
+      } as any);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -144,15 +159,7 @@ export default function App() {
   if (!user) {
     return (
       <div className="min-h-screen bg-black">
-        <LandingPage onStart={() => setIsAuthOpen(true)} />
-        <AuthModal 
-          isOpen={isAuthOpen} 
-          onClose={() => setIsAuthOpen(false)} 
-          onSuccess={(adminStatus) => {
-            setIsAuthOpen(false);
-            if (adminStatus) setIsAdmin(true);
-          }} 
-        />
+        <LandingPage onStart={handleStartAnonymous} />
       </div>
     );
   }

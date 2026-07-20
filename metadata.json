@@ -1,0 +1,6 @@
+{
+  "name": "AkinAI",
+  "description": "A highly polished, mobile-first conversational AI and news broadcasting assistant powered by Firebase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

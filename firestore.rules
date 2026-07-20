@@ -1,0 +1,172 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Hardened Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Admin authorization bootstrapped from runtime context
+    function isAdmin() {
+      return isSignedIn() &&
+             request.auth.token.email == "gildedlensstudio2005@gmail.com" &&
+             request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string &&
+             id.size() > 0 &&
+             id.size() <= 128 &&
+             id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Entity Validation Helpers ---
+
+    function isValidUser(u, userId) {
+      return u.uid == userId &&
+             u.email is string &&
+             u.email.size() <= 128 &&
+             u.displayName is string &&
+             u.displayName.size() <= 128 &&
+             u.photoURL is string &&
+             u.photoURL.size() <= 512 &&
+             u.isAdmin is bool &&
+             u.createdAt is string &&
+             u.createdAt.size() <= 64;
+    }
+
+    function isValidConversation(c, userId) {
+      return c.id is string &&
+             c.id.size() <= 128 &&
+             c.userId == userId &&
+             c.title is string &&
+             c.title.size() <= 256 &&
+             c.createdAt is string &&
+             c.createdAt.size() <= 64 &&
+             c.updatedAt is string &&
+             c.updatedAt.size() <= 64;
+    }
+
+    function isValidMessage(m, userId) {
+      return m.id is string &&
+             m.id.size() <= 128 &&
+             m.conversationId is string &&
+             m.conversationId.size() <= 128 &&
+             m.userId == userId &&
+             m.role is string &&
+             (m.role == 'user' || m.role == 'model') &&
+             m.content is string &&
+             m.content.size() <= 32768 &&
+             m.createdAt is string &&
+             m.createdAt.size() <= 64;
+    }
+
+    function isValidNews(n) {
+      return n.id is string &&
+             n.id.size() <= 128 &&
+             n.title is string &&
+             n.title.size() > 0 &&
+             n.title.size() <= 256 &&
+             n.content is string &&
+             n.content.size() > 0 &&
+             n.content.size() <= 65536 &&
+             n.publishedBy is string &&
+             n.publishedBy.size() <= 128 &&
+             n.createdAt is string &&
+             n.createdAt.size() <= 64;
+    }
+
+    // --- Match Rules ---
+
+    // User collection rules
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['uid', 'email', 'displayName', 'photoURL', 'isAdmin', 'createdAt']) &&
+                       incoming().keys().size() == 6 &&
+                       isValidUser(incoming(), userId) &&
+                       incoming().isAdmin == false; // Forbid self-elevating admin status on create
+      
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['uid', 'email', 'displayName', 'photoURL', 'isAdmin', 'createdAt']) &&
+                       incoming().keys().size() == 6 &&
+                       isValidUser(incoming(), userId) &&
+                       incoming().isAdmin == existing().isAdmin; // Prevent self-elevation on update
+      
+      allow delete: if false; // Profiles are permanent, no client deletion
+    }
+
+    // Conversations rules
+    match /users/{userId}/conversations/{conversationId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(conversationId) &&
+                       incoming().keys().hasAll(['id', 'userId', 'title', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().size() == 5 &&
+                       isValidConversation(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(conversationId) &&
+                       incoming().keys().hasAll(['id', 'userId', 'title', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().size() == 5 &&
+                       isValidConversation(incoming(), userId) &&
+                       incoming().createdAt == existing().createdAt && // Immortality rule
+                       incoming().userId == existing().userId; // Immortality rule
+
+      allow delete: if isOwner(userId) && isValidId(conversationId);
+    }
+
+    // Messages rules
+    match /users/{userId}/conversations/{conversationId}/messages/{messageId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(messageId) &&
+                       isValidId(conversationId) &&
+                       (incoming().keys().hasAll(['id', 'conversationId', 'userId', 'role', 'content', 'createdAt']) ||
+                        incoming().keys().hasAll(['id', 'conversationId', 'userId', 'role', 'content', 'imageUrl', 'createdAt'])) &&
+                       isValidMessage(incoming(), userId);
+
+      allow update: if false; // Chat messages are write-once, immutable for audit trail integrity
+      allow delete: if isOwner(userId) && isValidId(messageId);
+    }
+
+    // News broadcasts rules
+    match /news/{newsId} {
+      allow get, list: if true; // Public broadcasts are globally readable
+      allow create: if isAdmin() &&
+                       isValidId(newsId) &&
+                       incoming().keys().hasAll(['id', 'title', 'content', 'publishedBy', 'createdAt']) &&
+                       incoming().keys().size() == 5 &&
+                       isValidNews(incoming());
+
+      allow update: if isAdmin() &&
+                       isValidId(newsId) &&
+                       incoming().keys().hasAll(['id', 'title', 'content', 'publishedBy', 'createdAt']) &&
+                       incoming().keys().size() == 5 &&
+                       isValidNews(incoming());
+
+      allow delete: if isAdmin() && isValidId(newsId);
+    }
+
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with basic information and admin privileges",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique Firebase Auth ID" },
+        "email": { "type": "string", "description": "User's email address" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "photoURL": { "type": "string", "description": "User's photo URL" },
+        "isAdmin": { "type": "boolean", "description": "Whether the user has administrative privileges" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when user was created" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Chat Conversation",
+      "description": "A single chat session of a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique conversation ID" },
+        "userId": { "type": "string", "description": "The owner's Firebase Auth ID" },
+        "title": { "type": "string", "description": "The title of the conversation" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when conversation was created" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp when conversation was last updated" }
+      },
+      "required": ["id", "userId", "title", "createdAt", "updatedAt"]
+    },
+    "Message": {
+      "title": "Conversation Message",
+      "description": "A single message inside a conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique message ID" },
+        "conversationId": { "type": "string", "description": "The associated conversation ID" },
+        "userId": { "type": "string", "description": "The sender's Firebase Auth ID" },
+        "role": { "type": "string", "enum": ["user", "model"], "description": "Sender role" },
+        "content": { "type": "string", "description": "The textual content of the message" },
+        "imageUrl": { "type": "string", "description": "Optional URL or base64 data for image response" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when message was sent" }
+      },
+      "required": ["id", "conversationId", "userId", "role", "content", "createdAt"]
+    },
+    "News": {
+      "title": "News and Broadcasts",
+      "description": "News and announcements published by the admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique news ID" },
+        "title": { "type": "string", "description": "The title of the news article" },
+        "content": { "type": "string", "description": "The content body of the announcement" },
+        "publishedBy": { "type": "string", "description": "Email or display name of the publisher" },
+        "imageUrl": { "type": "string", "description": "Optional image URL for the article banner" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when published" }
+      },
+      "required": ["id", "title", "content", "publishedBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile records"
+    },
+    "/users/{userId}/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Conversations list for a user"
+    },
+    "/users/{userId}/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual messages in a user's conversation"
+    },
+    "/news/{newsId}": {
+      "schema": "News",
+      "description": "Admin published news and announcements"
+    }
+  }
+}

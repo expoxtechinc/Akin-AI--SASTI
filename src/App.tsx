@@ -845,15 +845,11 @@ export default function App() {
                 <Menu className="w-5 h-5" />
               </button>
 
-              {/* Get Plus Badge */}
-              <button
-                onClick={() => setCurrentView('settings')}
-                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[11px] font-bold tracking-wide shadow-md flex items-center gap-1 hover:brightness-110 active:scale-95 transition-all"
-                id="header-premium-trigger"
-              >
-                <Sparkles className="w-3 h-3 animate-pulse text-yellow-300" />
-                Get Plus
-              </button>
+              {/* AkinAI Header Title */}
+              <div className="flex items-center gap-2">
+                <img src={LOGO_URL} alt="AkinAI Logo" className="w-5 h-5 rounded-md object-cover" referrerPolicy="no-referrer" />
+                <span className={`text-sm font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>AkinAI</span>
+              </div>
 
               <button
                 onClick={() => handleCreateNewChat('AkinAI Conversation')}
@@ -1018,7 +1014,7 @@ export default function App() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
-                    placeholder="Ask ChatGPT..." // Matches user image exactly
+                    placeholder="Ask AkinAI..." // Matches user image exactly
                     className={`w-full pl-4 pr-10 py-3 rounded-full text-xs outline-none border transition-all ${isDarkMode ? 'bg-[#151515] border-neutral-800 text-white placeholder-neutral-500 focus:border-purple-500' : 'bg-slate-50 border-slate-100 text-slate-900 placeholder-slate-400 focus:border-purple-600'}`}
                     id="chat-input-field"
                   />
@@ -1162,10 +1158,10 @@ export default function App() {
                 </div>
               </div>
 
-              {/* My ChatGPT/AkinAI List */}
+              {/* My AkinAI List */}
               <div className="space-y-2">
                 <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-400 px-1">
-                  My ChatGPT
+                  My AkinAI
                 </div>
                 <div className={`rounded-2xl divide-y ${isDarkMode ? 'bg-[#1e1e1e] divide-neutral-800' : 'bg-white divide-slate-100'} overflow-hidden shadow-sm border ${isDarkMode ? 'border-neutral-800' : 'border-slate-100'}`}>
                   <div className="px-4 py-3 flex items-center justify-between text-xs">

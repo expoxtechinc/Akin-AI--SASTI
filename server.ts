@@ -35,11 +35,14 @@ const ai = new GoogleGenAI({
 });
 
 // API Routes
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', hasKey: !!process.env.GEMINI_API_KEY });
+});
 
 // Secure Chat proxy (talks to gemini-3.5-flash)
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages, systemInstruction, plugins } = req.body;
+    const { messages, systemInstruction, plugins } = req.body || {};
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Missing or invalid messages array' });
     }
@@ -97,7 +100,7 @@ app.post('/api/chat', async (req, res) => {
 // Secure Image Generation proxy (talks to gemini-3.1-flash-lite-image)
 app.post('/api/generate-image', async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt } = req.body || {};
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'Missing or invalid prompt string' });
     }

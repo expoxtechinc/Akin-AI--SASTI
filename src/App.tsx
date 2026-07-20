@@ -407,7 +407,15 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: userMsgContent })
         });
-        const data = await res.json();
+        
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          const text = await res.text();
+          throw new Error(text.slice(0, 150) || 'Failed to parse server image response');
+        }
+
         if (res.ok) {
           responseImageUrl = data.imageUrl;
           responseText = `Here is your generated image for: "${userMsgContent}"`;
@@ -429,7 +437,15 @@ export default function App() {
             plugins: activePlugins
           })
         });
-        const data = await res.json();
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          const text = await res.text();
+          throw new Error(text.slice(0, 150) || 'Failed to parse server chat response');
+        }
+
         if (res.ok) {
           responseText = data.text;
         } else {
